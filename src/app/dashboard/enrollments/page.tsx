@@ -1,0 +1,128 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Search, Filter, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+interface Enrollment {
+  id: string;
+  name: string;
+  email: string;
+  course: string;
+  class: string;
+  date: string;
+  status: "pending" | "approved" | "rejected";
+}
+
+const enrollments: Enrollment[] = [
+  { id: "1", name: "Arafat Hossain", email: "arafat@example.com", course: "Cadet Entrance Preparation", class: "Class 8", date: "2025-12-01", status: "pending" },
+  { id: "2", name: "Tasnim Rahman", email: "tasnim@example.com", course: "Scholarship Preparation", class: "Class 6", date: "2025-12-02", status: "approved" },
+  { id: "3", name: "Sadia Islam", email: "sadia@example.com", course: "Leadership Development", class: "Class 7", date: "2025-12-03", status: "pending" },
+  { id: "4", name: "Rafiq Ahmed", email: "rafiq@example.com", course: "Foundation Classes", class: "Class 9", date: "2025-12-04", status: "rejected" },
+  { id: "5", name: "Nusrat Jahan", email: "nusrat@example.com", course: "Spoken English", class: "Class 10", date: "2025-12-05", status: "approved" },
+];
+
+export default function EnrollmentsPage() {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+
+  const filtered = enrollments.filter((e) => {
+    const matchesSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.course.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || e.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const statusConfig = {
+    pending: { label: "Pending", variant: "warning" as const, icon: Clock },
+    approved: { label: "Approved", variant: "success" as const, icon: CheckCircle2 },
+    rejected: { label: "Rejected", variant: "destructive" as const, icon: XCircle },
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">Enrollments</h1>
+          <p className="text-sm text-muted">Review and manage student enrollment applications.</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+              <Input placeholder="Search enrollments..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-muted" />
+              {(["all", "pending", "approved", "rejected"] as const).map((s) => (
+                <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${statusFilter === s ? "bg-primary text-white" : "bg-accent text-muted hover:bg-primary/5"}`}>
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-primary/5 bg-accent/50">
+                  <th className="text-left text-xs font-medium text-muted py-3 px-6">Student</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Course</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Class</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Date</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Status</th>
+                  <th className="text-right text-xs font-medium text-muted py-3 px-6">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((enrollment) => {
+                  const config = statusConfig[enrollment.status];
+                  const StatusIcon = config.icon;
+                  return (
+                    <motion.tr key={enrollment.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
+                            {enrollment.name.split(" ").map((n) => n[0]).join("")}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-primary">{enrollment.name}</p>
+                            <p className="text-xs text-muted">{enrollment.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-sm text-muted">{enrollment.course}</td>
+                      <td className="py-4 px-4 text-sm text-muted">{enrollment.class}</td>
+                      <td className="py-4 px-4 text-sm text-muted">{enrollment.date}</td>
+                      <td className="py-4 px-4">
+                        <Badge variant={config.variant} className="text-[10px] capitalize">
+                          <StatusIcon className="w-3 h-3 mr-1" />
+                          {config.label}
+                        </Badge>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <button className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </motion.tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
