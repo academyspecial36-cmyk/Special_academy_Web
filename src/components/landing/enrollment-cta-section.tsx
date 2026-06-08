@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, GraduationCap, Clock, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/lib/app-context";
 
 export function EnrollmentCtaSection() {
+  const { settings } = useAppContext();
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,7 +77,7 @@ export function EnrollmentCtaSection() {
                 <div>
                   <h4 className="text-white font-semibold mb-1">Need Help?</h4>
                   <p className="text-sm text-white/60">
-                    Call us at 986-0302036 or visit our campus for a free consultation and campus tour.
+                    Call us at {settings.phone} or visit our campus for a free consultation and campus tour.
                   </p>
                 </div>
               </div>

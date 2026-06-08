@@ -14,6 +14,9 @@ import {
   MessageSquare,
   Image as ImageIcon,
   Settings,
+  HelpCircle,
+  GraduationCap,
+  Tags,
   Menu,
   X,
   Search,
@@ -34,6 +37,9 @@ const iconMap: Record<string, React.ElementType> = {
   MessageSquare,
   ImageIcon,
   Settings,
+  HelpCircle,
+  GraduationCap,
+  Tags,
 };
 
 export default function DashboardLayout({

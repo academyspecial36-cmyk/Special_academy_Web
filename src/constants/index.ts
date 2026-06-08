@@ -18,8 +18,11 @@ export const DASHBOARD_NAV = [
   { label: "Courses", href: "/dashboard/courses", icon: "BookOpen" },
   { label: "Notices", href: "/dashboard/notices", icon: "Bell" },
   { label: "Enrollments", href: "/dashboard/enrollments", icon: "FileText" },
+  { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
+  { label: "Faculty", href: "/dashboard/faculty", icon: "GraduationCap" },
+  { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
   { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
-  { label: "Gallery", href: "/dashboard/gallery", icon: "Image" },
+  { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
   { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
 ];
 
@@ -49,11 +52,6 @@ export const COURSE_CATEGORIES = [
 ];
 
 export const CLASS_LEVELS = [
-  "Class 6",
-  "Class 7",
-  "Class 8",
-  "Class 9",
-  "Class 10",
-  "Class 11",
   "Class 12",
+  "Becholor"
 ];

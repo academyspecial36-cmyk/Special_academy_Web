@@ -7,23 +7,24 @@ import {
   Phone,
   Mail,
   Clock,
-  Facebook,
-  Youtube,
-  Instagram,
   Send,
 } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppContext } from "@/lib/app-context";
+import { SocialLinks } from "@/components/shared/social-links";
 
 export function ContactSection() {
+  const { settings } = useAppContext();
+
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
           label="Get in Touch"
-          title="Contact Special academy"
+          title={`Contact ${settings.academyName}`}
           description="Have questions? We would love to hear from you. Reach out to us for admission inquiries, course details, or campus visits."
         />
 
@@ -44,8 +45,7 @@ export function ContactSection() {
                 <div>
                   <h4 className="font-semibold text-primary mb-1">Address</h4>
                   <p className="text-sm text-muted leading-relaxed">
-                    M8RP+363 New baneshwor, Devkota Sadak<br />
-                    Kathmandu 44600
+                    {settings.address}
                   </p>
                 </div>
               </div>
@@ -56,8 +56,10 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-primary mb-1">Phone</h4>
-                  <p className="text-sm text-muted">986-0302036</p>
-                  <p className="text-sm text-muted">986-0302036</p>
+                  <p className="text-sm text-muted">{settings.phone}</p>
+                  {settings.secondaryPhone && (
+                    <p className="text-sm text-muted">{settings.secondaryPhone}</p>
+                  )}
                 </div>
               </div>
 
@@ -67,8 +69,8 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-primary mb-1">Email</h4>
-                  <p className="text-sm text-muted">info@cadetacademy.edu</p>
-                  <p className="text-sm text-muted">admission@cadetacademy.edu</p>
+                  <p className="text-sm text-muted">{settings.email}</p>
+                  <p className="text-sm text-muted">{settings.admissionEmail}</p>
                 </div>
               </div>
 
@@ -78,8 +80,8 @@ export function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-primary mb-1">Office Hours</h4>
-                  <p className="text-sm text-muted">Sat - Thu: 7:00 AM - 5:00 PM</p>
-                  <p className="text-sm text-muted">Friday: Closed</p>
+                  <p className="text-sm text-muted">{settings.officeHours}</p>
+                  <p className="text-sm text-muted">{settings.holiday}</p>
                 </div>
               </div>
             </div>
@@ -87,17 +89,12 @@ export function ContactSection() {
             {/* Social */}
             <div>
               <h4 className="font-semibold text-primary mb-3">Follow Us</h4>
-              <div className="flex items-center gap-3">
-                <a href="#" className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-colors">
-                  <Facebook className="w-4 h-4" />
-                </a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-colors">
-                  <Youtube className="w-4 h-4" />
-                </a>
-                <a href="#" className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-colors">
-                  <Instagram className="w-4 h-4" />
-                </a>
-              </div>
+              <SocialLinks
+                links={settings.socialLinks}
+                baseColor="bg-primary/5 text-primary"
+                hoverColor="hover:bg-primary hover:text-white"
+                size="lg"
+              />
             </div>
           </motion.div>
 

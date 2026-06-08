@@ -6,9 +6,6 @@ import {
   Phone,
   Mail,
   Clock,
-  Facebook,
-  Youtube,
-  Instagram,
   Send,
 } from "lucide-react";
 import { PageWrapper } from "@/components/shared/page-wrapper";
@@ -16,8 +13,12 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useAppContext } from "@/lib/app-context";
+import { SocialLinks } from "@/components/shared/social-links";
 
 export default function ContactPage() {
+  const { settings } = useAppContext();
+
   return (
     <PageWrapper>
       <section className="bg-primary py-16 md:py-24 text-white">
@@ -50,9 +51,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Address</h4>
-                      <p className="text-sm text-muted">
-                        M8RP+363 New baneshwor, Devkota Sadak<br />Kathmandu 44600
-                      </p>
+                      <p className="text-sm text-muted">{settings.address}</p>
                     </div>
                   </div>
 
@@ -62,8 +61,10 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Phone</h4>
-                      <p className="text-sm text-muted">986-0302036</p>
-                      <p className="text-sm text-muted">986-0302036</p>
+                      <p className="text-sm text-muted">{settings.phone}</p>
+                      {settings.secondaryPhone && (
+                        <p className="text-sm text-muted">{settings.secondaryPhone}</p>
+                      )}
                     </div>
                   </div>
 
@@ -73,8 +74,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Email</h4>
-                      <p className="text-sm text-muted">info@cadetacademy.edu</p>
-                      <p className="text-sm text-muted">admission@cadetacademy.edu</p>
+                      <p className="text-sm text-muted">{settings.email}</p>
+                      <p className="text-sm text-muted">{settings.admissionEmail}</p>
                     </div>
                   </div>
 
@@ -84,8 +85,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Office Hours</h4>
-                      <p className="text-sm text-muted">Sat - Thu: 7:00 AM - 5:00 PM</p>
-                      <p className="text-sm text-muted">Friday: Closed</p>
+                      <p className="text-sm text-muted">{settings.officeHours}</p>
+                      <p className="text-sm text-muted">{settings.holiday}</p>
                     </div>
                   </div>
                 </div>
@@ -93,17 +94,12 @@ export default function ContactPage() {
 
               <div>
                 <h4 className="font-semibold text-primary mb-3">Follow Us</h4>
-                <div className="flex items-center gap-3">
-                  <a href="#" className="w-10 h-10 rounded-lg bg-white border border-primary/5 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-colors">
-                    <Facebook className="w-4 h-4" />
-                  </a>
-                  <a href="#" className="w-10 h-10 rounded-lg bg-white border border-primary/5 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-colors">
-                    <Youtube className="w-4 h-4" />
-                  </a>
-                  <a href="#" className="w-10 h-10 rounded-lg bg-white border border-primary/5 flex items-center justify-center hover:bg-primary hover:text-white text-primary transition-colors">
-                    <Instagram className="w-4 h-4" />
-                  </a>
-                </div>
+                <SocialLinks
+                  links={settings.socialLinks}
+                  baseColor="bg-white border border-primary/5 text-primary"
+                  hoverColor="hover:bg-primary hover:text-white"
+                  size="lg"
+                />
               </div>
             </motion.div>
 
@@ -164,7 +160,7 @@ export default function ContactPage() {
               <div className="text-center">
                 <MapPin className="w-12 h-12 text-primary/20 mx-auto mb-3" />
                 <p className="text-muted text-sm">Map integration placeholder</p>
-                <p className="text-xs text-muted/60 mt-1">M8RP+363 New baneshwor, Devkota Sadak, Kathmandu 44600</p>
+                <p className="text-xs text-muted/60 mt-1">{settings.address}</p>
               </div>
             </div>
           </motion.div>
