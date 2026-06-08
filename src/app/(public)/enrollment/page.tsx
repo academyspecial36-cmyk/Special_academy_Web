@@ -3,18 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CheckCircle2, ArrowRight, ArrowLeft, Send, GraduationCap } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, Send, GraduationCap, User as UserIcon, Lock } from "lucide-react";
 import { PageWrapper } from "@/components/shared/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CLASS_LEVELS } from "@/constants";
 
 const steps = [
   { label: "Personal Info", fields: ["fullName", "email", "phone"] },
-  { label: "Academic Info", fields: ["currentClass", "interestedCourse", "previousSchool"] },
-  { label: "Guardian Info", fields: ["guardianName", "guardianContact", "address"] },
+  { label: "Create Account", fields: ["username", "password", "confirmPassword"] },
+  { label: "Course & Guardian", fields: ["interestedCourse", "guardianName", "guardianContact", "address"] },
   { label: "Review", fields: [] },
 ];
 
@@ -34,12 +33,13 @@ export default function EnrollmentPage() {
     fullName: "",
     email: "",
     phone: "",
-    currentClass: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
     interestedCourse: "",
     guardianName: "",
     guardianContact: "",
     address: "",
-    previousSchool: "",
     message: "",
   });
 
@@ -50,6 +50,8 @@ export default function EnrollmentPage() {
   const handleSubmit = () => {
     setSubmitted(true);
   };
+
+  const passwordsMatch = formData.password === formData.confirmPassword;
 
   if (submitted) {
     return (
@@ -72,12 +74,12 @@ export default function EnrollmentPage() {
             >
               <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-primary mb-3">Application Submitted!</h2>
+            <h2 className="text-2xl font-bold text-primary mb-3">Account Created Successfully!</h2>
             <p className="text-muted mb-8">
-              Thank you for applying to Special academy. Our admissions team will review your application and contact you within 2-3 business days.
+              Your account has been created. Our admissions team will review your application and contact you within 2-3 business days.
             </p>
             <Button asChild>
-              <Link href="/">Return to Home</Link>
+              <Link href="/login">Sign In to Your Account</Link>
             </Button>
           </div>
         </section>
@@ -90,9 +92,9 @@ export default function EnrollmentPage() {
       <section className="bg-primary py-16 md:py-24 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Enrollment</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Create Account</h1>
             <p className="text-lg text-white/70">
-              Apply for admission to Special academy. Fill out the form below to begin your journey.
+              Create your account and apply for admission. Fill out the form below to get started.
             </p>
           </div>
         </div>
@@ -158,7 +160,7 @@ export default function EnrollmentPage() {
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">Phone Number *</label>
                   <Input
-                    placeholder="+880 1XXX-XXXXXX"
+                    placeholder="+977 98XXXXXXXX"
                     value={formData.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
                   />
@@ -168,19 +170,54 @@ export default function EnrollmentPage() {
 
             {step === 1 && (
               <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-2">Academic Information</h3>
+                <h3 className="text-lg font-semibold text-primary mb-2">Create Account</h3>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Current Class *</label>
-                  <Select
-                    value={formData.currentClass}
-                    onChange={(e) => updateField("currentClass", e.target.value)}
-                  >
-                    <option value="">Select class</option>
-                    {CLASS_LEVELS.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </Select>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Username *</label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                    <Input
+                      placeholder="Choose a username"
+                      value={formData.username}
+                      onChange={(e) => updateField("username", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                    <Input
+                      type="password"
+                      placeholder="Create a password"
+                      value={formData.password}
+                      onChange={(e) => updateField("password", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Confirm Password *</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                    <Input
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={(e) => updateField("confirmPassword", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  {formData.confirmPassword && !passwordsMatch && (
+                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-5">
+                <h3 className="text-lg font-semibold text-primary mb-2">Course & Guardian Info</h3>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">Interested Course *</label>
                   <Select
@@ -193,20 +230,6 @@ export default function EnrollmentPage() {
                     ))}
                   </Select>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Previous School</label>
-                  <Input
-                    placeholder="Name of your previous/current school"
-                    value={formData.previousSchool}
-                    onChange={(e) => updateField("previousSchool", e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-2">Guardian Information</h3>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">Guardian Name *</label>
                   <Input
@@ -249,7 +272,7 @@ export default function EnrollmentPage() {
                 <h3 className="text-lg font-semibold text-primary mb-4">Review Your Application</h3>
                 <div className="space-y-4">
                   {Object.entries(formData).map(([key, value]) => {
-                    if (!value) return null;
+                    if (!value || key === "confirmPassword" || key === "password") return null;
                     const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
                     return (
                       <div key={key} className="flex justify-between py-2 border-b border-primary/5">
@@ -280,7 +303,7 @@ export default function EnrollmentPage() {
               ) : (
                 <Button onClick={handleSubmit}>
                   <GraduationCap className="w-4 h-4 mr-2" />
-                  Submit Application
+                  Create Account
                 </Button>
               )}
             </div>

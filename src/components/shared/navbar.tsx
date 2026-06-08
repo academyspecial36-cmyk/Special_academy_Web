@@ -9,7 +9,6 @@ import {
   Menu,
   X,
   LogIn,
-  User,
   ChevronRight,
 } from "lucide-react";
 import { NAV_ITEMS } from "@/constants";
@@ -93,15 +92,9 @@ export function Navbar() {
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center gap-3">
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/student">
-                  <User className="w-4 h-4 mr-1.5" />
-                  Student Portal
-                </Link>
-              </Button>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/dashboard">
+                <Link href="/login">
                   <LogIn className="w-4 h-4 mr-1.5" />
-                  Admin Login
+                  Login
                 </Link>
               </Button>
               <Button size="sm" asChild>
@@ -168,10 +161,7 @@ export function Navbar() {
                   <Link href="/enrollment">Apply for Admission</Link>
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link href="/student">Student Portal</Link>
-                </Button>
-                <Button variant="ghost" className="w-full" asChild>
-                  <Link href="/dashboard">Admin Login</Link>
+                  <Link href="/login">Login</Link>
                 </Button>
               </div>
             </motion.div>
