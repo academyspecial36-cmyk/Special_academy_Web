@@ -16,6 +16,7 @@ export const DASHBOARD_NAV = [
   { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { label: "Students", href: "/dashboard/students", icon: "Users" },
   { label: "Courses", href: "/dashboard/courses", icon: "BookOpen" },
+  { label: "Exams", href: "/dashboard/exams", icon: "ClipboardCheck" },
   { label: "Notices", href: "/dashboard/notices", icon: "Bell" },
   { label: "Enrollments", href: "/dashboard/enrollments", icon: "FileText" },
   { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
@@ -29,6 +30,7 @@ export const DASHBOARD_NAV = [
 export const STUDENT_NAV = [
   { label: "Dashboard", href: "/student", icon: "LayoutDashboard" },
   { label: "My Courses", href: "/student/courses", icon: "BookOpen" },
+  { label: "Exams", href: "/student/exams", icon: "ClipboardCheck" },
   { label: "Notices", href: "/student/notices", icon: "Bell" },
   { label: "Profile", href: "/student/profile", icon: "User" },
 ];

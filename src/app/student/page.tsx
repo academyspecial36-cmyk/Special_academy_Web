@@ -14,18 +14,41 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAppContext } from "@/lib/app-context";
 import { notices, courses } from "@/mock";
 import { formatShortDate } from "@/lib/utils";
 
-const stats = [
-  { label: "Enrolled Courses", value: "3", icon: BookOpen, color: "bg-secondary/10 text-secondary" },
-  { label: "Attendance", value: "94%", icon: Calendar, color: "bg-emerald-50 text-emerald-600" },
-  { label: "Tests Taken", value: "12", icon: FileText, color: "bg-amber-50 text-amber-600" },
-  { label: "Avg. Score", value: "87%", icon: TrendingUp, color: "bg-violet-50 text-violet-600" },
-];
-
 export default function StudentDashboardPage() {
+  const { subcategories, completedItems } = useAppContext();
   const enrolledCourses = courses.slice(0, 3);
+
+  function getCourseProgress(courseId: string) {
+    const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
+    const allItems = courseSubs.flatMap((s) => s.items.filter((item) => !item.hidden));
+    const completed = allItems.filter((item) => completedItems.includes(item.id)).length;
+    return allItems.length > 0 ? Math.round((completed / allItems.length) * 100) : 0;
+  }
+
+  function getCompletedCount(courseId: string) {
+    const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
+    return courseSubs.flatMap((s) => s.items.filter((item) => !item.hidden && completedItems.includes(item.id))).length;
+  }
+
+  function getTotalCount(courseId: string) {
+    const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
+    return courseSubs.flatMap((s) => s.items.filter((item) => !item.hidden)).length;
+  }
+
+  const totalCompleted = enrolledCourses.reduce((sum, c) => sum + getCompletedCount(c.id), 0);
+  const totalItems = enrolledCourses.reduce((sum, c) => sum + getTotalCount(c.id), 0);
+  const avgProgress = totalItems > 0 ? Math.round((totalCompleted / totalItems) * 100) : 0;
+
+  const stats = [
+    { label: "Enrolled Courses", value: enrolledCourses.length.toString(), icon: BookOpen, color: "bg-secondary/10 text-secondary" },
+    { label: "Overall Progress", value: `${avgProgress}%`, icon: TrendingUp, color: "bg-emerald-50 text-emerald-600" },
+    { label: "Items Completed", value: totalCompleted.toString(), icon: FileText, color: "bg-amber-50 text-amber-600" },
+    { label: "Total Items", value: totalItems.toString(), icon: BookOpen, color: "bg-violet-50 text-violet-600" },
+  ];
 
   return (
     <div className="space-y-8">
@@ -69,18 +92,31 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {enrolledCourses.map((course) => (
-                <div key={course.id} className="flex items-center gap-4 p-4 bg-accent rounded-xl border border-primary/5">
-                  <div className="w-12 h-12 rounded-lg bg-primary/5 flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-primary text-sm truncate">{course.title}</p>
-                    <p className="text-xs text-muted">{course.duration} · {course.classLevel}</p>
-                  </div>
-                  <Badge variant="outline" className="text-[10px] shrink-0">In Progress</Badge>
-                </div>
-              ))}
+              {enrolledCourses.map((course) => {
+                const progress = getCourseProgress(course.id);
+                const completed = getCompletedCount(course.id);
+                const total = getTotalCount(course.id);
+                return (
+                  <Link key={course.id} href={`/student/courses/${course.id}`} className="block group">
+                    <div className="flex items-center gap-4 p-4 bg-accent rounded-xl border border-primary/5 group-hover:border-secondary/20 transition-colors">
+                      <div className="w-12 h-12 rounded-lg bg-primary/5 flex items-center justify-center">
+                        <BookOpen className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-primary text-sm truncate">{course.title}</p>
+                        <p className="text-xs text-muted">{course.duration} · {course.classLevel}</p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-primary/10 rounded-full overflow-hidden">
+                            <div className="h-full bg-secondary rounded-full transition-all" style={{ width: `${progress}%` }} />
+                          </div>
+                          <span className="text-[10px] text-muted">{completed}/{total}</span>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] shrink-0">{progress}%</Badge>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

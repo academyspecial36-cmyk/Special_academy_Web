@@ -10,6 +10,7 @@ import {
   BookOpen,
   Bell,
   User,
+  ClipboardCheck,
   Menu,
   X,
   LogOut,
@@ -23,6 +24,7 @@ const iconMap: Record<string, React.ElementType> = {
   BookOpen,
   Bell,
   User,
+  ClipboardCheck,
 };
 
 export default function StudentLayout({

@@ -101,3 +101,57 @@ export interface Activity {
   time: string;
   icon: string;
 }
+
+export interface Item {
+  id: string;
+  subcategoryId: string;
+  type: "video" | "pdf";
+  title: string;
+  description: string;
+  url: string;
+  duration?: string;
+  createdAt: string;
+  status: "paid" | "free";
+  hidden: boolean;
+}
+
+export interface Subcategory {
+  id: string;
+  courseId: string;
+  title: string;
+  thumbnail: string;
+  shortDescription: string;
+  createdAt: string;
+  status: "paid" | "free";
+  hidden: boolean;
+  items: Item[];
+}
+
+export interface ExamCategory {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  createdAt: string;
+}
+
+export interface Question {
+  id: string;
+  categoryId: string;
+  type: "mcq" | "subjective";
+  question: string;
+  options: string[];
+  answer: string;
+  explanation: string;
+  createdAt: string;
+}
+
+export interface ExamAttempt {
+  id: string;
+  categoryId: string;
+  studentName: string;
+  answers: { questionId: string; answer: string; correct: boolean }[];
+  score: number;
+  total: number;
+  completedAt: string;
+}

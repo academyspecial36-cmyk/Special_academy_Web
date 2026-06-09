@@ -4,18 +4,76 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Search, Plus, Pencil, Trash2, Images } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { galleryImages } from "@/mock";
+import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
+import { DeleteModal } from "@/components/ui/delete-modal";
+import { galleryImages as initialImages } from "@/mock";
+import type { GalleryImage } from "@/types";
+
+const fields: FieldConfig[] = [
+  { name: "src", label: "Image URL", type: "url", required: true, placeholder: "https://..." },
+  { name: "alt", label: "Alt Text", type: "text", required: true, placeholder: "Description of the image" },
+  { name: "category", label: "Category", type: "select", required: true, options: [
+    { label: "Campus", value: "campus" },
+    { label: "Events", value: "events" },
+    { label: "Classroom", value: "classroom" },
+    { label: "Sports", value: "sports" },
+    { label: "Graduation", value: "graduation" },
+  ]},
+];
 
 export default function DashboardGalleryPage() {
+  const [images, setImages] = useState<GalleryImage[]>(initialImages);
   const [search, setSearch] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selected, setSelected] = useState<GalleryImage | null>(null);
 
-  const filtered = galleryImages.filter((g) =>
+  const filtered = images.filter((g) =>
     g.alt.toLowerCase().includes(search.toLowerCase())
   );
+
+  function handleAdd(data: Record<string, string>) {
+    const newImage: GalleryImage = {
+      id: `gallery-${Date.now()}`,
+      src: data.src,
+      alt: data.alt,
+      category: data.category,
+    };
+    setImages((prev) => [newImage, ...prev]);
+    setAddOpen(false);
+    console.log("Image added:", newImage);
+    toast.success("Image added successfully");
+  }
+
+  function handleEdit(data: Record<string, string>) {
+    if (!selected) return;
+    const updated: GalleryImage = {
+      ...selected,
+      src: data.src,
+      alt: data.alt,
+      category: data.category,
+    };
+    setImages((prev) => prev.map((img) => (img.id === updated.id ? updated : img)));
+    setEditOpen(false);
+    setSelected(null);
+    console.log("Image updated:", updated);
+    toast.success("Image updated successfully");
+  }
+
+  function handleDelete() {
+    if (!selected) return;
+    setImages((prev) => prev.filter((img) => img.id !== selected.id));
+    setDeleteOpen(false);
+    setSelected(null);
+    console.log("Image deleted:", selected.id);
+    toast.success("Image deleted successfully");
+  }
 
   return (
     <div className="space-y-6">
@@ -24,7 +82,7 @@ export default function DashboardGalleryPage() {
           <h1 className="text-2xl font-bold text-primary">Gallery</h1>
           <p className="text-sm text-muted">Manage academy gallery images.</p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Upload Image
         </Button>
@@ -43,10 +101,16 @@ export default function DashboardGalleryPage() {
                 <Image src={img.src} alt={img.alt} fill className="object-cover" />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <div className="flex gap-2">
-                    <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+                    <button
+                      onClick={() => { setSelected(img); setEditOpen(true); }}
+                      className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                    >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-red-500/80 transition-colors">
+                    <button
+                      onClick={() => { setSelected(img); setDeleteOpen(true); }}
+                      className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-red-500/80 transition-colors"
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -67,6 +131,33 @@ export default function DashboardGalleryPage() {
           <p className="text-muted text-sm">No images found.</p>
         </div>
       )}
+
+      <FormModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Upload Image"
+        fields={fields}
+        onSubmit={handleAdd}
+        submitLabel="Upload"
+      />
+
+      <FormModal
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        title="Edit Image"
+        fields={fields}
+        initialValues={selected ? { src: selected.src, alt: selected.alt, category: selected.category } : undefined}
+        onSubmit={handleEdit}
+        submitLabel="Update Image"
+      />
+
+      <DeleteModal
+        open={deleteOpen}
+        onClose={() => { setDeleteOpen(false); setSelected(null); }}
+        onConfirm={handleDelete}
+        title="Delete Image?"
+        message={`Are you sure you want to delete "${selected?.alt}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

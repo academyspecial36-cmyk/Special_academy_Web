@@ -17,6 +17,7 @@ import {
   HelpCircle,
   GraduationCap,
   Tags,
+  ClipboardCheck,
   Menu,
   X,
   Search,
@@ -24,6 +25,7 @@ import {
   ChevronDown,
   LogOut,
 } from "lucide-react";
+import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { DASHBOARD_NAV } from "@/constants";
@@ -40,6 +42,7 @@ const iconMap: Record<string, React.ElementType> = {
   HelpCircle,
   GraduationCap,
   Tags,
+  ClipboardCheck,
 };
 
 export default function DashboardLayout({
@@ -205,6 +208,17 @@ export default function DashboardLayout({
         {/* Page Content */}
         <main className="p-4 lg:p-8">{children}</main>
       </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "white",
+            border: "1px solid hsl(var(--primary) / 0.05)",
+            borderRadius: "12px",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          },
+        }}
+      />
     </div>
   );
 }

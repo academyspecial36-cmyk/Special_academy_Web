@@ -4,9 +4,10 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
-import { faqs } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 export function FaqSection() {
+  const { faqs } = useAppContext();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -21,7 +22,7 @@ export function FaqSection() {
         <div className="space-y-3">
           {faqs.map((faq, index) => (
             <motion.div
-              key={index}
+              key={faq.id}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
