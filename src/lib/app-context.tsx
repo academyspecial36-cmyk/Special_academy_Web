@@ -208,6 +208,72 @@ function createSeedQuestions(): Question[] {
   ];
 }
 
+function createSeedAttempts(): ExamAttempt[] {
+  const now = new Date();
+  return [
+    {
+      id: "att-1", categoryId: "exam-cat-1", studentName: "Arafat Hossain",
+      answers: [
+        { questionId: "q-1", answer: "Kathmandu", correct: true },
+        { questionId: "q-2", answer: "Mars", correct: true },
+        { questionId: "q-3", answer: "Discipline helps cadets build character and leadership.", correct: false },
+      ],
+      score: 2, total: 3,
+      completedAt: new Date(now.getTime() - 86400000).toISOString(),
+    },
+    {
+      id: "att-2", categoryId: "exam-cat-1", studentName: "Rahul Sharma",
+      answers: [
+        { questionId: "q-1", answer: "Pokhara", correct: false },
+        { questionId: "q-2", answer: "Mars", correct: true },
+        { questionId: "q-3", answer: "Discipline is important for cadets to be successful in life and to follow rules and regulations properly.", correct: true },
+      ],
+      score: 2, total: 3,
+      completedAt: new Date(now.getTime() - 172800000).toISOString(),
+    },
+    {
+      id: "att-3", categoryId: "exam-cat-1", studentName: "Priya Thapa",
+      answers: [
+        { questionId: "q-1", answer: "Kathmandu", correct: true },
+        { questionId: "q-2", answer: "Venus", correct: false },
+        { questionId: "q-3", answer: "", correct: false },
+      ],
+      score: 1, total: 3,
+      completedAt: new Date(now.getTime() - 259200000).toISOString(),
+    },
+    {
+      id: "att-4", categoryId: "exam-cat-2", studentName: "Arafat Hossain",
+      answers: [
+        { questionId: "q-4", answer: "30", correct: true },
+        { questionId: "q-5", answer: "12", correct: true },
+        { questionId: "q-6", answer: "x = 3", correct: true },
+      ],
+      score: 3, total: 3,
+      completedAt: new Date(now.getTime() - 43200000).toISOString(),
+    },
+    {
+      id: "att-5", categoryId: "exam-cat-2", studentName: "Sneha KC",
+      answers: [
+        { questionId: "q-4", answer: "25", correct: false },
+        { questionId: "q-5", answer: "12", correct: true },
+        { questionId: "q-6", answer: "x = 5", correct: false },
+      ],
+      score: 1, total: 3,
+      completedAt: new Date(now.getTime() - 86400000).toISOString(),
+    },
+    {
+      id: "att-6", categoryId: "exam-cat-3", studentName: "Bikram Adhikari",
+      answers: [
+        { questionId: "q-7", answer: "Courageous", correct: true },
+        { questionId: "q-8", answer: "Happiness", correct: true },
+        { questionId: "q-9", answer: "I want to join cadet academy to become a strong leader and serve my country with pride and dedication.", correct: true },
+      ],
+      score: 3, total: 3,
+      completedAt: new Date(now.getTime() - 7200000).toISOString(),
+    },
+  ];
+}
+
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -222,7 +288,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [completedItems, setCompletedItems] = useState<string[]>([]);
   const [examCategories, setExamCategories] = useState<ExamCategory[]>(createSeedExamCategories);
   const [questions, setQuestions] = useState<Question[]>(createSeedQuestions);
-  const [attempts, setAttempts] = useState<ExamAttempt[]>([]);
+  const [attempts, setAttempts] = useState<ExamAttempt[]>(createSeedAttempts);
 
   const toggleItemComplete = useCallback((itemId: string) => {
     setCompletedItems((prev) =>

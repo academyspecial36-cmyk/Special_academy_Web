@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Pencil, Trash2, Printer, HelpCircle, FileQuestion } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Printer, HelpCircle, FileQuestion, BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,6 +127,11 @@ export default function AdminExamDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href={`/dashboard/exams/${categoryId}/results`}>
+                <BarChart3 className="w-4 h-4 mr-2" /> Results
+              </Link>
+            </Button>
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="w-4 h-4 mr-2" /> Print PDF
             </Button>
