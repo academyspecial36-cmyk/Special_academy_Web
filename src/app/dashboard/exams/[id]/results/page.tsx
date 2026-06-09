@@ -240,7 +240,7 @@ export default function AdminExamResultsPage() {
                         )}
                       </summary>
                       <div className="mt-2 space-y-2 pl-4">
-                        {attempt.answers.map((ans, ai) => {
+                        {(attempt.answers || []).map((ans, ai) => {
                           const question = categoryQuestions.find((q) => q.id === ans.questionId);
                           if (!question) return null;
                           return (

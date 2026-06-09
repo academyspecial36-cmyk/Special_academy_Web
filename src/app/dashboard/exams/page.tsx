@@ -46,22 +46,22 @@ export default function AdminExamsPage() {
 
   function handleAdd(data: Record<string, string>) {
     addExamCategory({ name: data.name, description: data.description, color: data.color });
+    setShowAdd(false);
     toast.success("Exam category added");
-    console.log("Exam category added:", data);
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!editing) return;
     updateExamCategory(editing.id, { name: data.name, description: data.description, color: data.color });
+    setEditing(null);
     toast.success("Exam category updated");
-    console.log("Exam category updated:", data);
   }
 
   function handleDelete() {
     if (!deleting) return;
     deleteExamCategory(deleting.id);
+    setDeleting(null);
     toast.success("Exam category deleted");
-    console.log("Exam category deleted:", deleting.id);
   }
 
   return (
