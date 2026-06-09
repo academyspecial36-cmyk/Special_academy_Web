@@ -126,3 +126,32 @@ export interface Subcategory {
   hidden: boolean;
   items: Item[];
 }
+
+export interface ExamCategory {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  createdAt: string;
+}
+
+export interface Question {
+  id: string;
+  categoryId: string;
+  type: "mcq" | "subjective";
+  question: string;
+  options: string[];
+  answer: string;
+  explanation: string;
+  createdAt: string;
+}
+
+export interface ExamAttempt {
+  id: string;
+  categoryId: string;
+  studentName: string;
+  answers: { questionId: string; answer: string; correct: boolean }[];
+  score: number;
+  total: number;
+  completedAt: string;
+}

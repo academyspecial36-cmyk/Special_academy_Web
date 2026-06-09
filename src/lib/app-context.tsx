@@ -6,7 +6,7 @@ import {
   facultyMembers as initialFaculty,
 } from "@/mock";
 import { NOTICE_CATEGORIES as initialNoticeCats, COURSE_CATEGORIES as initialCourseCats } from "@/constants";
-import { FacultyMember, Subcategory, Item, Course } from "@/types";
+import { FacultyMember, Subcategory, Item, Course, ExamCategory, Question, ExamAttempt } from "@/types";
 import { courses } from "@/mock";
 
 interface FAQ {
@@ -73,6 +73,16 @@ interface AppContextValue {
   addItem: (subcategoryId: string, item: Omit<Item, "id" | "createdAt">) => void;
   updateItem: (subcategoryId: string, itemId: string, data: Partial<Item>) => void;
   deleteItem: (subcategoryId: string, itemId: string) => void;
+  examCategories: ExamCategory[];
+  questions: Question[];
+  attempts: ExamAttempt[];
+  addExamCategory: (cat: Omit<ExamCategory, "id" | "createdAt">) => void;
+  updateExamCategory: (id: string, data: Partial<ExamCategory>) => void;
+  deleteExamCategory: (id: string) => void;
+  addQuestion: (q: Omit<Question, "id" | "createdAt">) => void;
+  updateQuestion: (id: string, data: Partial<Question>) => void;
+  deleteQuestion: (id: string) => void;
+  addAttempt: (a: Omit<ExamAttempt, "id" | "completedAt">) => void;
 }
 
 function generateId() {
@@ -175,6 +185,29 @@ function createSeedSubcategories(): Subcategory[] {
   ];
 }
 
+function createSeedExamCategories(): ExamCategory[] {
+  return [
+    { id: "exam-cat-1", name: "General Knowledge", description: "Test your knowledge of history, geography, science and current affairs.", color: "bg-emerald-100 text-emerald-800", createdAt: new Date().toISOString() },
+    { id: "exam-cat-2", name: "Mathematics", description: "Arithmetic, algebra, geometry and data interpretation.", color: "bg-blue-100 text-blue-800", createdAt: new Date().toISOString() },
+    { id: "exam-cat-3", name: "English", description: "Grammar, vocabulary, comprehension and writing skills.", color: "bg-amber-100 text-amber-800", createdAt: new Date().toISOString() },
+  ];
+}
+
+function createSeedQuestions(): Question[] {
+  const now = new Date().toISOString();
+  return [
+    { id: "q-1", categoryId: "exam-cat-1", type: "mcq", question: "What is the capital of Nepal?", options: ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur"], answer: "Kathmandu", explanation: "Kathmandu is the capital and largest city of Nepal.", createdAt: now },
+    { id: "q-2", categoryId: "exam-cat-1", type: "mcq", question: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: "Mars", explanation: "Mars appears reddish due to iron oxide on its surface.", createdAt: now },
+    { id: "q-3", categoryId: "exam-cat-1", type: "subjective", question: "Explain the importance of discipline in a cadet's life.", options: [], answer: "Discipline is crucial for cadets as it builds character, instills punctuality, and develops leadership qualities necessary for military service.", explanation: "Discipline forms the foundation of cadet training.", createdAt: now },
+    { id: "q-4", categoryId: "exam-cat-2", type: "mcq", question: "What is 15% of 200?", options: ["25", "30", "35", "40"], answer: "30", explanation: "15% of 200 = (15/100) × 200 = 30.", createdAt: now },
+    { id: "q-5", categoryId: "exam-cat-2", type: "mcq", question: "What is the square root of 144?", options: ["10", "11", "12", "13"], answer: "12", explanation: "12 × 12 = 144.", createdAt: now },
+    { id: "q-6", categoryId: "exam-cat-2", type: "subjective", question: "Solve: 5x + 3 = 18. Find x.", options: [], answer: "x = 3", explanation: "5x + 3 = 18 → 5x = 15 → x = 3.", createdAt: now },
+    { id: "q-7", categoryId: "exam-cat-3", type: "mcq", question: "What is the synonym of 'Brave'?", options: ["Cowardly", "Courageous", "Timid", "Weak"], answer: "Courageous", explanation: "Brave and courageous are synonyms.", createdAt: now },
+    { id: "q-8", categoryId: "exam-cat-3", type: "mcq", question: "Which of the following is a noun?", options: ["Run", "Beautiful", "Happiness", "Quickly"], answer: "Happiness", explanation: "Happiness is a noun representing a state of being.", createdAt: now },
+    { id: "q-9", categoryId: "exam-cat-3", type: "subjective", question: "Write a short paragraph about your aspirations to join the cadet academy.", options: [], answer: "Model answer: I aspire to join the cadet academy to develop leadership skills, build character, and serve my nation with honor and discipline.", explanation: "Answers should reflect genuine motivation and understanding of cadet life.", createdAt: now },
+  ];
+}
+
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -187,6 +220,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [subcategories, setSubcategories] = useState<Subcategory[]>(createSeedSubcategories);
   const [completedItems, setCompletedItems] = useState<string[]>([]);
+  const [examCategories, setExamCategories] = useState<ExamCategory[]>(createSeedExamCategories);
+  const [questions, setQuestions] = useState<Question[]>(createSeedQuestions);
+  const [attempts, setAttempts] = useState<ExamAttempt[]>([]);
 
   const toggleItemComplete = useCallback((itemId: string) => {
     setCompletedItems((prev) =>
@@ -302,6 +338,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const addExamCategory = useCallback((cat: Omit<ExamCategory, "id" | "createdAt">) => {
+    setExamCategories((prev) => [...prev, { ...cat, id: generateId(), createdAt: new Date().toISOString() }]);
+  }, []);
+
+  const updateExamCategory = useCallback((id: string, data: Partial<ExamCategory>) => {
+    setExamCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
+  }, []);
+
+  const deleteExamCategory = useCallback((id: string) => {
+    setExamCategories((prev) => prev.filter((c) => c.id !== id));
+    setQuestions((prev) => prev.filter((q) => q.categoryId !== id));
+  }, []);
+
+  const addQuestion = useCallback((q: Omit<Question, "id" | "createdAt">) => {
+    setQuestions((prev) => [...prev, { ...q, id: generateId(), createdAt: new Date().toISOString() }]);
+  }, []);
+
+  const updateQuestion = useCallback((id: string, data: Partial<Question>) => {
+    setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)));
+  }, []);
+
+  const deleteQuestion = useCallback((id: string) => {
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
+  }, []);
+
+  const addAttempt = useCallback((a: Omit<ExamAttempt, "id" | "completedAt">) => {
+    setAttempts((prev) => [...prev, { ...a, id: generateId(), completedAt: new Date().toISOString() }]);
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -333,6 +398,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addItem,
         updateItem,
         deleteItem,
+        examCategories,
+        questions,
+        attempts,
+        addExamCategory,
+        updateExamCategory,
+        deleteExamCategory,
+        addQuestion,
+        updateQuestion,
+        deleteQuestion,
+        addAttempt,
       }}
     >
       {children}

@@ -17,6 +17,7 @@ import {
   HelpCircle,
   GraduationCap,
   Tags,
+  ClipboardCheck,
   Menu,
   X,
   Search,
@@ -41,6 +42,7 @@ const iconMap: Record<string, React.ElementType> = {
   HelpCircle,
   GraduationCap,
   Tags,
+  ClipboardCheck,
 };
 
 export default function DashboardLayout({
