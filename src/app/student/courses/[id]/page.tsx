@@ -1,0 +1,211 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft, Play, FileText, Lock, Unlock, Clock, BookOpen, CheckCircle, Circle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PreviewModal } from "@/components/ui/preview-modal";
+import { useAppContext } from "@/lib/app-context";
+import { courses } from "@/mock";
+
+export default function StudentCourseDetailPage() {
+  const params = useParams();
+  const courseId = params.id as string;
+  const course = courses.find((c) => c.id === courseId);
+  const { subcategories, completedItems, toggleItemComplete } = useAppContext();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf"; title: string; url: string } | null>(null);
+
+  const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
+
+  const allItems = useMemo(
+    () => courseSubs.flatMap((s) => s.items.filter((item) => !item.hidden)),
+    [courseSubs]
+  );
+
+  const totalItems = allItems.length;
+  const completedCount = allItems.filter((item) => completedItems.includes(item.id)).length;
+  const progress = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+
+  if (!course) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-xl font-bold text-primary mb-2">Course not found</h2>
+        <Button variant="outline" asChild>
+          <Link href="/student/courses">Back to Courses</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/student/courses">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold text-primary">{course.title}</h1>
+          <p className="text-sm text-muted">{course.category} · {course.duration} · {course.classLevel}</p>
+        </div>
+      </div>
+
+      {totalItems > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-primary">Course Progress</span>
+              <span className="text-sm text-muted">{completedCount}/{totalItems} items · {progress}%</span>
+            </div>
+            <div className="w-full h-2.5 bg-accent rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-secondary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {courseSubs.length === 0 ? (
+        <div className="text-center py-16">
+          <BookOpen className="w-12 h-12 text-muted mx-auto mb-3" />
+          <h3 className="font-semibold text-primary mb-1">No content available yet</h3>
+          <p className="text-sm text-muted">Course content is being prepared. Check back later.</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-5">
+          {courseSubs.map((sub, i) => (
+            <motion.div
+              key={sub.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <Card className="overflow-hidden">
+                <div className="relative h-36">
+                  <Image
+                    src={sub.thumbnail || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&q=80"}
+                    alt={sub.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge variant={sub.status === "free" ? "secondary" : "default"} className="text-[10px]">
+                      {sub.status === "free" ? (
+                        <><Unlock className="w-3 h-3 mr-1" /> Free</>
+                      ) : (
+                        <><Lock className="w-3 h-3 mr-1" /> Paid</>
+                      )}
+                    </Badge>
+                  </div>
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <h3 className="text-white font-bold text-lg drop-shadow-sm">{sub.title}</h3>
+                  </div>
+                </div>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted mb-3 line-clamp-2">{sub.shortDescription}</p>
+                  <div className="space-y-2">
+                    {sub.items.filter((item) => !item.hidden).map((item) => {
+                      const isLocked = item.status === "paid";
+                      const isCompleted = completedItems.includes(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-2"
+                        >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!isLocked) toggleItemComplete(item.id);
+                            }}
+                            className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
+                              isLocked
+                                ? "text-muted/30 cursor-not-allowed"
+                                : isCompleted
+                                  ? "text-emerald-500"
+                                  : "text-muted hover:text-secondary"
+                            }`}
+                            title={isCompleted ? "Mark as incomplete" : "Mark as complete"}
+                          >
+                            {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (!isLocked) {
+                                setPreviewItem({ type: item.type, title: item.title, url: item.url });
+                                setPreviewOpen(true);
+                              }
+                            }}
+                            className={`flex-1 flex items-center gap-3 p-2.5 rounded-lg transition-colors text-left ${
+                              isLocked
+                                ? "bg-accent/50 cursor-not-allowed opacity-60"
+                                : isCompleted
+                                  ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+                                  : "bg-accent hover:bg-primary/5 cursor-pointer"
+                            }`}
+                          >
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                              item.type === "video" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                            }`}>
+                              {item.type === "video" ? <Play className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-medium truncate ${
+                                  isCompleted ? "text-emerald-700" : "text-primary"
+                                }`}>{item.title}</span>
+                                <Badge variant="outline" className="text-[8px] uppercase px-1">{item.type}</Badge>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {item.duration && (
+                                  <span className="text-[10px] text-muted flex items-center gap-0.5">
+                                    <Clock className="w-3 h-3" /> {item.duration}
+                                  </span>
+                                )}
+                                {item.status === "free" ? (
+                                  <span className="text-[10px] text-emerald-600 font-medium">Free</span>
+                                ) : (
+                                  <span className="text-[10px] text-amber-600 font-medium flex items-center gap-0.5">
+                                    <Lock className="w-3 h-3" /> Premium
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            {isLocked ? (
+                              <Lock className="w-4 h-4 text-muted shrink-0" />
+                            ) : (
+                              <Play className="w-4 h-4 text-secondary shrink-0" />
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      <PreviewModal
+        open={previewOpen}
+        onClose={() => { setPreviewOpen(false); setPreviewItem(null); }}
+        type={previewItem?.type || "video"}
+        title={previewItem?.title || ""}
+        url={previewItem?.url || ""}
+      />
+    </div>
+  );
+}

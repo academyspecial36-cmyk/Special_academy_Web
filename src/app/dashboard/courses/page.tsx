@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Search, Plus, Pencil, Trash2, Star } from "lucide-react";
+import Link from "next/link";
+import { Search, Plus, Pencil, Trash2, Star, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -133,25 +134,37 @@ export default function DashboardCoursesPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <Card className="overflow-hidden">
-              <div className="relative h-40">
-                <Image src={course.image} alt={course.title} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  {course.isPopular && (
-                    <Badge className="bg-secondary text-white border-0 text-[10px]">
-                      <Star className="w-3 h-3 mr-1 fill-white" />
-                      Popular
-                    </Badge>
-                  )}
+            <Card className="overflow-hidden group">
+              <Link href={`/dashboard/courses/${course.id}`}>
+                <div className="relative h-40">
+                  <Image src={course.image} alt={course.title} fill className="object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    {course.isPopular && (
+                      <Badge className="bg-secondary text-white border-0 text-[10px]">
+                        <Star className="w-3 h-3 mr-1 fill-white" />
+                        Popular
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+                    <Badge className="bg-white/90 text-primary border-0 text-[10px]">{course.category}</Badge>
+                    <span className="text-white font-bold text-sm">{course.price}</span>
+                  </div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <span className="text-white text-xs font-medium bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                      Manage Content
+                    </span>
+                  </div>
                 </div>
-                <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-                  <Badge className="bg-white/90 text-primary border-0 text-[10px]">{course.category}</Badge>
-                  <span className="text-white font-bold text-sm">{course.price}</span>
-                </div>
-              </div>
+              </Link>
               <CardContent className="p-4">
-                <h3 className="font-semibold text-primary text-sm mb-1">{course.title}</h3>
+                <Link href={`/dashboard/courses/${course.id}`} className="group/title">
+                  <h3 className="font-semibold text-primary text-sm mb-1 group-hover/title:text-secondary transition-colors inline-flex items-center gap-1">
+                    {course.title}
+                    <ChevronRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover/title:opacity-100 group-hover/title:translate-x-0 transition-all" />
+                  </h3>
+                </Link>
                 <p className="text-xs text-muted line-clamp-2 mb-3">{course.description}</p>
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-muted">

@@ -6,7 +6,8 @@ import {
   facultyMembers as initialFaculty,
 } from "@/mock";
 import { NOTICE_CATEGORIES as initialNoticeCats, COURSE_CATEGORIES as initialCourseCats } from "@/constants";
-import { FacultyMember } from "@/types";
+import { FacultyMember, Subcategory, Item, Course } from "@/types";
+import { courses } from "@/mock";
 
 interface FAQ {
   id: string;
@@ -49,6 +50,9 @@ interface AppContextValue {
   courseCategories: string[];
   noticeCategories: NoticeCategory[];
   settings: AppSettings;
+  subcategories: Subcategory[];
+  completedItems: string[];
+  toggleItemComplete: (itemId: string) => void;
   setFaqs: (faqs: FAQ[]) => void;
   addFaq: (faq: Omit<FAQ, "id">) => void;
   updateFaq: (id: string, faq: Partial<FAQ>) => void;
@@ -63,6 +67,12 @@ interface AppContextValue {
   deleteNoticeCategory: (value: string) => void;
   updateNoticeCategory: (value: string, cat: Partial<NoticeCategory>) => void;
   updateSettings: (s: Partial<AppSettings>) => void;
+  addSubcategory: (sub: Omit<Subcategory, "id" | "items" | "createdAt">) => void;
+  updateSubcategory: (id: string, data: Partial<Subcategory>) => void;
+  deleteSubcategory: (id: string) => void;
+  addItem: (subcategoryId: string, item: Omit<Item, "id" | "createdAt">) => void;
+  updateItem: (subcategoryId: string, itemId: string, data: Partial<Item>) => void;
+  deleteItem: (subcategoryId: string, itemId: string) => void;
 }
 
 function generateId() {
@@ -90,6 +100,81 @@ const defaultSettings: AppSettings = {
   },
 };
 
+function createSeedSubcategories(): Subcategory[] {
+  const now = new Date().toISOString();
+  return [
+    {
+      id: "sub-1", courseId: "1", title: "General Knowledge",
+      thumbnail: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=200&q=80",
+      shortDescription: "Comprehensive GK covering history, geography, science and current affairs.",
+      createdAt: now, status: "free", hidden: false,
+      items: [
+        { id: "item-1", subcategoryId: "sub-1", type: "video", title: "GK - Introduction to World Geography", description: "Overview of continents and oceans.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "12:30", createdAt: now, status: "free", hidden: false },
+        { id: "item-2", subcategoryId: "sub-1", type: "pdf", title: "GK Study Notes - Chapter 1", description: "Complete study notes with diagrams.", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", createdAt: now, status: "paid", hidden: false },
+        { id: "item-3", subcategoryId: "sub-1", type: "video", title: "Current Affairs - Monthly Review", description: "Important current events summarized.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "18:45", createdAt: now, status: "free", hidden: false },
+      ],
+    },
+    {
+      id: "sub-2", courseId: "1", title: "English Language",
+      thumbnail: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=200&q=80",
+      shortDescription: "Grammar, vocabulary, comprehension and essay writing skills.",
+      createdAt: now, status: "free", hidden: false,
+      items: [
+        { id: "item-4", subcategoryId: "sub-2", type: "video", title: "English Grammar - Tenses", description: "Complete guide to English tenses.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "15:20", createdAt: now, status: "free", hidden: false },
+        { id: "item-5", subcategoryId: "sub-2", type: "pdf", title: "Vocabulary Builder - 500 Words", description: "Essential vocabulary for cadet exams.", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", createdAt: now, status: "free", hidden: false },
+      ],
+    },
+    {
+      id: "sub-3", courseId: "1", title: "Mathematics",
+      thumbnail: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=200&q=80",
+      shortDescription: "Arithmetic, algebra, geometry and data interpretation.",
+      createdAt: now, status: "paid", hidden: false,
+      items: [
+        { id: "item-6", subcategoryId: "sub-3", type: "video", title: "Algebra Basics", description: "Linear equations and quadratic formulas.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "22:10", createdAt: now, status: "paid", hidden: false },
+        { id: "item-7", subcategoryId: "sub-3", type: "pdf", title: "Math Formula Sheet", description: "All important formulas in one place.", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", createdAt: now, status: "paid", hidden: false },
+      ],
+    },
+    {
+      id: "sub-4", courseId: "1", title: "Intelligence (IQ)",
+      thumbnail: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      shortDescription: "Logical reasoning, pattern recognition and mental ability.",
+      createdAt: now, status: "free", hidden: false,
+      items: [
+        { id: "item-8", subcategoryId: "sub-4", type: "video", title: "IQ Test Strategies", description: "Tips and tricks for IQ tests.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "10:15", createdAt: now, status: "free", hidden: false },
+      ],
+    },
+    {
+      id: "sub-5", courseId: "2", title: "Advanced Mathematics",
+      thumbnail: "https://images.unsplash.com/photo-1509228627152-72ae9ae6848d?w=200&q=80",
+      shortDescription: "Advanced topics for scholarship exams.",
+      createdAt: now, status: "free", hidden: false,
+      items: [
+        { id: "item-9", subcategoryId: "sub-5", type: "video", title: "Number Systems", description: "Understanding number theory.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "14:30", createdAt: now, status: "free", hidden: false },
+        { id: "item-10", subcategoryId: "sub-5", type: "pdf", title: "Practice Problems Set 1", description: "100 practice problems with solutions.", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", createdAt: now, status: "paid", hidden: false },
+      ],
+    },
+    {
+      id: "sub-6", courseId: "2", title: "English Literature",
+      thumbnail: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=200&q=80",
+      shortDescription: "Literary analysis and advanced comprehension.",
+      createdAt: now, status: "free", hidden: false,
+      items: [
+        { id: "item-11", subcategoryId: "sub-6", type: "video", title: "Poetry Analysis", description: "How to analyze poems effectively.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "20:00", createdAt: now, status: "free", hidden: false },
+      ],
+    },
+    {
+      id: "sub-7", courseId: "3", title: "Science Fundamentals",
+      thumbnail: "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=200&q=80",
+      shortDescription: "Physics, chemistry and biology fundamentals.",
+      createdAt: now, status: "free", hidden: false,
+      items: [
+        { id: "item-12", subcategoryId: "sub-7", type: "video", title: "Introduction to Physics", description: "Basic concepts of motion and force.", url: "https://www.youtube.com/embed/dQw4w9WgXcQ", duration: "16:40", createdAt: now, status: "free", hidden: false },
+        { id: "item-13", subcategoryId: "sub-7", type: "pdf", title: "Science Lab Manual", description: "Lab experiments and procedures.", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf", createdAt: now, status: "free", hidden: false },
+      ],
+    },
+  ];
+}
+
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -100,6 +185,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [courseCategories, setCourseCategories] = useState<string[]>(initialCourseCats.filter((c) => c !== "All"));
   const [noticeCategories, setNoticeCategories] = useState<NoticeCategory[]>(initialNoticeCats);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>(createSeedSubcategories);
+  const [completedItems, setCompletedItems] = useState<string[]>([]);
+
+  const toggleItemComplete = useCallback((itemId: string) => {
+    setCompletedItems((prev) =>
+      prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]
+    );
+  }, []);
 
   const addFaq = useCallback((faq: Omit<FAQ, "id">) => {
     setFaqs((prev) => [...prev, { id: generateId(), ...faq }]);
@@ -158,6 +251,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, ...s }));
   }, []);
 
+  const addSubcategory = useCallback((sub: Omit<Subcategory, "id" | "items" | "createdAt">) => {
+    const newSub: Subcategory = {
+      ...sub,
+      id: generateId(),
+      items: [],
+      createdAt: new Date().toISOString(),
+    };
+    setSubcategories((prev) => [...prev, newSub]);
+  }, []);
+
+  const updateSubcategory = useCallback((id: string, data: Partial<Subcategory>) => {
+    setSubcategories((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
+  }, []);
+
+  const deleteSubcategory = useCallback((id: string) => {
+    setSubcategories((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  const addItem = useCallback((subcategoryId: string, item: Omit<Item, "id" | "createdAt">) => {
+    const newItem: Item = {
+      ...item,
+      id: generateId(),
+      createdAt: new Date().toISOString(),
+    };
+    setSubcategories((prev) =>
+      prev.map((s) =>
+        s.id === subcategoryId ? { ...s, items: [...s.items, newItem] } : s
+      )
+    );
+  }, []);
+
+  const updateItem = useCallback((subcategoryId: string, itemId: string, data: Partial<Item>) => {
+    setSubcategories((prev) =>
+      prev.map((s) =>
+        s.id === subcategoryId
+          ? { ...s, items: s.items.map((item) => (item.id === itemId ? { ...item, ...data } : item)) }
+          : s
+      )
+    );
+  }, []);
+
+  const deleteItem = useCallback((subcategoryId: string, itemId: string) => {
+    setSubcategories((prev) =>
+      prev.map((s) =>
+        s.id === subcategoryId
+          ? { ...s, items: s.items.filter((item) => item.id !== itemId) }
+          : s
+      )
+    );
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -180,6 +324,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteNoticeCategory,
         updateNoticeCategory,
         updateSettings,
+        subcategories,
+        completedItems,
+        toggleItemComplete,
+        addSubcategory,
+        updateSubcategory,
+        deleteSubcategory,
+        addItem,
+        updateItem,
+        deleteItem,
       }}
     >
       {children}
