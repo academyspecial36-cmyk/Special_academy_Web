@@ -2,16 +2,36 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, Filter, Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { students, courses } from "@/mock";
+import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
+import { DeleteModal } from "@/components/ui/delete-modal";
+import { students as initialStudents, courses } from "@/mock";
+import type { Student } from "@/types";
+
+const fields: FieldConfig[] = [
+  { name: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. John Doe" },
+  { name: "email", label: "Email", type: "email", required: true, placeholder: "john@example.com" },
+  { name: "phone", label: "Phone", type: "tel", required: true, placeholder: "98XXXXXXXX" },
+  { name: "class", label: "Class", type: "text", required: true, placeholder: "e.g. Class 8" },
+  { name: "status", label: "Status", type: "select", required: true, options: [
+    { label: "Active", value: "active" },
+    { label: "Inactive", value: "inactive" },
+  ]},
+];
 
 export default function StudentsPage() {
+  const [students, setStudents] = useState<Student[]>(initialStudents);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selected, setSelected] = useState<Student | null>(null);
 
   const filtered = useMemo(() => {
     return students.filter((s) => {
@@ -21,7 +41,50 @@ export default function StudentsPage() {
       const matchesStatus = statusFilter === "all" || s.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [search, statusFilter]);
+  }, [search, statusFilter, students]);
+
+  function handleAdd(data: Record<string, string>) {
+    const newStudent: Student = {
+      id: `student-${Date.now()}`,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      class: data.class,
+      status: data.status as "active" | "inactive",
+      enrolledCourses: [],
+      joinDate: new Date().toISOString().split("T")[0],
+    };
+    setStudents((prev) => [newStudent, ...prev]);
+    setAddOpen(false);
+    console.log("Student added:", newStudent);
+    toast.success("Student added successfully");
+  }
+
+  function handleEdit(data: Record<string, string>) {
+    if (!selected) return;
+    const updated: Student = {
+      ...selected,
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      class: data.class,
+      status: data.status as "active" | "inactive",
+    };
+    setStudents((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    setEditOpen(false);
+    setSelected(null);
+    console.log("Student updated:", updated);
+    toast.success("Student updated successfully");
+  }
+
+  function handleDelete() {
+    if (!selected) return;
+    setStudents((prev) => prev.filter((s) => s.id !== selected.id));
+    setDeleteOpen(false);
+    setSelected(null);
+    console.log("Student deleted:", selected.id);
+    toast.success("Student deleted successfully");
+  }
 
   return (
     <div className="space-y-6">
@@ -30,13 +93,12 @@ export default function StudentsPage() {
           <h1 className="text-2xl font-bold text-primary">Students</h1>
           <p className="text-sm text-muted">Manage enrolled students and their details.</p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Student
         </Button>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -67,7 +129,6 @@ export default function StudentsPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -125,10 +186,16 @@ export default function StudentsPage() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
+                        <button
+                          onClick={() => { setSelected(student); setEditOpen(true); }}
+                          className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                        >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
+                        <button
+                          onClick={() => { setSelected(student); setDeleteOpen(true); }}
+                          className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -146,6 +213,39 @@ export default function StudentsPage() {
           )}
         </CardContent>
       </Card>
+
+      <FormModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add Student"
+        fields={fields}
+        onSubmit={handleAdd}
+        submitLabel="Add Student"
+      />
+
+      <FormModal
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        title="Edit Student"
+        fields={fields}
+        initialValues={selected ? {
+          name: selected.name,
+          email: selected.email,
+          phone: selected.phone,
+          class: selected.class,
+          status: selected.status,
+        } : undefined}
+        onSubmit={handleEdit}
+        submitLabel="Update Student"
+      />
+
+      <DeleteModal
+        open={deleteOpen}
+        onClose={() => { setDeleteOpen(false); setSelected(null); }}
+        onConfirm={handleDelete}
+        title="Delete Student?"
+        message={`Are you sure you want to delete "${selected?.name}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

@@ -3,18 +3,86 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Plus, Star, Pencil, Trash2, Trophy } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { testimonials } from "@/mock";
+import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
+import { DeleteModal } from "@/components/ui/delete-modal";
+import { testimonials as initialTestimonials } from "@/mock";
+import type { Testimonial } from "@/types";
+
+const fields: FieldConfig[] = [
+  { name: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. John Doe" },
+  { name: "role", label: "Role", type: "select", required: true, options: [
+    { label: "Student", value: "student" },
+    { label: "Parent", value: "parent" },
+    { label: "Cadet", value: "cadet" },
+  ]},
+  { name: "content", label: "Testimonial Content", type: "textarea", required: true, placeholder: "Write the testimonial..." },
+  { name: "rating", label: "Rating (1-5)", type: "number", required: true, placeholder: "5" },
+  { name: "achievement", label: "Achievement (optional)", type: "text", placeholder: "e.g. Secured top rank in XYZ" },
+  { name: "class", label: "Class (optional)", type: "text", placeholder: "e.g. Class 10" },
+  { name: "image", label: "Image URL (optional)", type: "url", placeholder: "https://..." },
+];
 
 export default function DashboardTestimonialsPage() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
   const [search, setSearch] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selected, setSelected] = useState<Testimonial | null>(null);
 
   const filtered = testimonials.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  function handleAdd(data: Record<string, string>) {
+    const newTestimonial: Testimonial = {
+      id: `testimonial-${Date.now()}`,
+      name: data.name,
+      role: data.role as Testimonial["role"],
+      content: data.content,
+      rating: Math.min(5, Math.max(1, parseInt(data.rating) || 5)),
+      achievement: data.achievement || undefined,
+      class: data.class || undefined,
+      image: data.image || undefined,
+    };
+    setTestimonials((prev) => [newTestimonial, ...prev]);
+    setAddOpen(false);
+    console.log("Testimonial added:", newTestimonial);
+    toast.success("Testimonial added successfully");
+  }
+
+  function handleEdit(data: Record<string, string>) {
+    if (!selected) return;
+    const updated: Testimonial = {
+      ...selected,
+      name: data.name,
+      role: data.role as Testimonial["role"],
+      content: data.content,
+      rating: Math.min(5, Math.max(1, parseInt(data.rating) || 5)),
+      achievement: data.achievement || undefined,
+      class: data.class || undefined,
+      image: data.image || undefined,
+    };
+    setTestimonials((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    setEditOpen(false);
+    setSelected(null);
+    console.log("Testimonial updated:", updated);
+    toast.success("Testimonial updated successfully");
+  }
+
+  function handleDelete() {
+    if (!selected) return;
+    setTestimonials((prev) => prev.filter((t) => t.id !== selected.id));
+    setDeleteOpen(false);
+    setSelected(null);
+    console.log("Testimonial deleted:", selected.id);
+    toast.success("Testimonial deleted successfully");
+  }
 
   return (
     <div className="space-y-6">
@@ -23,7 +91,7 @@ export default function DashboardTestimonialsPage() {
           <h1 className="text-2xl font-bold text-primary">Testimonials</h1>
           <p className="text-sm text-muted">Manage student and parent testimonials.</p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Testimonial
         </Button>
@@ -46,10 +114,16 @@ export default function DashboardTestimonialsPage() {
                     ))}
                   </div>
                   <div className="flex gap-1">
-                    <button className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
+                    <button
+                      onClick={() => { setSelected(t); setEditOpen(true); }}
+                      className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                    >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
+                    <button
+                      onClick={() => { setSelected(t); setDeleteOpen(true); }}
+                      className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -74,6 +148,41 @@ export default function DashboardTestimonialsPage() {
           </motion.div>
         ))}
       </div>
+
+      <FormModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Add Testimonial"
+        fields={fields}
+        onSubmit={handleAdd}
+        submitLabel="Add Testimonial"
+      />
+
+      <FormModal
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        title="Edit Testimonial"
+        fields={fields}
+        initialValues={selected ? {
+          name: selected.name,
+          role: selected.role,
+          content: selected.content,
+          rating: String(selected.rating),
+          achievement: selected.achievement || "",
+          class: selected.class || "",
+          image: selected.image || "",
+        } : undefined}
+        onSubmit={handleEdit}
+        submitLabel="Update Testimonial"
+      />
+
+      <DeleteModal
+        open={deleteOpen}
+        onClose={() => { setDeleteOpen(false); setSelected(null); }}
+        onConfirm={handleDelete}
+        title="Delete Testimonial?"
+        message={`Are you sure you want to delete the testimonial from "${selected?.name}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

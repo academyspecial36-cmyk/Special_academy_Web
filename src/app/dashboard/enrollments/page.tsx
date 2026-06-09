@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, CheckCircle2, XCircle, Clock, Eye } from "lucide-react";
+import { Search, Filter, CheckCircle2, XCircle, Clock, Eye, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+import { DeleteModal } from "@/components/ui/delete-modal";
 
 interface Enrollment {
   id: string;
@@ -18,7 +21,7 @@ interface Enrollment {
   status: "pending" | "approved" | "rejected";
 }
 
-const enrollments: Enrollment[] = [
+const initialEnrollments: Enrollment[] = [
   { id: "1", name: "Arafat Hossain", email: "arafat@example.com", course: "Cadet Entrance Preparation", class: "Class 8", date: "2025-12-01", status: "pending" },
   { id: "2", name: "Tasnim Rahman", email: "tasnim@example.com", course: "Scholarship Preparation", class: "Class 6", date: "2025-12-02", status: "approved" },
   { id: "3", name: "Sadia Islam", email: "sadia@example.com", course: "Leadership Development", class: "Class 7", date: "2025-12-03", status: "pending" },
@@ -27,8 +30,12 @@ const enrollments: Enrollment[] = [
 ];
 
 export default function EnrollmentsPage() {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialEnrollments);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [viewOpen, setViewOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selected, setSelected] = useState<Enrollment | null>(null);
 
   const filtered = enrollments.filter((e) => {
     const matchesSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.course.toLowerCase().includes(search.toLowerCase());
@@ -41,6 +48,15 @@ export default function EnrollmentsPage() {
     approved: { label: "Approved", variant: "success" as const, icon: CheckCircle2 },
     rejected: { label: "Rejected", variant: "destructive" as const, icon: XCircle },
   };
+
+  function handleDelete() {
+    if (!selected) return;
+    setEnrollments((prev) => prev.filter((e) => e.id !== selected.id));
+    setDeleteOpen(false);
+    setSelected(null);
+    console.log("Enrollment deleted:", selected.id);
+    toast.success("Enrollment deleted successfully");
+  }
 
   return (
     <div className="space-y-6">
@@ -111,9 +127,20 @@ export default function EnrollmentsPage() {
                         </Badge>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <button className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => { setSelected(enrollment); setViewOpen(true); }}
+                            className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => { setSelected(enrollment); setDeleteOpen(true); }}
+                            className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </motion.tr>
                   );
@@ -123,6 +150,54 @@ export default function EnrollmentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Modal open={viewOpen} onClose={() => { setViewOpen(false); setSelected(null); }} title="Enrollment Details">
+        {selected && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-medium text-muted">Full Name</label>
+                <p className="text-sm text-primary font-medium">{selected.name}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">Email</label>
+                <p className="text-sm text-primary">{selected.email}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">Course</label>
+                <p className="text-sm text-primary">{selected.course}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">Class</label>
+                <p className="text-sm text-primary">{selected.class}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">Date</label>
+                <p className="text-sm text-primary">{selected.date}</p>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted">Status</label>
+                <div className="mt-1">
+                  <Badge variant={statusConfig[selected.status].variant} className="text-[10px] capitalize">
+                    {statusConfig[selected.status].label}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => { setViewOpen(false); setSelected(null); }}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <DeleteModal
+        open={deleteOpen}
+        onClose={() => { setDeleteOpen(false); setSelected(null); }}
+        onConfirm={handleDelete}
+        title="Delete Enrollment?"
+        message={`Are you sure you want to delete the enrollment for "${selected?.name}"? This action cannot be undone.`}
+      />
     </div>
   );
 }

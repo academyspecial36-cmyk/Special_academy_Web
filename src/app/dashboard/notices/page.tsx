@@ -3,16 +3,40 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Plus, Pin, Pencil, Trash2, Calendar } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { notices } from "@/mock";
+import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
+import { DeleteModal } from "@/components/ui/delete-modal";
+import { notices as initialNotices } from "@/mock";
 import { NOTICE_CATEGORIES } from "@/constants";
 import { formatShortDate } from "@/lib/utils";
+import type { Notice } from "@/types";
+
+const fields: FieldConfig[] = [
+  { name: "title", label: "Title", type: "text", required: true, placeholder: "Notice title" },
+  { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
+  { name: "category", label: "Category", type: "select", required: true, options: NOTICE_CATEGORIES.map((c) => ({ label: c.label, value: c.value })) },
+  { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
+];
+
+const editFields: FieldConfig[] = [
+  { name: "title", label: "Title", type: "text", required: true, placeholder: "Notice title" },
+  { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
+  { name: "category", label: "Category", type: "select", required: true, options: NOTICE_CATEGORIES.map((c) => ({ label: c.label, value: c.value })) },
+  { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
+  { name: "isPinned", label: "Pinned", type: "select", options: [{ label: "No", value: "false" }, { label: "Yes", value: "true" }] },
+];
 
 export default function DashboardNoticesPage() {
+  const [notices, setNotices] = useState<Notice[]>(initialNotices);
   const [search, setSearch] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selected, setSelected] = useState<Notice | null>(null);
 
   const filtered = notices.filter((n) =>
     n.title.toLowerCase().includes(search.toLowerCase())
@@ -23,6 +47,48 @@ export default function DashboardNoticesPage() {
     return cat?.color || "bg-slate-100 text-slate-800";
   };
 
+  function handleAdd(data: Record<string, string>) {
+    const newNotice: Notice = {
+      id: `notice-${Date.now()}`,
+      title: data.title,
+      content: data.content,
+      category: data.category as Notice["category"],
+      author: data.author,
+      date: new Date().toISOString(),
+      isPinned: false,
+    };
+    setNotices((prev) => [newNotice, ...prev]);
+    setAddOpen(false);
+    console.log("Notice added:", newNotice);
+    toast.success("Notice published successfully");
+  }
+
+  function handleEdit(data: Record<string, string>) {
+    if (!selected) return;
+    const updated: Notice = {
+      ...selected,
+      title: data.title,
+      content: data.content,
+      category: data.category as Notice["category"],
+      author: data.author,
+      isPinned: data.isPinned === "true",
+    };
+    setNotices((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+    setEditOpen(false);
+    setSelected(null);
+    console.log("Notice updated:", updated);
+    toast.success("Notice updated successfully");
+  }
+
+  function handleDelete() {
+    if (!selected) return;
+    setNotices((prev) => prev.filter((n) => n.id !== selected.id));
+    setDeleteOpen(false);
+    setSelected(null);
+    console.log("Notice deleted:", selected.id);
+    toast.success("Notice deleted successfully");
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -30,7 +96,7 @@ export default function DashboardNoticesPage() {
           <h1 className="text-2xl font-bold text-primary">Notices</h1>
           <p className="text-sm text-muted">Publish and manage academy notices.</p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Publish Notice
         </Button>
@@ -77,10 +143,16 @@ export default function DashboardNoticesPage() {
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
-                    <button className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
+                    <button
+                      onClick={() => { setSelected(notice); setEditOpen(true); }}
+                      className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                    >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
+                    <button
+                      onClick={() => { setSelected(notice); setDeleteOpen(true); }}
+                      className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                    >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -90,6 +162,39 @@ export default function DashboardNoticesPage() {
           </motion.div>
         ))}
       </div>
+
+      <FormModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        title="Publish Notice"
+        fields={fields}
+        onSubmit={handleAdd}
+        submitLabel="Publish"
+      />
+
+      <FormModal
+        open={editOpen}
+        onClose={() => { setEditOpen(false); setSelected(null); }}
+        title="Edit Notice"
+        fields={editFields}
+        initialValues={selected ? {
+          title: selected.title,
+          content: selected.content,
+          category: selected.category,
+          author: selected.author,
+          isPinned: selected.isPinned ? "true" : "false",
+        } : undefined}
+        onSubmit={handleEdit}
+        submitLabel="Update Notice"
+      />
+
+      <DeleteModal
+        open={deleteOpen}
+        onClose={() => { setDeleteOpen(false); setSelected(null); }}
+        onConfirm={handleDelete}
+        title="Delete Notice?"
+        message={`Are you sure you want to delete "${selected?.title}"? This action cannot be undone.`}
+      />
     </div>
   );
 }
