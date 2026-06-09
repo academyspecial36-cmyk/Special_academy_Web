@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { testimonials as initialTestimonials } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { Testimonial } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -28,7 +28,7 @@ const fields: FieldConfig[] = [
 ];
 
 export default function DashboardTestimonialsPage() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
+  const { testimonials, addTestimonial, updateTestimonial, deleteTestimonial } = useAppContext();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -40,8 +40,7 @@ export default function DashboardTestimonialsPage() {
   );
 
   function handleAdd(data: Record<string, string>) {
-    const newTestimonial: Testimonial = {
-      id: `testimonial-${Date.now()}`,
+    addTestimonial({
       name: data.name,
       role: data.role as Testimonial["role"],
       content: data.content,
@@ -49,17 +48,14 @@ export default function DashboardTestimonialsPage() {
       achievement: data.achievement || undefined,
       class: data.class || undefined,
       image: data.image || undefined,
-    };
-    setTestimonials((prev) => [newTestimonial, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Testimonial added:", newTestimonial);
     toast.success("Testimonial added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Testimonial = {
-      ...selected,
+    updateTestimonial(selected.id, {
       name: data.name,
       role: data.role as Testimonial["role"],
       content: data.content,
@@ -67,20 +63,17 @@ export default function DashboardTestimonialsPage() {
       achievement: data.achievement || undefined,
       class: data.class || undefined,
       image: data.image || undefined,
-    };
-    setTestimonials((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Testimonial updated:", updated);
     toast.success("Testimonial updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setTestimonials((prev) => prev.filter((t) => t.id !== selected.id));
+    deleteTestimonial(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Testimonial deleted:", selected.id);
     toast.success("Testimonial deleted successfully");
   }
 

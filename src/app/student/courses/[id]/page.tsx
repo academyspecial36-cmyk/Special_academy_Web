@@ -11,13 +11,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModal } from "@/components/ui/preview-modal";
 import { useAppContext } from "@/lib/app-context";
-import { courses } from "@/mock";
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
   const courseId = params.id as string;
+  const { subcategories, completedItems, toggleItemComplete, courses } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
-  const { subcategories, completedItems, toggleItemComplete } = useAppContext();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf"; title: string; url: string } | null>(null);
 

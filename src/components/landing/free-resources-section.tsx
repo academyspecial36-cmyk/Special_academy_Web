@@ -9,10 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PreviewModal } from "@/components/ui/preview-modal";
 import { useAppContext } from "@/lib/app-context";
-import { courses } from "@/mock";
 
 export function FreeResourcesSection() {
-  const { subcategories } = useAppContext();
+  const { subcategories, courses } = useAppContext();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf"; title: string; url: string } | null>(null);
 

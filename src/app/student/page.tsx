@@ -15,11 +15,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
-import { notices, courses } from "@/mock";
 import { formatShortDate } from "@/lib/utils";
 
 export default function StudentDashboardPage() {
-  const { subcategories, completedItems } = useAppContext();
+  const { subcategories, completedItems, notices, courses } = useAppContext();
   const enrolledCourses = courses.slice(0, 3);
 
   function getCourseProgress(courseId: string) {

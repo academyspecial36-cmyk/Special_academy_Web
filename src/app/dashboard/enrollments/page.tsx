@@ -10,27 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { useAppContext } from "@/lib/app-context";
 
 interface Enrollment {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
-  course: string;
-  class: string;
-  date: string;
+  interestedCourse: string;
+  currentClass: string;
+  createdAt: string;
   status: "pending" | "approved" | "rejected";
 }
 
-const initialEnrollments: Enrollment[] = [
-  { id: "1", name: "Arafat Hossain", email: "arafat@example.com", course: "Cadet Entrance Preparation", class: "Class 8", date: "2025-12-01", status: "pending" },
-  { id: "2", name: "Tasnim Rahman", email: "tasnim@example.com", course: "Scholarship Preparation", class: "Class 6", date: "2025-12-02", status: "approved" },
-  { id: "3", name: "Sadia Islam", email: "sadia@example.com", course: "Leadership Development", class: "Class 7", date: "2025-12-03", status: "pending" },
-  { id: "4", name: "Rafiq Ahmed", email: "rafiq@example.com", course: "Foundation Classes", class: "Class 9", date: "2025-12-04", status: "rejected" },
-  { id: "5", name: "Nusrat Jahan", email: "nusrat@example.com", course: "Spoken English", class: "Class 10", date: "2025-12-05", status: "approved" },
-];
-
 export default function EnrollmentsPage() {
-  const [enrollments, setEnrollments] = useState<Enrollment[]>(initialEnrollments);
+  const { enrollments, deleteEnrollment } = useAppContext();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [viewOpen, setViewOpen] = useState(false);
@@ -38,7 +31,7 @@ export default function EnrollmentsPage() {
   const [selected, setSelected] = useState<Enrollment | null>(null);
 
   const filtered = enrollments.filter((e) => {
-    const matchesSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.course.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = e.fullName.toLowerCase().includes(search.toLowerCase()) || e.interestedCourse.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || e.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -51,10 +44,9 @@ export default function EnrollmentsPage() {
 
   function handleDelete() {
     if (!selected) return;
-    setEnrollments((prev) => prev.filter((e) => e.id !== selected.id));
+    deleteEnrollment(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Enrollment deleted:", selected.id);
     toast.success("Enrollment deleted successfully");
   }
 
@@ -109,17 +101,17 @@ export default function EnrollmentsPage() {
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
-                            {enrollment.name.split(" ").map((n) => n[0]).join("")}
+                            {enrollment.fullName.split(" ").map((n) => n[0]).join("")}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-primary">{enrollment.name}</p>
+                            <p className="text-sm font-medium text-primary">{enrollment.fullName}</p>
                             <p className="text-xs text-muted">{enrollment.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-sm text-muted">{enrollment.course}</td>
-                      <td className="py-4 px-4 text-sm text-muted">{enrollment.class}</td>
-                      <td className="py-4 px-4 text-sm text-muted">{enrollment.date}</td>
+                      <td className="py-4 px-4 text-sm text-muted">{enrollment.interestedCourse}</td>
+                      <td className="py-4 px-4 text-sm text-muted">{enrollment.currentClass}</td>
+                      <td className="py-4 px-4 text-sm text-muted">{enrollment.createdAt}</td>
                       <td className="py-4 px-4">
                         <Badge variant={config.variant} className="text-[10px] capitalize">
                           <StatusIcon className="w-3 h-3 mr-1" />
@@ -157,7 +149,7 @@ export default function EnrollmentsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-medium text-muted">Full Name</label>
-                <p className="text-sm text-primary font-medium">{selected.name}</p>
+                <p className="text-sm text-primary font-medium">{selected.fullName}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Email</label>
@@ -165,15 +157,15 @@ export default function EnrollmentsPage() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Course</label>
-                <p className="text-sm text-primary">{selected.course}</p>
+                <p className="text-sm text-primary">{selected.interestedCourse}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Class</label>
-                <p className="text-sm text-primary">{selected.class}</p>
+                <p className="text-sm text-primary">{selected.currentClass}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Date</label>
-                <p className="text-sm text-primary">{selected.date}</p>
+                <p className="text-sm text-primary">{selected.createdAt}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Status</label>
@@ -196,7 +188,7 @@ export default function EnrollmentsPage() {
         onClose={() => { setDeleteOpen(false); setSelected(null); }}
         onConfirm={handleDelete}
         title="Delete Enrollment?"
-        message={`Are you sure you want to delete the enrollment for "${selected?.name}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete the enrollment for "${selected?.fullName}"? This action cannot be undone.`}
       />
     </div>
   );

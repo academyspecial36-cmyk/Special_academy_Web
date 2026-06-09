@@ -5,16 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Pin, Calendar, X, Bell } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { notices } from "@/mock";
-import { NOTICE_CATEGORIES } from "@/constants";
+import { useAppContext } from "@/lib/app-context";
 import { Notice } from "@/types";
 import { formatDate } from "@/lib/utils";
 
 export default function StudentNoticesPage() {
+  const { notices, noticeCategories } = useAppContext();
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 
   const getCategoryStyle = (category: string) => {
-    const cat = NOTICE_CATEGORIES.find((c) => c.value === category);
+    const cat = noticeCategories.find((c) => c.value === category);
     return cat?.color || "bg-slate-100 text-slate-800";
   };
 
@@ -42,7 +42,7 @@ export default function StudentNoticesPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className={getCategoryStyle(notice.category)}>
-                        {NOTICE_CATEGORIES.find((c) => c.value === notice.category)?.label}
+                        {noticeCategories.find((c) => c.value === notice.category)?.label}
                       </Badge>
                       {notice.isPinned && (
                         <Pin className="w-3.5 h-3.5 text-secondary fill-secondary" />
@@ -88,7 +88,7 @@ export default function StudentNoticesPage() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <Badge className={getCategoryStyle(selectedNotice.category)}>
-                    {NOTICE_CATEGORIES.find((c) => c.value === selectedNotice.category)?.label}
+                    {noticeCategories.find((c) => c.value === selectedNotice.category)?.label}
                   </Badge>
                   <button
                     onClick={() => setSelectedNotice(null)}

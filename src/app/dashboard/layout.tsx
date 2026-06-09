@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -27,8 +27,10 @@ import {
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { DASHBOARD_NAV } from "@/constants";
+import { useAuth } from "@/lib/auth-context";
+import { useAppContext } from "@/lib/app-context";
+import { LandingLoader } from "@/components/landing/landing-loader";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -53,6 +55,29 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading, logout } = useAuth();
+  const { loading } = useAppContext();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) router.replace("/");
+    else if (user.role !== "admin") router.replace("/login");
+  }, [user, isLoading, router]);
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : "AD";
+
+  // if (isLoading) {
+  //   return (
+  //     <div className="min-h-screen bg-accent flex items-center justify-center">
+  //       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  //     </div>
+  //   );
+  // }
+
+  if (!user || user.role !== "admin") return null;
 
   return (
     <div className="min-h-screen bg-accent flex">
@@ -176,7 +201,7 @@ export default function DashboardLayout({
                 className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors"
               >
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                  AD
+                  {initials}
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-muted hidden sm:block" />
               </button>
@@ -189,15 +214,15 @@ export default function DashboardLayout({
                     className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-elevated border border-primary/5 py-1 z-50"
                   >
                     <div className="px-4 py-2 border-b border-primary/5">
-                      <p className="text-sm font-medium text-primary">Admin User</p>
-                      <p className="text-xs text-muted">admin@cadetacademy.edu</p>
+                      <p className="text-sm font-medium text-primary">{user?.name ?? "Admin User"}</p>
+                      <p className="text-xs text-muted">{user?.email ?? "admin@cadetacademy.edu"}</p>
                     </div>
                     <Link href="/dashboard/settings" className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors">
                       Settings
                     </Link>
-                    <Link href="/" className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    <button onClick={logout} className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                       Sign Out
-                    </Link>
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -206,7 +231,9 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="p-4 lg:p-8">{children}</main>
+        <main className="p-4 lg:p-8">
+          {loading ? <LandingLoader /> : children}
+        </main>
       </div>
       <Toaster
         position="top-right"

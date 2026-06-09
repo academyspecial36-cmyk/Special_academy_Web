@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export default function DashboardCategoriesPage() {
     if (newCourseCat.trim()) {
       addCourseCategory(newCourseCat.trim());
       setNewCourseCat("");
+      toast.success("Course category added");
     }
   }
 
@@ -38,6 +40,7 @@ export default function DashboardCategoriesPage() {
       addNoticeCategory({ value: newNoticeValue.trim().toLowerCase().replace(/\s+/g, "-"), label: newNoticeLabel.trim() });
       setNewNoticeValue("");
       setNewNoticeLabel("");
+      toast.success("Notice category added");
     }
   }
 
@@ -50,6 +53,7 @@ export default function DashboardCategoriesPage() {
     if (editLabel.trim()) {
       updateNoticeCategory(value, { label: editLabel.trim() });
       setEditingNotice(null);
+      toast.success("Notice category updated");
     }
   }
 
@@ -83,7 +87,7 @@ export default function DashboardCategoriesPage() {
                 {courseCategories.map((cat) => (
                   <Badge key={cat} variant="secondary" className="gap-2 px-3 py-1.5">
                     {cat}
-                    <button onClick={() => deleteCourseCategory(cat)} className="hover:text-red-600 transition-colors">
+                    <button onClick={() => { deleteCourseCategory(cat); toast.success("Course category deleted"); }} className="hover:text-red-600 transition-colors">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </Badge>
@@ -135,7 +139,7 @@ export default function DashboardCategoriesPage() {
                           <button onClick={() => startEditNotice(cat.value, cat.label)} className="p-1 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => deleteNoticeCategory(cat.value)} className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
+                          <button onClick={() => { deleteNoticeCategory(cat.value); toast.success("Notice category deleted"); }} className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>

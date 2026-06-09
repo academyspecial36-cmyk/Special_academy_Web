@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Star, Quote, Trophy, GraduationCap, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { PageWrapper } from "@/components/shared/page-wrapper";
 import { SectionHeader } from "@/components/ui/section-header";
-import { testimonials } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 const roleIcons = {
   student: User,
@@ -26,6 +26,7 @@ const roleColors = {
 };
 
 export default function TestimonialsPage() {
+  const { testimonials } = useAppContext();
   const [filter, setFilter] = useState<"all" | "student" | "parent" | "cadet">("all");
 
   const filtered = filter === "all" ? testimonials : testimonials.filter((t) => t.role === filter);

@@ -15,7 +15,6 @@ import { SocialLinks } from "./social-links";
 
 export function Footer() {
   const { settings } = useAppContext();
-
   return (
     <footer className="bg-primary text-white/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

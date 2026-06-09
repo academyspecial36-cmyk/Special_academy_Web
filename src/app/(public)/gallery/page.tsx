@@ -6,11 +6,12 @@ import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Images } from "lucide-react";
 import { PageWrapper } from "@/components/shared/page-wrapper";
 import { SectionHeader } from "@/components/ui/section-header";
-import { galleryImages } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 const categories = ["all", "classroom", "training", "facilities", "events"];
 
 export default function GalleryPage() {
+  const { galleryImages } = useAppContext();
   const [filter, setFilter] = useState("all");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 

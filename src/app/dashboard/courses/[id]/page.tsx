@@ -17,7 +17,6 @@ import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { PreviewModal } from "@/components/ui/preview-modal";
 import { useAppContext } from "@/lib/app-context";
-import { courses } from "@/mock";
 import { formatShortDate } from "@/lib/utils";
 
 const subFields: FieldConfig[] = [
@@ -78,9 +77,9 @@ export default function CourseDetailPage() {
   const params = useParams();
   const router = useRouter();
   const courseId = params.id as string;
-  const course = courses.find((c) => c.id === courseId);
 
   const {
+    courses,
     subcategories,
     addSubcategory,
     updateSubcategory,
@@ -89,6 +88,8 @@ export default function CourseDetailPage() {
     updateItem,
     deleteItem,
   } = useAppContext();
+
+  const course = courses.find((c) => c.id === courseId);
 
   const courseSubs = subcategories.filter((s) => s.courseId === courseId);
 

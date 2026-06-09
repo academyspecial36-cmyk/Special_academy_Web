@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { notices, students, courses } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 
 const stats = [
@@ -25,6 +25,7 @@ const stats = [
 ];
 
 export default function DashboardPage() {
+  const { notices, students, courses } = useAppContext();
   return (
     <div className="space-y-8">
       {/* Welcome */}

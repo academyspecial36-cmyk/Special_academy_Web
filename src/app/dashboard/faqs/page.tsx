@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Search, Plus, Pencil, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ export default function DashboardFaqsPage() {
   const [selected, setSelected] = useState<{ id: string; question: string; answer: string } | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const dragNode = useRef<HTMLElement | null>(null);
+  const pendingOrder = useRef<typeof faqs | null>(null);
 
   const filtered = faqs.filter((f) =>
     f.question.toLowerCase().includes(search.toLowerCase())
@@ -52,16 +53,33 @@ export default function DashboardFaqsPage() {
     const [removed] = reordered.splice(dragIndex, 1);
     reordered.splice(targetIndex, 0, removed);
     setFaqs(reordered);
+    pendingOrder.current = reordered;
     setDragIndex(targetIndex);
   }
 
-  function handleDragEnd() {
+  async function handleDragEnd() {
     const item = dragNode.current;
     if (item) {
       item.classList.remove("opacity-50", "ring-2", "ring-secondary", "ring-offset-2");
     }
     setDragIndex(null);
     dragNode.current = null;
+
+    const order = pendingOrder.current;
+    pendingOrder.current = null;
+    if (!order) return;
+
+    const changed: { id: string; sortOrder: number }[] = [];
+    for (let i = 0; i < order.length; i++) {
+      if (order[i].sortOrder !== i) {
+        changed.push({ id: order[i].id, sortOrder: i });
+      }
+    }
+
+    if (changed.length === 0) return;
+
+    await Promise.all(changed.map((faq) => updateFaq(faq.id, { sortOrder: faq.sortOrder })));
+    toast.success("FAQ order updated");
   }
 
   function handleAdd(data: Record<string, string>) {

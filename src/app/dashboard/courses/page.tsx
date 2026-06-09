@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { courses as initialCourses } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { Course } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -33,7 +33,7 @@ const fields: FieldConfig[] = [
 ];
 
 export default function DashboardCoursesPage() {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const { courses, addCourse, updateCourse, deleteCourse } = useAppContext();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -45,8 +45,7 @@ export default function DashboardCoursesPage() {
   );
 
   function handleAdd(data: Record<string, string>) {
-    const newCourse: Course = {
-      id: `course-${Date.now()}`,
+    addCourse({
       title: data.title,
       slug: data.slug,
       description: data.description,
@@ -57,17 +56,14 @@ export default function DashboardCoursesPage() {
       image: data.image || "/placeholder.jpg",
       features: [],
       isPopular: false,
-    };
-    setCourses((prev) => [newCourse, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Course added:", newCourse);
     toast.success("Course added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Course = {
-      ...selected,
+    updateCourse(selected.id, {
       title: data.title,
       slug: data.slug,
       description: data.description,
@@ -76,20 +72,17 @@ export default function DashboardCoursesPage() {
       category: data.category,
       price: data.price || undefined,
       image: data.image || selected.image,
-    };
-    setCourses((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Course updated:", updated);
     toast.success("Course updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setCourses((prev) => prev.filter((c) => c.id !== selected.id));
+    deleteCourse(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Course deleted:", selected.id);
     toast.success("Course deleted successfully");
   }
 

@@ -14,11 +14,13 @@ import {
 import { NAV_ITEMS } from "@/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/lib/app-context";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+   const { settings } = useAppContext();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -63,10 +65,10 @@ export function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="text-primary font-bold text-lg leading-tight tracking-tight">
-                  Special academy
+                 {settings?.academyName}
                 </span>
                 <span className="text-[10px] text-muted leading-tight tracking-wide uppercase">
-                  Excellence Through Discipline
+                 {settings?.tagline}
                 </span>
               </div>
             </Link>

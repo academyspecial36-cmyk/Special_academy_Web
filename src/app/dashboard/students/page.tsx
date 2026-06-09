@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { students as initialStudents, courses } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { Student } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -25,7 +25,7 @@ const fields: FieldConfig[] = [
 ];
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const { students, addStudent, updateStudent, deleteStudent, courses } = useAppContext();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -44,8 +44,7 @@ export default function StudentsPage() {
   }, [search, statusFilter, students]);
 
   function handleAdd(data: Record<string, string>) {
-    const newStudent: Student = {
-      id: `student-${Date.now()}`,
+    addStudent({
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -53,36 +52,30 @@ export default function StudentsPage() {
       status: data.status as "active" | "inactive",
       enrolledCourses: [],
       joinDate: new Date().toISOString().split("T")[0],
-    };
-    setStudents((prev) => [newStudent, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Student added:", newStudent);
     toast.success("Student added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Student = {
-      ...selected,
+    updateStudent(selected.id, {
       name: data.name,
       email: data.email,
       phone: data.phone,
       class: data.class,
       status: data.status as "active" | "inactive",
-    };
-    setStudents((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Student updated:", updated);
     toast.success("Student updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setStudents((prev) => prev.filter((s) => s.id !== selected.id));
+    deleteStudent(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Student deleted:", selected.id);
     toast.success("Student deleted successfully");
   }
 

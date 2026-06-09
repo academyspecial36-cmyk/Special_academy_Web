@@ -3,16 +3,19 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Lock, KeyRound, LogIn, X } from "lucide-react";
+import { Shield, Lock, KeyRound, LogIn, X, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth-context";
+import { getSupabase } from "@/lib/supabase";
 
 export function AdminAuthModal() {
   const router = useRouter();
+  const { login } = useAuth();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"passcode" | "login">("passcode");
   const [passcode, setPasscode] = useState("");
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,7 +28,7 @@ export function AdminAuthModal() {
       setOpen((prev) => !prev);
       setStep("passcode");
       setPasscode("");
-      setUsername("");
+      setEmail("");
       setPassword("");
       setError("");
     }
@@ -40,7 +43,7 @@ export function AdminAuthModal() {
     setOpen(false);
     setStep("passcode");
     setPasscode("");
-    setUsername("");
+    setEmail("");
     setPassword("");
     setError("");
   }
@@ -75,23 +78,19 @@ export function AdminAuthModal() {
     setError("");
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      if (data.success) {
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      if (result.role === "admin") {
         close();
         router.push("/dashboard");
       } else {
-        setError(data.error || "Invalid credentials");
+        await getSupabase()?.auth.signOut();
+        setError("Access denied. Admin account required.");
       }
-    } catch {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.error || "Invalid credentials");
     }
   }
 
@@ -163,13 +162,18 @@ export function AdminAuthModal() {
                 ) : (
                   <form onSubmit={handleLoginSubmit} className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium text-primary mb-1.5 block">Username</label>
-                      <Input
-                        placeholder="Admin username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        autoFocus
-                      />
+                      <label className="text-sm font-medium text-primary mb-1.5 block">Email</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                        <Input
+                          type="email"
+                          placeholder="admin@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          autoFocus
+                        />
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-primary mb-1.5 block">Password</label>
@@ -183,7 +187,7 @@ export function AdminAuthModal() {
                     {error && (
                       <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
                     )}
-                    <Button type="submit" className="w-full" disabled={loading || !username || !password}>
+                    <Button type="submit" className="w-full" disabled={loading || !email || !password}>
                       <LogIn className="w-4 h-4 mr-2" />
                       {loading ? "Signing in..." : "Sign In"}
                     </Button>

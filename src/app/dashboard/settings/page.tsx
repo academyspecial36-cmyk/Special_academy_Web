@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Save, Building2, Mail, Phone, Globe, Upload, Facebook, Youtube, Instagram, Music2 } from "lucide-react";
 import { TikTokIcon } from "@/components/shared/tiktok-icon";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +20,7 @@ export default function SettingsPage() {
 
   function handleSave() {
     updateSettings(form);
+    toast.success("Settings saved");
   }
 
   function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {

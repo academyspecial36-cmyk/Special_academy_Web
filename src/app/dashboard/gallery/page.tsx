@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { galleryImages as initialImages } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { GalleryImage } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -27,7 +27,7 @@ const fields: FieldConfig[] = [
 ];
 
 export default function DashboardGalleryPage() {
-  const [images, setImages] = useState<GalleryImage[]>(initialImages);
+  const { galleryImages: images, addGalleryImage, updateGalleryImage, deleteGalleryImage } = useAppContext();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -39,39 +39,32 @@ export default function DashboardGalleryPage() {
   );
 
   function handleAdd(data: Record<string, string>) {
-    const newImage: GalleryImage = {
-      id: `gallery-${Date.now()}`,
+    addGalleryImage({
       src: data.src,
       alt: data.alt,
       category: data.category,
-    };
-    setImages((prev) => [newImage, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Image added:", newImage);
     toast.success("Image added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: GalleryImage = {
-      ...selected,
+    updateGalleryImage(selected.id, {
       src: data.src,
       alt: data.alt,
       category: data.category,
-    };
-    setImages((prev) => prev.map((img) => (img.id === updated.id ? updated : img)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Image updated:", updated);
     toast.success("Image updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setImages((prev) => prev.filter((img) => img.id !== selected.id));
+    deleteGalleryImage(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Image deleted:", selected.id);
     toast.success("Image deleted successfully");
   }
 

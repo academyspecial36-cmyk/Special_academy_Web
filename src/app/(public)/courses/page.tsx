@@ -18,11 +18,11 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { courses } from "@/mock";
-import { COURSE_CATEGORIES } from "@/constants";
+import { useAppContext } from "@/lib/app-context";
 import { Course } from "@/types";
 
 export default function CoursesPage() {
+  const { courses, courseCategories } = useAppContext();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
@@ -35,7 +35,7 @@ export default function CoursesPage() {
       const matchesCategory = activeCategory === "All" || c.category === activeCategory;
       return matchesSearch && matchesCategory;
     });
-  }, [search, activeCategory]);
+  }, [search, activeCategory, courses]);
 
   return (
     <PageWrapper>
@@ -67,7 +67,7 @@ export default function CoursesPage() {
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-muted" />
-              {COURSE_CATEGORIES.map((cat) => (
+              {["All", ...courseCategories].map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
