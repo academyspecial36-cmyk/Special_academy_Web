@@ -97,17 +97,26 @@ export function Footer() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 mt-0.5 text-secondary shrink-0" />
-                <span className="text-sm text-white/60">
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(settings.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/60 hover:text-white transition-colors"
+                >
                   {settings.address}
-                </span>
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-secondary shrink-0" />
-                <span className="text-sm text-white/60">{settings.phone}</span>
+                <a href={`tel:${settings.phone}`} className="text-sm text-white/60 hover:text-white transition-colors">
+                  {settings.phone}
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-secondary shrink-0" />
-                <span className="text-sm text-white/60">{settings.email}</span>
+                <a href={`mailto:${settings.email}`} className="text-sm text-white/60 hover:text-white transition-colors">
+                  {settings.email}
+                </a>
               </li>
               <li className="flex items-start gap-3">
                 <Clock className="w-4 h-4 mt-0.5 text-secondary shrink-0" />
@@ -124,8 +133,8 @@ export function Footer() {
         <div className="py-5 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-white/40">
           <p>© 2026 {settings.academyName}. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>

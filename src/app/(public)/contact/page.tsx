@@ -51,7 +51,14 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Address</h4>
-                      <p className="text-sm text-muted">{settings.address}</p>
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(settings.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-muted hover:text-primary transition-colors"
+                      >
+                        {settings.address}
+                      </a>
                     </div>
                   </div>
 
@@ -61,9 +68,13 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Phone</h4>
-                      <p className="text-sm text-muted">{settings.phone}</p>
+                      <a href={`tel:${settings.phone}`} className="text-sm text-muted hover:text-primary transition-colors block">
+                        {settings.phone}
+                      </a>
                       {settings.secondaryPhone && (
-                        <p className="text-sm text-muted">{settings.secondaryPhone}</p>
+                        <a href={`tel:${settings.secondaryPhone}`} className="text-sm text-muted hover:text-primary transition-colors block">
+                          {settings.secondaryPhone}
+                        </a>
                       )}
                     </div>
                   </div>
@@ -74,8 +85,12 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h4 className="font-semibold text-primary text-sm mb-1">Email</h4>
-                      <p className="text-sm text-muted">{settings.email}</p>
-                      <p className="text-sm text-muted">{settings.admissionEmail}</p>
+                      <a href={`mailto:${settings.email}`} className="text-sm text-muted hover:text-primary transition-colors block">
+                        {settings.email}
+                      </a>
+                      <a href={`mailto:${settings.admissionEmail}`} className="text-sm text-muted hover:text-primary transition-colors block">
+                        {settings.admissionEmail}
+                      </a>
                     </div>
                   </div>
 
@@ -149,19 +164,24 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-          {/* Map Placeholder */}
+          {/* Map */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="mt-16"
           >
-            <div className="bg-white rounded-2xl border border-primary/5 overflow-hidden h-[400px] flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-primary/20 mx-auto mb-3" />
-                <p className="text-muted text-sm">Map integration placeholder</p>
-                <p className="text-xs text-muted/60 mt-1">{settings.address}</p>
-              </div>
+            <div className="bg-white rounded-2xl border border-primary/5 overflow-hidden h-[400px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14128.494958996613!2d85.3354403!3d27.6901084!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb191051eb484d%3A0x5bb20af2abcd66f0!2sSPECIAL%20ACADEMY!5e0!3m2!1sen!2snp!4v1"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Special Academy Location"
+              />
             </div>
           </motion.div>
         </div>

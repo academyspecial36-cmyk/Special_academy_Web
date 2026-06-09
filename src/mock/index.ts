@@ -9,7 +9,7 @@ export const courses: Course[] = [
     duration: "12 Months",
     classLevel: "Class 6-8",
     features: ["Mock Tests Weekly", "Physical Training Guide", "Interview Preparation", "Study Material Included", "Doubt Clearing Sessions"],
-    image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80",
+    image: "https://images.unsplash.com/photo-1763656447224-dd5e8c89c767?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     category: "Cadet Preparation",
     price: "Rs.25,000",
     isPopular: true,
@@ -198,7 +198,7 @@ export const testimonials: Testimonial[] = [
 ];
 
 export const galleryImages: GalleryImage[] = [
-  { id: "1", src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80", alt: "Classroom Session", category: "classroom" },
+  { id: "1", src: "https://images.unsplash.com/photo-1763656447224-dd5e8c89c767?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D", alt: "Classroom Session", category: "classroom" },
   { id: "2", src: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80", alt: "Study Group", category: "classroom" },
   { id: "3", src: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800&q=80", alt: "Leadership Training", category: "training" },
   { id: "4", src: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80", alt: "Physical Training", category: "training" },
