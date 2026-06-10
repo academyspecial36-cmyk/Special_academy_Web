@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Lock, KeyRound, LogIn, X, Mail } from "lucide-react";
+import { Shield, Lock, KeyRound, LogIn, X, Mail, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
@@ -17,6 +17,8 @@ export function AdminAuthModal() {
   const [passcode, setPasscode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPasscode, setShowPasscode] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -143,13 +145,23 @@ export function AdminAuthModal() {
                   <form onSubmit={handlePasscodeSubmit} className="space-y-4">
                     <div>
                       <label className="text-sm font-medium text-primary mb-1.5 block">Passcode</label>
-                      <Input
-                        type="password"
-                        placeholder="Enter admin passcode"
-                        value={passcode}
-                        onChange={(e) => setPasscode(e.target.value)}
-                        autoFocus
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPasscode ? "text" : "password"}
+                          placeholder="Enter admin passcode"
+                          value={passcode}
+                          onChange={(e) => setPasscode(e.target.value)}
+                          className="pr-10"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasscode(!showPasscode)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
+                        >
+                          {showPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                     {error && (
                       <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
@@ -177,12 +189,22 @@ export function AdminAuthModal() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-primary mb-1.5 block">Password</label>
-                      <Input
-                        type="password"
-                        placeholder="Admin password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Admin password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                     {error && (
                       <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>

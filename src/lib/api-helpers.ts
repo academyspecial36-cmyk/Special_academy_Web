@@ -30,7 +30,7 @@ const COLUMN_MAP: Record<string, Record<string, string>> = {
   questions: { categoryId: "category_id", createdAt: "created_at" },
   exam_attempts: { studentName: "student_name", categoryId: "category_id", completedAt: "completed_at" },
   course_categories: {},
-  enrollments: { fullName: "full_name", interestedCourse: "interested_course", currentClass: "current_class", guardianName: "guardian_name", guardianContact: "guardian_contact", previousSchool: "previous_school", createdAt: "created_at" },
+  enrollments: { fullName: "full_name", interestedCourse: "interested_course", currentClass: "current_class", guardianName: "guardian_name", guardianContact: "guardian_contact", previousSchool: "previous_school", createdAt: "created_at", rejectionMessage: "rejection_message", authUserId: "auth_user_id" },
   notice_categories: {},
   settings: { academyName: "academy_name", admissionEmail: "admission_email", secondaryPhone: "secondary_phone", officeHours: "office_hours", appIcon: "app_icon", socialLinks: "social_links" },
   progress: { studentId: "student_id", itemId: "item_id", completedAt: "completed_at" },

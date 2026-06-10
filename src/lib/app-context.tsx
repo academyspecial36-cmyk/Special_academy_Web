@@ -48,7 +48,8 @@ interface Enrollment {
   interestedCourse: string;
   currentClass: string;
   createdAt: string;
-  status: "pending" | "approved" | "rejected";
+  status: "unverified" | "pending" | "approved" | "rejected";
+  rejectionMessage?: string;
 }
 
 interface AppContextValue {

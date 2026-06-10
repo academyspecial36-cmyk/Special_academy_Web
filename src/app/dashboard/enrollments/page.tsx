@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, CheckCircle2, XCircle, Clock, Eye, Trash2 } from "lucide-react";
+import { Search, Filter, CheckCircle2, XCircle, Clock, Eye, Trash2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/ui/modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppContext } from "@/lib/app-context";
 
 interface Enrollment {
@@ -19,15 +20,21 @@ interface Enrollment {
   interestedCourse: string;
   currentClass: string;
   createdAt: string;
-  status: "pending" | "approved" | "rejected";
+  status: "unverified" | "pending" | "approved" | "rejected";
+  rejectionMessage?: string;
 }
 
 export default function EnrollmentsPage() {
-  const { enrollments, deleteEnrollment } = useAppContext();
+  const { enrollments, deleteEnrollment, updateEnrollment } = useAppContext();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "unverified" | "pending" | "approved" | "rejected">("pending");
   const [viewOpen, setViewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [rejectMessage, setRejectMessage] = useState("");
+  const [rejectSubmitting, setRejectSubmitting] = useState(false);
+  const [approveSubmitting, setApproveSubmitting] = useState(false);
   const [selected, setSelected] = useState<Enrollment | null>(null);
 
   const filtered = enrollments.filter((e) => {
@@ -36,10 +43,11 @@ export default function EnrollmentsPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const statusConfig = {
-    pending: { label: "Pending", variant: "warning" as const, icon: Clock },
-    approved: { label: "Approved", variant: "success" as const, icon: CheckCircle2 },
-    rejected: { label: "Rejected", variant: "destructive" as const, icon: XCircle },
+  const statusConfig: Record<string, { label: string; variant: "warning" | "success" | "destructive" | "default"; icon: React.ElementType }> = {
+    unverified: { label: "Unverified", variant: "default", icon: Clock },
+    pending: { label: "Pending", variant: "warning", icon: Clock },
+    approved: { label: "Approved", variant: "success", icon: CheckCircle2 },
+    rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
   };
 
   function handleDelete() {
@@ -48,6 +56,59 @@ export default function EnrollmentsPage() {
     setDeleteOpen(false);
     setSelected(null);
     toast.success("Enrollment deleted successfully");
+  }
+
+  async function handleApprove() {
+    if (!selected) return;
+    setApproveSubmitting(true);
+    try {
+      const res = await fetch(`/api/enrollments/${selected.id}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approved" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      updateEnrollment(selected.id, { status: "approved" });
+      setApproveOpen(false);
+      setSelected(null);
+      toast.success("Enrollment approved! Student record created.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to approve");
+    } finally {
+      setApproveSubmitting(false);
+    }
+  }
+
+  async function handleReject() {
+    if (!selected || !rejectMessage.trim()) {
+      toast.error("Please provide a rejection reason");
+      return;
+    }
+
+    setRejectSubmitting(true);
+    try {
+      const res = await fetch(`/api/enrollments/${selected.id}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rejected", rejectionMessage: rejectMessage.trim() }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      updateEnrollment(selected.id, { status: "rejected", rejectionMessage: rejectMessage.trim() });
+      setRejectOpen(false);
+      setSelected(null);
+      setRejectMessage("");
+      toast.success("Enrollment rejected");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to reject");
+    } finally {
+      setRejectSubmitting(false);
+    }
   }
 
   return (
@@ -66,9 +127,9 @@ export default function EnrollmentsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
               <Input placeholder="Search enrollments..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-muted" />
-              {(["all", "pending", "approved", "rejected"] as const).map((s) => (
+              {(["all", "unverified", "pending", "approved", "rejected"] as const).map((s) => (
                 <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${statusFilter === s ? "bg-primary text-white" : "bg-accent text-muted hover:bg-primary/5"}`}>
                   {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
@@ -94,7 +155,7 @@ export default function EnrollmentsPage() {
               </thead>
               <tbody>
                 {filtered.map((enrollment) => {
-                  const config = statusConfig[enrollment.status];
+                  const config = statusConfig[enrollment.status] || statusConfig.pending;
                   const StatusIcon = config.icon;
                   return (
                     <motion.tr key={enrollment.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors">
@@ -120,6 +181,24 @@ export default function EnrollmentsPage() {
                       </td>
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {enrollment.status === "pending" && (
+                            <>
+                              <button
+                                onClick={() => { setSelected(enrollment); setApproveOpen(true); }}
+                                className="p-1.5 rounded-md hover:bg-emerald-50 text-muted hover:text-emerald-600 transition-colors"
+                                title="Approve"
+                              >
+                                <ThumbsUp className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => { setSelected(enrollment); setRejectMessage(""); setRejectOpen(true); }}
+                                className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                                title="Reject"
+                              >
+                                <ThumbsDown className="w-3.5 h-3.5" />
+                              </button>
+                            </>
+                          )}
                           <button
                             onClick={() => { setSelected(enrollment); setViewOpen(true); }}
                             className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
@@ -170,14 +249,69 @@ export default function EnrollmentsPage() {
               <div>
                 <label className="text-xs font-medium text-muted">Status</label>
                 <div className="mt-1">
-                  <Badge variant={statusConfig[selected.status].variant} className="text-[10px] capitalize">
-                    {statusConfig[selected.status].label}
+                  <Badge variant={statusConfig[selected.status]?.variant || "warning"} className="text-[10px] capitalize">
+                    {statusConfig[selected.status]?.label || selected.status}
                   </Badge>
                 </div>
               </div>
             </div>
+            {selected.status === "rejected" && selected.rejectionMessage && (
+              <div>
+                <label className="text-xs font-medium text-muted">Rejection Reason</label>
+                <div className="mt-1 p-3 bg-red-50 rounded-lg text-sm text-red-700">
+                  {selected.rejectionMessage}
+                </div>
+              </div>
+            )}
             <div className="flex gap-2 pt-2">
               <Button variant="outline" size="sm" onClick={() => { setViewOpen(false); setSelected(null); }}>Close</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={approveOpen} onClose={() => { setApproveOpen(false); setSelected(null); }} title="Approve Enrollment">
+        {selected && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted">
+              This will approve <strong>{selected.fullName}</strong>&apos;s enrollment and create a student record. They will receive a confirmation email.
+            </p>
+            <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
+              <p className="text-sm"><strong>Name:</strong> {selected.fullName}</p>
+              <p className="text-sm"><strong>Email:</strong> {selected.email}</p>
+              <p className="text-sm"><strong>Course:</strong> {selected.interestedCourse}</p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => { setApproveOpen(false); setSelected(null); }}>
+                Cancel
+              </Button>
+              <Button variant="default" size="sm" onClick={handleApprove} disabled={approveSubmitting}>
+                {approveSubmitting ? "Approving..." : "Approve & Create Student"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={rejectOpen} onClose={() => { setRejectOpen(false); setSelected(null); setRejectMessage(""); }} title="Reject Enrollment">
+        {selected && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted">
+              Provide a reason for rejecting <strong>{selected.fullName}</strong>&apos;s enrollment. This message will be sent to their email.
+            </p>
+            <Textarea
+              placeholder="Enter rejection reason..."
+              rows={4}
+              value={rejectMessage}
+              onChange={(e) => setRejectMessage(e.target.value)}
+            />
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" size="sm" onClick={() => { setRejectOpen(false); setSelected(null); setRejectMessage(""); }}>
+                Cancel
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleReject} disabled={rejectSubmitting}>
+                {rejectSubmitting ? "Rejecting..." : "Reject & Send Email"}
+              </Button>
             </div>
           </div>
         )}
