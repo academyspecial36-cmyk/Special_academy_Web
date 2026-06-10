@@ -7,7 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, Pencil, Trash2, Eye, EyeOff,
-  Lock, Unlock, Video, FileText, Play,
+  Lock, Unlock, Video, FileText, Play, ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -280,7 +281,7 @@ export default function CourseDetailPage() {
                               }}
                               className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
                             >
-                              <Play className="w-3.5 h-3.5" />
+                             {expandedSub !== null ? <ChevronUp className="w-3.5 h-3.5" />:<ChevronDown className="w-3.5 h-3.5" />} 
                             </button>
                             <button
                               onClick={() => {

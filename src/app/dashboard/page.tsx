@@ -18,7 +18,7 @@ import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 
 const stats = [
-  { label: "Total Students", value: "2,547", change: "+12%", up: true, icon: Users, color: "bg-emerald-50 text-emerald-600" },
+  { label: "Total Students", value: "250", change: "+12%", up: true, icon: Users, color: "bg-emerald-50 text-emerald-600" },
   { label: "Active Courses", value: "12", change: "+2", up: true, icon: BookOpen, color: "bg-secondary/10 text-secondary" },
   { label: "New Enrollments", value: "186", change: "+24%", up: true, icon: FileText, color: "bg-amber-50 text-amber-600" },
   { label: "Pending Notices", value: "8", change: "-3", up: false, icon: Bell, color: "bg-violet-50 text-violet-600" },

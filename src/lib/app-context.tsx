@@ -595,7 +595,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const addSubcategory = useCallback((sub: Omit<Subcategory, "id" | "items" | "createdAt">) => {
     const newSub: Subcategory = { ...sub, id: generateId(), items: [], createdAt: new Date().toISOString() };
     setSubcategories((prev) => [...prev, newSub]);
-    try { apiCreate("subcategories", newSub); } catch { /* silent */ }
+    const { items: _, ...dbBody } = newSub;
+    try { apiCreate("subcategories", dbBody); } catch { /* silent */ }
   }, []);
 
   const updateSubcategory = useCallback((id: string, data: Partial<Subcategory>) => {
