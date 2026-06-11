@@ -10,6 +10,10 @@ export function FaqSection() {
   const { faqs } = useAppContext();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
+  const sortedFaqs = [...faqs].sort(
+  (a, b) => a.sortOrder - b.sortOrder
+);
+
   return (
     <section className="py-20 md:py-28 bg-accent">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,7 +24,7 @@ export function FaqSection() {
         />
 
         <div className="space-y-3">
-          {faqs.map((faq, index) => (
+          {sortedFaqs.map((faq, index) => (
             <motion.div
               key={faq.id}
               initial={{ opacity: 0, y: 10 }}

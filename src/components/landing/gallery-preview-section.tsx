@@ -6,9 +6,10 @@ import Image from "next/image";
 import { ArrowRight, Images } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
-import { galleryImages } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 export function GalleryPreviewSection() {
+  const { galleryImages } = useAppContext();
   const previewImages = galleryImages.slice(0, 6);
 
   return (

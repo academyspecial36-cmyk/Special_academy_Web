@@ -4,9 +4,10 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Award, BookOpen, Users } from "lucide-react";
 import { PageWrapper } from "@/components/shared/page-wrapper";
-import { facultyMembers } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 export default function TeamPage() {
+  const { facultyMembers } = useAppContext();
   return (
     <PageWrapper>
       <section className="bg-primary py-16 md:py-24 text-white">

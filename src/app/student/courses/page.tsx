@@ -7,10 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { useAppContext } from "@/lib/app-context";
-import { courses } from "@/mock";
 
 export default function StudentCoursesPage() {
-  const { subcategories, completedItems } = useAppContext();
+  const { subcategories, completedItems, courses } = useAppContext();
   const enrolledCourses = courses.slice(0, 3);
 
   function getCourseProgress(courseId: string) {

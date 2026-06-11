@@ -62,6 +62,7 @@ export interface Student {
   enrolledCourses: string[];
   joinDate: string;
   status: "active" | "inactive";
+  image?: string;
 }
 
 export interface NavItem {
@@ -105,10 +106,11 @@ export interface Activity {
 export interface Item {
   id: string;
   subcategoryId: string;
-  type: "video" | "pdf";
+  type: "video" | "pdf" | "image";
   title: string;
   description: string;
   url: string;
+  images?: string[];
   duration?: string;
   createdAt: string;
   status: "paid" | "free";
@@ -144,6 +146,21 @@ export interface Question {
   answer: string;
   explanation: string;
   createdAt: string;
+}
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  author?: string;
+  image?: string;
+  status: "draft" | "published";
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
 }
 
 export interface ExamAttempt {

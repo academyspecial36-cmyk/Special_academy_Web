@@ -5,21 +5,20 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Play, FileText, Lock, Unlock, Clock, BookOpen, CheckCircle, Circle } from "lucide-react";
+import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModal } from "@/components/ui/preview-modal";
 import { useAppContext } from "@/lib/app-context";
-import { courses } from "@/mock";
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
   const courseId = params.id as string;
+  const { subcategories, completedItems, toggleItemComplete, courses } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
-  const { subcategories, completedItems, toggleItemComplete } = useAppContext();
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf"; title: string; url: string } | null>(null);
+  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);
 
   const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
 
@@ -98,15 +97,12 @@ export default function StudentCourseDetailPage() {
                     alt={sub.title}
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <Badge variant={sub.status === "free" ? "secondary" : "default"} className="text-[10px]">
-                      {sub.status === "free" ? (
-                        <><Unlock className="w-3 h-3 mr-1" /> Free</>
-                      ) : (
-                        <><Lock className="w-3 h-3 mr-1" /> Paid</>
-                      )}
+                  <div className="absolute top-3 left-3">
+                    <Badge variant="secondary" className="text-[10px]">
+                      <BookOpen className="w-3 h-3 mr-1" /> {sub.status === "free" ? "Free" : "Available"}
                     </Badge>
                   </div>
                   <div className="absolute bottom-3 left-3 right-3">
@@ -117,7 +113,6 @@ export default function StudentCourseDetailPage() {
                   <p className="text-xs text-muted mb-3 line-clamp-2">{sub.shortDescription}</p>
                   <div className="space-y-2">
                     {sub.items.filter((item) => !item.hidden).map((item) => {
-                      const isLocked = item.status === "paid";
                       const isCompleted = completedItems.includes(item.id);
                       return (
                         <div
@@ -125,16 +120,11 @@ export default function StudentCourseDetailPage() {
                           className="flex items-center gap-2"
                         >
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!isLocked) toggleItemComplete(item.id);
-                            }}
+                            onClick={() => toggleItemComplete(item.id)}
                             className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                              isLocked
-                                ? "text-muted/30 cursor-not-allowed"
-                                : isCompleted
-                                  ? "text-emerald-500"
-                                  : "text-muted hover:text-secondary"
+                              isCompleted
+                                ? "text-emerald-500"
+                                : "text-muted hover:text-secondary"
                             }`}
                             title={isCompleted ? "Mark as incomplete" : "Mark as complete"}
                           >
@@ -142,23 +132,28 @@ export default function StudentCourseDetailPage() {
                           </button>
                           <button
                             onClick={() => {
-                              if (!isLocked) {
-                                setPreviewItem({ type: item.type, title: item.title, url: item.url });
-                                setPreviewOpen(true);
-                              }
+                              setPreviewItem({
+                                type: item.type,
+                                title: item.title,
+                                url: item.url,
+                                images: item.images,
+                              });
+                              setPreviewOpen(true);
                             }}
                             className={`flex-1 flex items-center gap-3 p-2.5 rounded-lg transition-colors text-left ${
-                              isLocked
-                                ? "bg-accent/50 cursor-not-allowed opacity-60"
-                                : isCompleted
-                                  ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
-                                  : "bg-accent hover:bg-primary/5 cursor-pointer"
+                              isCompleted
+                                ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
+                                : "bg-accent hover:bg-primary/5 cursor-pointer"
                             }`}
                           >
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                              item.type === "video" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                              item.type === "video" ? "bg-blue-50 text-blue-600"
+                              : item.type === "image" ? "bg-purple-50 text-purple-600"
+                              : "bg-amber-50 text-amber-600"
                             }`}>
-                              {item.type === "video" ? <Play className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                              {item.type === "video" ? <Play className="w-4 h-4" />
+                                : item.type === "image" ? <ImageIcon className="w-4 h-4" />
+                                : <FileText className="w-4 h-4" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
@@ -173,20 +168,9 @@ export default function StudentCourseDetailPage() {
                                     <Clock className="w-3 h-3" /> {item.duration}
                                   </span>
                                 )}
-                                {item.status === "free" ? (
-                                  <span className="text-[10px] text-emerald-600 font-medium">Free</span>
-                                ) : (
-                                  <span className="text-[10px] text-amber-600 font-medium flex items-center gap-0.5">
-                                    <Lock className="w-3 h-3" /> Premium
-                                  </span>
-                                )}
                               </div>
                             </div>
-                            {isLocked ? (
-                              <Lock className="w-4 h-4 text-muted shrink-0" />
-                            ) : (
-                              <Play className="w-4 h-4 text-secondary shrink-0" />
-                            )}
+                            <Play className="w-4 h-4 text-secondary shrink-0" />
                           </button>
                         </div>
                       );
@@ -205,6 +189,7 @@ export default function StudentCourseDetailPage() {
         type={previewItem?.type || "video"}
         title={previewItem?.title || ""}
         url={previewItem?.url || ""}
+        images={previewItem?.images}
       />
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-import { stats } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 function AnimatedNumber({ value, suffix }: { value: string; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -36,6 +36,8 @@ function AnimatedNumber({ value, suffix }: { value: string; suffix?: string }) {
 }
 
 export function StatsSection() {
+  const { settings } = useAppContext();
+  const stats = settings.config.stats;
   return (
     <section className="py-16 md:py-24 bg-primary relative overflow-hidden">
       <div className="absolute inset-0 opacity-5">

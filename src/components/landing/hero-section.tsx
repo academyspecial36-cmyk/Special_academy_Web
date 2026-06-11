@@ -12,8 +12,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppContext } from "@/lib/app-context";
 
 export function HeroSection() {
+  const { settings } = useAppContext();
+  const hero = settings.config.hero;
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-800 text-white min-h-[90vh] flex items-center">
       {/* Background Pattern */}
@@ -52,20 +55,16 @@ export function HeroSection() {
               className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm"
             >
               <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
-              <span>Admission Open for 2026-27 Session</span>
+              <span>{hero.badge}</span>
               <ChevronRight className="w-3 h-3" />
             </motion.div>
 
             <div className="space-y-6">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-                Preparing Future{" "}
-                <span className="text-secondary">Cadets</span> Through
-                Discipline & Excellence
+                {hero.title}
               </h1>
               <p className="text-lg text-white/70 max-w-xl leading-relaxed">
-                We help students develop academic excellence, leadership skills,
-                confidence, and discipline for cadet entrance success. Join
-                Nepal&apos;s most trusted cadet preparation academy.
+                {hero.subtitle}
               </p>
             </div>
 
@@ -133,12 +132,13 @@ export function HeroSection() {
             <div className="relative">
               <div className="relative rounded-2xl overflow-hidden shadow-elevated border border-white/10">
                 <Image
-                  src="https://images.unsplash.com/photo-1763656443687-c3de11b68813?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src={hero.image}
                   alt="Special academy Students"
                   width={600}
                   height={500}
                   className="w-full h-[500px] object-cover"
                   priority
+                  unoptimized
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent" />
               </div>

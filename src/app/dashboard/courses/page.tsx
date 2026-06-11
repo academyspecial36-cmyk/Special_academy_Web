@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { courses as initialCourses } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { Course } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -29,11 +29,11 @@ const fields: FieldConfig[] = [
     { label: "Leadership", value: "Leadership" },
   ]},
   { name: "price", label: "Price", type: "text", placeholder: "e.g. NPR 15,000" },
-  { name: "image", label: "Image URL", type: "url", placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
 ];
 
 export default function DashboardCoursesPage() {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
+  const { courses, addCourse, updateCourse, deleteCourse } = useAppContext();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -45,8 +45,7 @@ export default function DashboardCoursesPage() {
   );
 
   function handleAdd(data: Record<string, string>) {
-    const newCourse: Course = {
-      id: `course-${Date.now()}`,
+    addCourse({
       title: data.title,
       slug: data.slug,
       description: data.description,
@@ -54,20 +53,17 @@ export default function DashboardCoursesPage() {
       classLevel: data.classLevel,
       category: data.category,
       price: data.price || undefined,
-      image: data.image || "/placeholder.jpg",
+      image: data.image || "/placeholder.svg",
       features: [],
       isPopular: false,
-    };
-    setCourses((prev) => [newCourse, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Course added:", newCourse);
     toast.success("Course added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Course = {
-      ...selected,
+    updateCourse(selected.id, {
       title: data.title,
       slug: data.slug,
       description: data.description,
@@ -76,20 +72,17 @@ export default function DashboardCoursesPage() {
       category: data.category,
       price: data.price || undefined,
       image: data.image || selected.image,
-    };
-    setCourses((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Course updated:", updated);
     toast.success("Course updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setCourses((prev) => prev.filter((c) => c.id !== selected.id));
+    deleteCourse(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Course deleted:", selected.id);
     toast.success("Course deleted successfully");
   }
 
@@ -104,8 +97,8 @@ export default function DashboardCoursesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Courses</h1>
           <p className="text-sm text-muted">Manage courses and programs.</p>
@@ -116,7 +109,7 @@ export default function DashboardCoursesPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input
           placeholder="Search courses..."
@@ -137,7 +130,7 @@ export default function DashboardCoursesPage() {
             <Card className="overflow-hidden group">
               <Link href={`/dashboard/courses/${course.id}`}>
                 <div className="relative h-40">
-                  <Image src={course.image} alt={course.title} fill className="object-cover" />
+                  <Image src={course.image || "/placeholder.svg"} alt={course.title} fill className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 left-3 flex gap-2">
                     {course.isPopular && (

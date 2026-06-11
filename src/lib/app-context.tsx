@@ -1,18 +1,15 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import {
-  faqs as initialFaqs,
-  facultyMembers as initialFaculty,
-} from "@/mock";
-import { NOTICE_CATEGORIES as initialNoticeCats, COURSE_CATEGORIES as initialCourseCats } from "@/constants";
-import { FacultyMember, Subcategory, Item, Course, ExamCategory, Question, ExamAttempt } from "@/types";
-import { courses } from "@/mock";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { NOTICE_CATEGORIES, COURSE_CATEGORIES } from "@/constants";
+import type { FacultyMember, Subcategory, Item, ExamCategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
+import { apiList, apiCreate, apiUpdate, apiDelete, clearCache } from "./api-client";
 
 interface FAQ {
   id: string;
   question: string;
   answer: string;
+  sortOrder: number;
 }
 
 interface NoticeCategory {
@@ -21,14 +18,30 @@ interface NoticeCategory {
   color: string;
 }
 
-interface SocialLinks {
+export interface SocialLinks {
   facebook: string;
   instagram: string;
   tiktok: string;
   youtube: string;
 }
 
-interface AppSettings {
+export type SectionKey =
+  | "hero" | "about" | "whyChoose" | "cadetOverview" | "stats"
+  | "courses" | "freeResources" | "notices" | "testimonials" | "faculty"
+  | "facilities" | "activities" | "gallery" | "enrollmentCta" | "faq"
+  | "contact" | "blog";
+
+interface LandingConfig {
+  hero: { title: string; subtitle: string; badge: string; image: string };
+  about: { title: string; description: string; image: string; values: { title: string; description: string }[] };
+  stats: { label: string; value: string; suffix?: string; description?: string }[];
+  seo?: { metaDescription: string; gaTrackingId: string };
+  sections?: Record<SectionKey, boolean>;
+  cta?: { title: string; subtitle: string; buttonText: string; buttonLink: string };
+  footer?: { copyright: string; description: string };
+}
+
+export interface AppSettings {
   academyName: string;
   tagline: string;
   description: string;
@@ -42,11 +55,34 @@ interface AppSettings {
   holiday: string;
   appIcon: string;
   socialLinks: SocialLinks;
+  enableBlog: boolean;
+  maintenanceMode: boolean;
+  config: LandingConfig;
+  seo: { metaDescription: string; gaTrackingId: string };
+}
+
+interface Enrollment {
+  id: string;
+  fullName: string;
+  email: string;
+  interestedCourse: string;
+  currentClass: string;
+  createdAt: string;
+  status: "unverified" | "pending" | "approved" | "rejected";
+  rejectionMessage?: string;
 }
 
 interface AppContextValue {
+  loading: boolean;
+  loadAdminData: () => Promise<void>;
   faqs: FAQ[];
   facultyMembers: FacultyMember[];
+  courses: Course[];
+  notices: Notice[];
+  testimonials: Testimonial[];
+  galleryImages: GalleryImage[];
+  students: Student[];
+  enrollments: Enrollment[];
   courseCategories: string[];
   noticeCategories: NoticeCategory[];
   settings: AppSettings;
@@ -54,12 +90,31 @@ interface AppContextValue {
   completedItems: string[];
   toggleItemComplete: (itemId: string) => void;
   setFaqs: (faqs: FAQ[]) => void;
-  addFaq: (faq: Omit<FAQ, "id">) => void;
+  addFaq: (faq: Omit<FAQ, "id" | "sortOrder">) => void;
   updateFaq: (id: string, faq: Partial<FAQ>) => void;
   deleteFaq: (id: string) => void;
   addFacultyMember: (member: Omit<FacultyMember, "id">) => void;
   updateFacultyMember: (id: string, member: Partial<FacultyMember>) => void;
   deleteFacultyMember: (id: string) => void;
+  addCourse: (course: Omit<Course, "id">) => void;
+  updateCourse: (id: string, data: Partial<Course>) => void;
+  deleteCourse: (id: string) => void;
+  addNotice: (notice: Omit<Notice, "id">) => void;
+  updateNotice: (id: string, data: Partial<Notice>) => void;
+  deleteNotice: (id: string) => void;
+  addTestimonial: (t: Omit<Testimonial, "id">) => void;
+  updateTestimonial: (id: string, data: Partial<Testimonial>) => void;
+  deleteTestimonial: (id: string) => void;
+  addGalleryImage: (img: Omit<GalleryImage, "id">) => void;
+  updateGalleryImage: (id: string, data: Partial<GalleryImage>) => void;
+  deleteGalleryImage: (id: string) => void;
+  addStudent: (s: Omit<Student, "id">) => void;
+  updateStudent: (id: string, data: Partial<Student>) => void;
+  deleteStudent: (id: string) => void;
+  addEnrollment: (e: Omit<Enrollment, "id">) => void;
+  updateEnrollment: (id: string, data: Partial<Enrollment>) => void;
+  deleteEnrollment: (id: string) => void;
+  setEnrollments: React.Dispatch<React.SetStateAction<Enrollment[]>>;
   setCourseCategories: (cats: string[]) => void;
   addCourseCategory: (cat: string) => void;
   deleteCourseCategory: (cat: string) => void;
@@ -86,29 +141,81 @@ interface AppContextValue {
 }
 
 function generateId() {
-  return Math.random().toString(36).substring(2, 10);
+  return crypto.randomUUID();
 }
 
 const defaultSettings: AppSettings = {
-  academyName: "Special academy",
+  academyName: "Special Academy",
   tagline: "Preparing Future Leaders Through Discipline & Excellence",
-  description: "Nepal's premier cadet preparation academy since 2010.",
-  address: "M8RP+363 New baneshwor, Devkota Sadak, Kathmandu 44600",
+  description: "Nepal's premier cadet preparation academy.",
+  address: "Kathmandu, Nepal",
   email: "info@cadetacademy.edu",
   admissionEmail: "admission@cadetacademy.edu",
   phone: "986-0302036",
   secondaryPhone: "986-0302036",
   website: "https://cadetacademy.edu",
-  officeHours: "Sun–Thu: 9:00 AM – 5:00 PM",
+  officeHours: "Sun-Thu: 9:00 AM - 5:00 PM",
   holiday: "Friday & Public Holidays",
   appIcon: "/icon-image.png",
   socialLinks: {
-    facebook: "https://facebook.com/specialacademy",
-    instagram: "https://instagram.com/specialacademy",
-    tiktok: "https://tiktok.com/@specialacademy",
-    youtube: "https://youtube.com/@specialacademy",
+    facebook: "",
+    instagram: "",
+    tiktok: "",
+    youtube: "",
   },
+  enableBlog: true,
+  maintenanceMode: false,
+  config: {
+    hero: {
+      title: "Preparing Future Cadets Through Discipline & Excellence",
+      subtitle: "We help students develop academic excellence, leadership skills, confidence, and discipline for cadet entrance success. Join Nepal's most trusted cadet preparation academy.",
+      badge: "Admission Open for 2026-27 Session",
+      image: "https://images.unsplash.com/photo-1763656443687-c3de11b68813?q=80&w=687&auto=format&fit=crop",
+    },
+    about: {
+      title: "Building Future Leaders Since 2010",
+      description: "Special academy has been the trusted choice for parents and students aspiring for cadet college admissions. Our holistic approach combines academic rigor with character building.",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80",
+      values: [
+        { title: "Mission", description: "To prepare disciplined, academically excellent, and morally upright future leaders through comprehensive cadet preparation programs." },
+        { title: "Discipline", description: "We instill military-grade discipline, punctuality, and self-control that forms the foundation of successful cadet life." },
+        { title: "Excellence", description: "Pursuit of academic and personal excellence is at the core of everything we teach, ensuring our students stand out." },
+        { title: "Character", description: "Building strong character, integrity, and leadership qualities that last a lifetime beyond cadet college admission." },
+      ],
+    },
+    stats: [
+      { label: "Students Enrolled", value: "2500", suffix: "+", description: "Since 2010" },
+      { label: "Success Rate", value: "94", suffix: "%", description: "College admission" },
+      { label: "Expert Faculty", value: "35", suffix: "+", description: "Qualified instructors" },
+      { label: "Years Experience", value: "15", suffix: "+", description: "In education" },
+    ],
+    sections: {
+      hero: true, about: true, whyChoose: true, cadetOverview: true,
+      stats: true, courses: true, freeResources: true, notices: true,
+      testimonials: true, faculty: true, facilities: true, activities: true,
+      gallery: true, enrollmentCta: true, faq: true, contact: true, blog: true,
+    },
+    cta: {
+      title: "Start Your Cadet Journey Today",
+      subtitle: "Join Nepal's most trusted cadet preparation academy and take the first step toward a disciplined, successful future.",
+      buttonText: "Enroll Now",
+      buttonLink: "/enroll",
+    },
+    footer: {
+      copyright: "© 2026 Special Academy. All rights reserved.",
+      description: "Special Academy is Nepal's premier cadet preparation institution, dedicated to shaping disciplined, academically excellent, and morally upright future leaders.",
+    },
+  },
+  seo: { metaDescription: "", gaTrackingId: "" },
 };
+
+const initialEnrollments: Enrollment[] = [
+  { id: "1", fullName: "Arafat Hossain", email: "arafat@example.com", interestedCourse: "Cadet Entrance Preparation", currentClass: "Class 8", createdAt: "2025-12-01", status: "pending" },
+  { id: "2", fullName: "Tasnim Rahman", email: "tasnim@example.com", interestedCourse: "Scholarship Preparation", currentClass: "Class 6", createdAt: "2025-12-02", status: "approved" },
+  { id: "3", fullName: "Sadia Islam", email: "sadia@example.com", interestedCourse: "Leadership Development", currentClass: "Class 7", createdAt: "2025-12-03", status: "pending" },
+  { id: "4", fullName: "Rafiq Ahmed", email: "rafiq@example.com", interestedCourse: "Foundation Classes", currentClass: "Class 9", createdAt: "2025-12-04", status: "rejected" },
+  { id: "5", fullName: "Nusrat Jahan", email: "nusrat@example.com", interestedCourse: "Spoken English", currentClass: "Class 10", createdAt: "2025-12-05", status: "approved" },
+];
 
 function createSeedSubcategories(): Subcategory[] {
   const now = new Date().toISOString();
@@ -146,7 +253,7 @@ function createSeedSubcategories(): Subcategory[] {
     },
     {
       id: "sub-4", courseId: "1", title: "Intelligence (IQ)",
-      thumbnail: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      thumbnail: "https://images.unsplash.com/photo-1677442135703-1787eea5ce01?w=200&q=80",
       shortDescription: "Logical reasoning, pattern recognition and mental ability.",
       createdAt: now, status: "free", hidden: false,
       items: [
@@ -277,12 +384,17 @@ function createSeedAttempts(): ExamAttempt[] {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [faqs, setFaqs] = useState<FAQ[]>(() =>
-    initialFaqs.map((f, i) => ({ ...f, id: `faq-${i}` }))
-  );
-  const [facultyMembers, setFacultyMembers] = useState<FacultyMember[]>(initialFaculty);
-  const [courseCategories, setCourseCategories] = useState<string[]>(initialCourseCats.filter((c) => c !== "All"));
-  const [noticeCategories, setNoticeCategories] = useState<NoticeCategory[]>(initialNoticeCats);
+  const [loading, setLoading] = useState(true);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [facultyMembers, setFacultyMembers] = useState<FacultyMember[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [courseCategories, setCourseCategories] = useState<string[]>(COURSE_CATEGORIES.filter((c) => c !== "All"));
+  const [noticeCategories, setNoticeCategories] = useState<NoticeCategory[]>(NOTICE_CATEGORIES);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [subcategories, setSubcategories] = useState<Subcategory[]>(createSeedSubcategories);
   const [completedItems, setCompletedItems] = useState<string[]>([]);
@@ -290,98 +402,287 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [questions, setQuestions] = useState<Question[]>(createSeedQuestions);
   const [attempts, setAttempts] = useState<ExamAttempt[]>(createSeedAttempts);
 
+  useEffect(() => {
+    const hasApi = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!hasApi) {
+      setLoading(false);
+      return;
+    }
+
+    async function loadAll() {
+      try {
+        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData] = await Promise.all([
+          apiList("faqs"),
+          apiList("faculty_members"),
+          apiList("courses"),
+          apiList("notices"),
+          apiList("testimonials"),
+          apiList("gallery_images"),
+          apiList("course_categories"),
+          apiList("notice_categories"),
+          apiList("subcategories"),
+          apiList("items"),
+          apiList("exam_categories"),
+          apiList("questions"),
+        ]);
+
+        if (Array.isArray(faqData) && faqData.length) setFaqs(faqData);
+        if (Array.isArray(facultyData) && facultyData.length) setFacultyMembers(facultyData);
+        if (Array.isArray(courseData) && courseData.length) setCourses(courseData);
+        if (Array.isArray(noticeData) && noticeData.length) setNotices(noticeData);
+        if (Array.isArray(testimonialData) && testimonialData.length) setTestimonials(testimonialData);
+        if (Array.isArray(galleryData) && galleryData.length) setGalleryImages(galleryData);
+        if (Array.isArray(catData) && catData.length) setCourseCategories(catData.map((c: { name: string }) => c.name));
+        if (Array.isArray(noticeCatData) && noticeCatData.length) setNoticeCategories(noticeCatData);
+        if (Array.isArray(subData) && subData.length) {
+          const items = Array.isArray(itemsData) ? itemsData : [];
+          setSubcategories(subData.map((s: Subcategory) => ({
+            ...s,
+            items: items.filter((i: Item) => i.subcategoryId === s.id),
+          })));
+        }
+        if (Array.isArray(examCatData) && examCatData.length) setExamCategories(examCatData);
+        if (Array.isArray(qData) && qData.length) setQuestions(qData);
+
+        try {
+          const settingsRes = await fetch("/api/settings");
+          if (settingsRes.ok) {
+            const { settings: merged } = await settingsRes.json();
+            setSettings(merged);
+          }
+        } catch { /* fallback to defaults */ }
+      } catch (err) {
+        console.log("API load failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadAll();
+  }, []);
+
+  const loadAdminData = useCallback(async () => {
+    try {
+      clearCache("students");
+      clearCache("enrollments");
+      clearCache("exam_attempts");
+      const [studentData, enrollmentData, attemptData] = await Promise.all([
+        apiList("students").catch(() => []),
+        apiList("enrollments").catch(() => []),
+        apiList("exam_attempts").catch(() => []),
+      ]);
+      if (Array.isArray(studentData)) setStudents(studentData);
+      if (Array.isArray(enrollmentData)) setEnrollments(enrollmentData);
+      if (Array.isArray(attemptData)) setAttempts(attemptData);
+    } catch {
+      // admin data unavailable — likely not authenticated as admin
+    }
+  }, []);
+
   const toggleItemComplete = useCallback((itemId: string) => {
     setCompletedItems((prev) =>
       prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]
     );
   }, []);
 
-  const addFaq = useCallback((faq: Omit<FAQ, "id">) => {
-    setFaqs((prev) => [...prev, { id: generateId(), ...faq }]);
-  }, []);
+  // ----- FAQs -----
+  const addFaq = useCallback(async (faq: Omit<FAQ, "id" | "sortOrder">) => {
+    const id = generateId();
+    const sortOrder = faqs.length;
+    setFaqs((prev) => [...prev, { id, sortOrder, ...faq }]);
+    try { await apiCreate("faqs", { id, sortOrder, ...faq }); } catch { /* silent */ }
+  }, [faqs.length]);
 
-  const updateFaq = useCallback((id: string, data: Partial<FAQ>) => {
+  const updateFaq = useCallback(async (id: string, data: Partial<FAQ>) => {
     setFaqs((prev) => prev.map((f) => (f.id === id ? { ...f, ...data } : f)));
+    try { await apiUpdate("faqs", id, data); } catch { /* silent */ }
   }, []);
 
-  const deleteFaq = useCallback((id: string) => {
+  const deleteFaq = useCallback(async (id: string) => {
     setFaqs((prev) => prev.filter((f) => f.id !== id));
+    try { await apiDelete("faqs", id); } catch { /* silent */ }
   }, []);
 
-  const addFacultyMember = useCallback((member: Omit<FacultyMember, "id">) => {
-    setFacultyMembers((prev) => [...prev, { id: generateId(), ...member }]);
+  // ----- Faculty -----
+  const addFacultyMember = useCallback(async (member: Omit<FacultyMember, "id">) => {
+    const id = generateId();
+    setFacultyMembers((prev) => [...prev, { id, ...member }]);
+    try { await apiCreate("faculty_members", { id, ...member }); } catch { /* silent */ }
   }, []);
 
-  const updateFacultyMember = useCallback((id: string, data: Partial<FacultyMember>) => {
+  const updateFacultyMember = useCallback(async (id: string, data: Partial<FacultyMember>) => {
     setFacultyMembers((prev) => prev.map((m) => (m.id === id ? { ...m, ...data } : m)));
+    try { await apiUpdate("faculty_members", id, data); } catch { /* silent */ }
   }, []);
 
-  const deleteFacultyMember = useCallback((id: string) => {
+  const deleteFacultyMember = useCallback(async (id: string) => {
     setFacultyMembers((prev) => prev.filter((m) => m.id !== id));
+    try { await apiDelete("faculty_members", id); } catch { /* silent */ }
   }, []);
 
-  const addCourseCategory = useCallback((cat: string) => {
+  // ----- Courses -----
+  const addCourse = useCallback(async (course: Omit<Course, "id">) => {
+    const id = generateId();
+    setCourses((prev) => [{ ...course, id }, ...prev]);
+    try { await apiCreate("courses", { id, ...course }); } catch { /* silent */ }
+  }, []);
+
+  const updateCourse = useCallback(async (id: string, data: Partial<Course>) => {
+    setCourses((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
+    try { await apiUpdate("courses", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteCourse = useCallback(async (id: string) => {
+    setCourses((prev) => prev.filter((c) => c.id !== id));
+    try { await apiDelete("courses", id); } catch { /* silent */ }
+  }, []);
+
+  // ----- Notices -----
+  const addNotice = useCallback(async (notice: Omit<Notice, "id">) => {
+    const id = generateId();
+    setNotices((prev) => [{ ...notice, id }, ...prev]);
+    try { await apiCreate("notices", { id, ...notice }); } catch { /* silent */ }
+  }, []);
+
+  const updateNotice = useCallback(async (id: string, data: Partial<Notice>) => {
+    setNotices((prev) => prev.map((n) => (n.id === id ? { ...n, ...data } : n)));
+    try { await apiUpdate("notices", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteNotice = useCallback(async (id: string) => {
+    setNotices((prev) => prev.filter((n) => n.id !== id));
+    try { await apiDelete("notices", id); } catch { /* silent */ }
+  }, []);
+
+  // ----- Testimonials -----
+  const addTestimonial = useCallback(async (t: Omit<Testimonial, "id">) => {
+    const id = generateId();
+    setTestimonials((prev) => [{ ...t, id }, ...prev]);
+    try { await apiCreate("testimonials", { id, ...t }); } catch { /* silent */ }
+  }, []);
+
+  const updateTestimonial = useCallback(async (id: string, data: Partial<Testimonial>) => {
+    setTestimonials((prev) => prev.map((t) => (t.id === id ? { ...t, ...data } : t)));
+    try { await apiUpdate("testimonials", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteTestimonial = useCallback(async (id: string) => {
+    setTestimonials((prev) => prev.filter((t) => t.id !== id));
+    try { await apiDelete("testimonials", id); } catch { /* silent */ }
+  }, []);
+
+  // ----- Gallery -----
+  const addGalleryImage = useCallback(async (img: Omit<GalleryImage, "id">) => {
+    const id = generateId();
+    setGalleryImages((prev) => [{ ...img, id }, ...prev]);
+    try { await apiCreate("gallery_images", { id, ...img }); } catch { /* silent */ }
+  }, []);
+
+  const updateGalleryImage = useCallback(async (id: string, data: Partial<GalleryImage>) => {
+    setGalleryImages((prev) => prev.map((g) => (g.id === id ? { ...g, ...data } : g)));
+    try { await apiUpdate("gallery_images", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteGalleryImage = useCallback(async (id: string) => {
+    setGalleryImages((prev) => prev.filter((g) => g.id !== id));
+    try { await apiDelete("gallery_images", id); } catch { /* silent */ }
+  }, []);
+
+  // ----- Students -----
+  const addStudent = useCallback(async (s: Omit<Student, "id">) => {
+    const id = generateId();
+    setStudents((prev) => [{ ...s, id }, ...prev]);
+    try { await apiCreate("students", { id, ...s }); } catch { /* silent */ }
+  }, []);
+
+  const updateStudent = useCallback(async (id: string, data: Partial<Student>) => {
+    setStudents((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
+    try { await apiUpdate("students", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteStudent = useCallback(async (id: string) => {
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+    try { await apiDelete("students", id); } catch { /* silent */ }
+  }, []);
+
+  // ----- Enrollments -----
+  const addEnrollment = useCallback(async (e: Omit<Enrollment, "id">) => {
+    const id = generateId();
+    setEnrollments((prev) => [{ ...e, id }, ...prev]);
+    try { await apiCreate("enrollments", { id, ...e }); } catch { /* silent */ }
+  }, []);
+
+  const updateEnrollment = useCallback(async (id: string, data: Partial<Enrollment>) => {
+    setEnrollments((prev) => prev.map((e) => (e.id === id ? { ...e, ...data } : e)));
+    try { await apiUpdate("enrollments", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteEnrollment = useCallback(async (id: string) => {
+    setEnrollments((prev) => prev.filter((e) => e.id !== id));
+    try { await apiDelete("enrollments", id); } catch { /* silent */ }
+  }, []);
+
+  // ----- Course Categories -----
+  const addCourseCategory = useCallback(async (cat: string) => {
     setCourseCategories((prev) => (prev.includes(cat) ? prev : [...prev, cat]));
+    try { await apiCreate("course_categories", { name: cat }); } catch { /* silent */ }
   }, []);
 
-  const deleteCourseCategory = useCallback((cat: string) => {
+  const deleteCourseCategory = useCallback(async (cat: string) => {
     setCourseCategories((prev) => prev.filter((c) => c !== cat));
+    try { const cats = await apiList("course_categories"); const found = cats.find((c: { name: string }) => c.name === cat); if (found) await apiDelete("course_categories", found.id); } catch { /* silent */ }
   }, []);
 
   const addNoticeCategory = useCallback((cat: Omit<NoticeCategory, "color">) => {
     const colors = [
-      "bg-rose-100 text-rose-800",
-      "bg-cyan-100 text-cyan-800",
-      "bg-orange-100 text-orange-800",
-      "bg-teal-100 text-teal-800",
-      "bg-indigo-100 text-indigo-800",
-      "bg-lime-100 text-lime-800",
+      "bg-rose-100 text-rose-800", "bg-cyan-100 text-cyan-800",
+      "bg-orange-100 text-orange-800", "bg-teal-100 text-teal-800",
+      "bg-indigo-100 text-indigo-800", "bg-lime-100 text-lime-800",
     ];
     const color = colors[noticeCategories.length % colors.length];
     setNoticeCategories((prev) => [...prev, { ...cat, color }]);
+    try { apiCreate("notice_categories", { ...cat, color }); } catch { /* silent */ }
   }, [noticeCategories.length]);
 
-  const deleteNoticeCategory = useCallback((value: string) => {
+  const deleteNoticeCategory = useCallback(async (value: string) => {
     setNoticeCategories((prev) => prev.filter((c) => c.value !== value));
+    try { const cats = await apiList("notice_categories"); const found = cats.find((c: { value: string }) => c.value === value); if (found) await apiDelete("notice_categories", found.id); } catch { /* silent */ }
   }, []);
 
-  const updateNoticeCategory = useCallback((value: string, data: Partial<NoticeCategory>) => {
+  const updateNoticeCategory = useCallback(async (value: string, data: Partial<NoticeCategory>) => {
     setNoticeCategories((prev) => prev.map((c) => (c.value === value ? { ...c, ...data } : c)));
+    try { const cats = await apiList("notice_categories"); const found = cats.find((c: { value: string }) => c.value === value); if (found) await apiUpdate("notice_categories", found.id, data); } catch { /* silent */ }
   }, []);
 
-  const updateSettings = useCallback((s: Partial<AppSettings>) => {
+  const updateSettings = useCallback(async (s: Partial<AppSettings>) => {
     setSettings((prev) => ({ ...prev, ...s }));
+    try { const all = await apiList("settings"); if (all.length) await apiUpdate("settings", all[0].id, s); } catch { /* silent */ }
   }, []);
 
+  // ----- Subcategories -----
   const addSubcategory = useCallback((sub: Omit<Subcategory, "id" | "items" | "createdAt">) => {
-    const newSub: Subcategory = {
-      ...sub,
-      id: generateId(),
-      items: [],
-      createdAt: new Date().toISOString(),
-    };
+    const newSub: Subcategory = { ...sub, id: generateId(), items: [], createdAt: new Date().toISOString() };
     setSubcategories((prev) => [...prev, newSub]);
+    const { items: _, ...dbBody } = newSub;
+    try { apiCreate("subcategories", dbBody); } catch { /* silent */ }
   }, []);
 
   const updateSubcategory = useCallback((id: string, data: Partial<Subcategory>) => {
     setSubcategories((prev) => prev.map((s) => (s.id === id ? { ...s, ...data } : s)));
+    try { apiUpdate("subcategories", id, data); } catch { /* silent */ }
   }, []);
 
   const deleteSubcategory = useCallback((id: string) => {
     setSubcategories((prev) => prev.filter((s) => s.id !== id));
+    try { apiDelete("subcategories", id); } catch { /* silent */ }
   }, []);
 
   const addItem = useCallback((subcategoryId: string, item: Omit<Item, "id" | "createdAt">) => {
-    const newItem: Item = {
-      ...item,
-      id: generateId(),
-      createdAt: new Date().toISOString(),
-    };
+    const newItem: Item = { ...item, id: generateId(), createdAt: new Date().toISOString() };
     setSubcategories((prev) =>
-      prev.map((s) =>
-        s.id === subcategoryId ? { ...s, items: [...s.items, newItem] } : s
-      )
+      prev.map((s) => s.id === subcategoryId ? { ...s, items: [...s.items, newItem] } : s)
     );
+    try { apiCreate("items", { ...newItem, subcategoryId }); } catch { /* silent */ }
   }, []);
 
   const updateItem = useCallback((subcategoryId: string, itemId: string, data: Partial<Item>) => {
@@ -392,87 +693,82 @@ export function AppProvider({ children }: { children: ReactNode }) {
           : s
       )
     );
+    try { apiUpdate("items", itemId, data); } catch { /* silent */ }
   }, []);
 
   const deleteItem = useCallback((subcategoryId: string, itemId: string) => {
     setSubcategories((prev) =>
       prev.map((s) =>
-        s.id === subcategoryId
-          ? { ...s, items: s.items.filter((item) => item.id !== itemId) }
-          : s
+        s.id === subcategoryId ? { ...s, items: s.items.filter((item) => item.id !== itemId) } : s
       )
     );
+    try { apiDelete("items", itemId); } catch { /* silent */ }
   }, []);
 
+  // ----- Exams -----
   const addExamCategory = useCallback((cat: Omit<ExamCategory, "id" | "createdAt">) => {
-    setExamCategories((prev) => [...prev, { ...cat, id: generateId(), createdAt: new Date().toISOString() }]);
+    const id = generateId();
+    setExamCategories((prev) => [...prev, { ...cat, id, createdAt: new Date().toISOString() }]);
+    try { apiCreate("exam_categories", { id, ...cat }); } catch { /* silent */ }
   }, []);
 
   const updateExamCategory = useCallback((id: string, data: Partial<ExamCategory>) => {
     setExamCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)));
+    try { apiUpdate("exam_categories", id, data); } catch { /* silent */ }
   }, []);
 
   const deleteExamCategory = useCallback((id: string) => {
     setExamCategories((prev) => prev.filter((c) => c.id !== id));
     setQuestions((prev) => prev.filter((q) => q.categoryId !== id));
+    try { apiDelete("exam_categories", id); } catch { /* silent */ }
   }, []);
 
   const addQuestion = useCallback((q: Omit<Question, "id" | "createdAt">) => {
-    setQuestions((prev) => [...prev, { ...q, id: generateId(), createdAt: new Date().toISOString() }]);
+    const id = generateId();
+    setQuestions((prev) => [...prev, { ...q, id, createdAt: new Date().toISOString() }]);
+    try { apiCreate("questions", { id, ...q }); } catch { /* silent */ }
   }, []);
 
   const updateQuestion = useCallback((id: string, data: Partial<Question>) => {
     setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)));
+    try { apiUpdate("questions", id, data); } catch { /* silent */ }
   }, []);
 
   const deleteQuestion = useCallback((id: string) => {
     setQuestions((prev) => prev.filter((q) => q.id !== id));
+    try { apiDelete("questions", id); } catch { /* silent */ }
   }, []);
 
   const addAttempt = useCallback((a: Omit<ExamAttempt, "id" | "completedAt">) => {
-    setAttempts((prev) => [...prev, { ...a, id: generateId(), completedAt: new Date().toISOString() }]);
+    const attempt: ExamAttempt = { ...a, id: generateId(), completedAt: new Date().toISOString() };
+    setAttempts((prev) => [...prev, attempt]);
+    try { apiCreate("exam_attempts", attempt); } catch { /* silent */ }
   }, []);
 
   return (
     <AppContext.Provider
       value={{
-        faqs,
-        facultyMembers,
-        courseCategories,
-        noticeCategories,
-        settings,
-        setFaqs,
-        addFaq,
-        updateFaq,
-        deleteFaq,
-        addFacultyMember,
-        updateFacultyMember,
-        deleteFacultyMember,
-        setCourseCategories,
-        addCourseCategory,
-        deleteCourseCategory,
-        addNoticeCategory,
-        deleteNoticeCategory,
-        updateNoticeCategory,
+        loading, loadAdminData,
+        faqs, facultyMembers,
+        courses, notices, testimonials, galleryImages, students, enrollments,
+        courseCategories, noticeCategories, settings,
+        subcategories, completedItems, toggleItemComplete,
+        setFaqs, addFaq, updateFaq, deleteFaq,
+        addFacultyMember, updateFacultyMember, deleteFacultyMember,
+        addCourse, updateCourse, deleteCourse,
+        addNotice, updateNotice, deleteNotice,
+        addTestimonial, updateTestimonial, deleteTestimonial,
+        addGalleryImage, updateGalleryImage, deleteGalleryImage,
+        addStudent, updateStudent, deleteStudent,
+        addEnrollment, updateEnrollment, deleteEnrollment, setEnrollments,
+        setCourseCategories, addCourseCategory, deleteCourseCategory,
+        addNoticeCategory, deleteNoticeCategory, updateNoticeCategory,
         updateSettings,
-        subcategories,
-        completedItems,
-        toggleItemComplete,
-        addSubcategory,
-        updateSubcategory,
-        deleteSubcategory,
-        addItem,
-        updateItem,
-        deleteItem,
-        examCategories,
-        questions,
-        attempts,
-        addExamCategory,
-        updateExamCategory,
-        deleteExamCategory,
-        addQuestion,
-        updateQuestion,
-        deleteQuestion,
+        addSubcategory, updateSubcategory, deleteSubcategory,
+        addItem, updateItem, deleteItem,
+        examCategories, questions, attempts,
+        addExamCategory, updateExamCategory, deleteExamCategory,
+        addQuestion, updateQuestion, deleteQuestion,
         addAttempt,
       }}
     >

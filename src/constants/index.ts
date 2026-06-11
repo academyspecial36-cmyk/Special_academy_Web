@@ -7,6 +7,7 @@ export const NAV_ITEMS = [
   { label: "Courses", href: "/courses" },
   { label: "Notices", href: "/notices" },
   { label: "Testimonials", href: "/testimonials" },
+  { label: "Blog", href: "/blog" },
   { label: "Gallery", href: "/gallery" },
   { label: "Team", href: "/team" },
   { label: "Contact", href: "/contact" },
@@ -21,9 +22,11 @@ export const DASHBOARD_NAV = [
   { label: "Enrollments", href: "/dashboard/enrollments", icon: "FileText" },
   { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
   { label: "Faculty", href: "/dashboard/faculty", icon: "GraduationCap" },
+  { label: "Blog", href: "/dashboard/blog", icon: "FileText" },
   { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
   { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
   { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
+  { label: "Contact Submissions", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
   { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
 ];
 

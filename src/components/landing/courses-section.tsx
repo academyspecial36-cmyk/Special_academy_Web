@@ -7,9 +7,10 @@ import { ArrowRight, Clock, Users, Star, CheckCircle2 } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { courses } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 export function CoursesSection() {
+  const { courses } = useAppContext();
   const featuredCourses = courses.slice(0, 3);
 
   return (
@@ -34,7 +35,7 @@ export function CoursesSection() {
               {/* Image */}
               <div className="relative h-52 overflow-hidden">
                 <Image
-                  src={course.image}
+                  src={course.image || "/placeholder.svg"}
                   alt={course.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"

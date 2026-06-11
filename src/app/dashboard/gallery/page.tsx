@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { galleryImages as initialImages } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { GalleryImage } from "@/types";
 
 const fields: FieldConfig[] = [
-  { name: "src", label: "Image URL", type: "url", required: true, placeholder: "https://..." },
+  { name: "src", label: "Image", type: "image" as const, required: true, placeholder: "https://..." },
   { name: "alt", label: "Alt Text", type: "text", required: true, placeholder: "Description of the image" },
   { name: "category", label: "Category", type: "select", required: true, options: [
     { label: "Campus", value: "campus" },
@@ -27,7 +27,7 @@ const fields: FieldConfig[] = [
 ];
 
 export default function DashboardGalleryPage() {
-  const [images, setImages] = useState<GalleryImage[]>(initialImages);
+  const { galleryImages: images, addGalleryImage, updateGalleryImage, deleteGalleryImage } = useAppContext();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -39,45 +39,38 @@ export default function DashboardGalleryPage() {
   );
 
   function handleAdd(data: Record<string, string>) {
-    const newImage: GalleryImage = {
-      id: `gallery-${Date.now()}`,
+    addGalleryImage({
       src: data.src,
       alt: data.alt,
       category: data.category,
-    };
-    setImages((prev) => [newImage, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Image added:", newImage);
     toast.success("Image added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: GalleryImage = {
-      ...selected,
+    updateGalleryImage(selected.id, {
       src: data.src,
       alt: data.alt,
       category: data.category,
-    };
-    setImages((prev) => prev.map((img) => (img.id === updated.id ? updated : img)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Image updated:", updated);
     toast.success("Image updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setImages((prev) => prev.filter((img) => img.id !== selected.id));
+    deleteGalleryImage(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Image deleted:", selected.id);
     toast.success("Image deleted successfully");
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Gallery</h1>
           <p className="text-sm text-muted">Manage academy gallery images.</p>
@@ -88,7 +81,7 @@ export default function DashboardGalleryPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input placeholder="Search images..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>

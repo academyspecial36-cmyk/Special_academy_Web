@@ -6,9 +6,10 @@ import Link from "next/link";
 import { Award, BookOpen, ArrowRight } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
-import { facultyMembers } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 export function FacultySection() {
+  const { facultyMembers } = useAppContext();
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

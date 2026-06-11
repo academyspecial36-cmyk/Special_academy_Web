@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STUDENT_NAV } from "@/constants";
+import { useAuth } from "@/lib/auth-context";
+import { useAppContext } from "@/lib/app-context";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -35,6 +37,29 @@ export default function StudentLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, isLoading, logout } = useAuth();
+  const { settings } = useAppContext();
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!user) router.replace("/login");
+    else if (user.role !== "student") router.replace("/");
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-accent flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user || user.role !== "student") return null;
+
+  const initials = user?.name
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : user?.email?.charAt(0).toUpperCase() ?? "S";
 
   return (
     <div className="min-h-screen bg-accent flex">
@@ -59,7 +84,7 @@ export default function StudentLayout({
         <div className="h-16 flex items-center px-6 border-b border-primary/5">
           <Link href="/student" className="flex items-center gap-2.5">
             <div className="w-8 h-8 relative">
-              <Image src="/icon-image.png" alt="Special academy" width={32} height={32} className="object-contain" />
+              <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={32} height={32} className="object-contain" unoptimized />
             </div>
             <div>
               <span className="font-bold text-sm text-primary">Special academy</span>
@@ -124,8 +149,12 @@ export default function StudentLayout({
             </button>
             <div className="relative">
               <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                  AH
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
+                  {user?.avatar_url ? (
+                    <Image src={user.avatar_url} alt="" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                  ) : (
+                    initials
+                  )}
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-muted hidden sm:block" />
               </button>
@@ -138,11 +167,11 @@ export default function StudentLayout({
                     className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-elevated border border-primary/5 py-1 z-50"
                   >
                     <div className="px-4 py-2 border-b border-primary/5">
-                      <p className="text-sm font-medium text-primary">Arafat Hossain</p>
-                      <p className="text-xs text-muted">arafat@example.com</p>
+                      <p className="text-sm font-medium text-primary">{user?.name ?? "Student"}</p>
+                      <p className="text-xs text-muted">{user?.role ?? ""}</p>
                     </div>
                     <Link href="/student/profile" className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors">Profile</Link>
-                    <Link href="/" className="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">Sign Out</Link>
+                    <button onClick={logout} className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">Sign Out</button>
                   </motion.div>
                 )}
               </AnimatePresence>

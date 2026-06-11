@@ -6,15 +6,15 @@ import { ArrowRight, Pin, Calendar } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { notices } from "@/mock";
-import { NOTICE_CATEGORIES } from "@/constants";
+import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 
 export function NoticesSection() {
+  const { notices, noticeCategories } = useAppContext();
   const featuredNotices = notices.slice(0, 4);
 
   const getCategoryStyle = (category: string) => {
-    const cat = NOTICE_CATEGORIES.find((c) => c.value === category);
+    const cat = noticeCategories.find((c) => c.value === category);
     return cat?.color || "bg-slate-100 text-slate-800";
   };
 
@@ -40,7 +40,7 @@ export function NoticesSection() {
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex items-center gap-2">
                   <Badge className={getCategoryStyle(notice.category)}>
-                    {NOTICE_CATEGORIES.find((c) => c.value === notice.category)?.label}
+                    {noticeCategories.find((c) => c.value === notice.category)?.label}
                   </Badge>
                   {notice.isPinned && (
                     <Pin className="w-3.5 h-3.5 text-secondary fill-secondary" />

@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowLeft, Plus, Pencil, Trash2, Eye, EyeOff,
-  Lock, Unlock, Video, FileText, Play,
+  Lock, Unlock, Video, FileText, Play, ChevronUp,
+  ChevronDown, Image as ImageIcon, Upload, Loader2, X
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,34 +16,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { Modal } from "@/components/ui/modal";
 import { PreviewModal } from "@/components/ui/preview-modal";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useAppContext } from "@/lib/app-context";
-import { courses } from "@/mock";
 import { formatShortDate } from "@/lib/utils";
+import { apiUpload, apiUploadMultiple } from "@/lib/api-client";
 
 const subFields: FieldConfig[] = [
   { name: "title", label: "Title", type: "text", required: true, placeholder: "e.g. General Knowledge" },
   { name: "shortDescription", label: "Short Description", type: "textarea", required: true, placeholder: "Brief description of this subcategory" },
-  { name: "thumbnail", label: "Thumbnail URL", type: "url", placeholder: "https://..." },
-  { name: "status", label: "Status", type: "select", required: true, options: [
-    { label: "Free", value: "free" },
-    { label: "Paid", value: "paid" },
-  ]},
-  { name: "hidden", label: "Visibility", type: "select", required: true, options: [
-    { label: "Visible", value: "false" },
-    { label: "Hidden", value: "true" },
-  ]},
-];
-
-const itemFields: FieldConfig[] = [
-  { name: "type", label: "Type", type: "select", required: true, options: [
-    { label: "Video", value: "video" },
-    { label: "PDF", value: "pdf" },
-  ]},
-  { name: "title", label: "Title", type: "text", required: true, placeholder: "e.g. GK Chapter 1 - Introduction" },
-  { name: "description", label: "Description", type: "textarea", placeholder: "Brief description of this item" },
-  { name: "url", label: "Video URL / PDF URL", type: "url", required: true, placeholder: "https://..." },
-  { name: "duration", label: "Duration (for video)", type: "text", placeholder: "e.g. 15:30" },
+  { name: "thumbnail", label: "Thumbnail", type: "image" as const, placeholder: "https://..." },
   { name: "status", label: "Status", type: "select", required: true, options: [
     { label: "Free", value: "free" },
     { label: "Paid", value: "paid" },
@@ -62,25 +47,39 @@ interface SubcategoryForm {
   hidden: boolean;
 }
 
-interface ItemForm {
-  id: string;
+interface ItemFormState {
+  id?: string;
   subcategoryId: string;
-  type: "video" | "pdf";
+  type: "video" | "pdf" | "image";
   title: string;
   description: string;
   url: string;
+  images: string[];
   duration: string;
   status: "paid" | "free";
   hidden: boolean;
 }
 
+function defaultItemForm(subcategoryId: string): ItemFormState {
+  return {
+    subcategoryId,
+    type: "video",
+    title: "",
+    description: "",
+    url: "",
+    images: [],
+    duration: "",
+    status: "free",
+    hidden: false,
+  };
+}
+
 export default function CourseDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params.id as string;
-  const course = courses.find((c) => c.id === courseId);
 
   const {
+    courses,
     subcategories,
     addSubcategory,
     updateSubcategory,
@@ -90,21 +89,41 @@ export default function CourseDetailPage() {
     deleteItem,
   } = useAppContext();
 
+  const course = courses.find((c) => c.id === courseId);
   const courseSubs = subcategories.filter((s) => s.courseId === courseId);
 
+  // Subcategory modals
   const [subAddOpen, setSubAddOpen] = useState(false);
   const [subEditOpen, setSubEditOpen] = useState(false);
   const [subDeleteOpen, setSubDeleteOpen] = useState(false);
   const [selectedSub, setSelectedSub] = useState<SubcategoryForm | null>(null);
 
-  const [itemAddOpen, setItemAddOpen] = useState(false);
-  const [itemEditOpen, setItemEditOpen] = useState(false);
+  // Item modal state
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [itemForm, setItemForm] = useState<ItemFormState>(defaultItemForm(""));
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [itemDeleteOpen, setItemDeleteOpen] = useState(false);
-  const [itemParentId, setItemParentId] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<ItemForm | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ItemFormState | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  // Pending file uploads (not yet saved to bucket)
+  const [pendingImageFiles, setPendingImageFiles] = useState<File[]>([]);
+  const [pendingImagePreviews, setPendingImagePreviews] = useState<string[]>([]);
+  const [pendingPdfFile, setPendingPdfFile] = useState<File | null>(null);
+
+  const pdfFileRef = useRef<HTMLInputElement>(null);
+  const imageFilesRef = useRef<HTMLInputElement>(null);
+
   const [expandedSub, setExpandedSub] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf"; title: string; url: string } | null>(null);
+  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);
+
+  // Clean up object URLs on unmount
+  useEffect(() => {
+    return () => {
+      pendingImagePreviews.forEach((p) => URL.revokeObjectURL(p));
+    };
+  }, [pendingImagePreviews]);
 
   if (!course) {
     return (
@@ -117,6 +136,7 @@ export default function CourseDetailPage() {
     );
   }
 
+  // Subcategory handlers
   function handleAddSub(data: Record<string, string>) {
     addSubcategory({
       courseId,
@@ -127,7 +147,6 @@ export default function CourseDetailPage() {
       hidden: data.hidden === "true",
     });
     setSubAddOpen(false);
-    console.log("Subcategory added:", data);
     toast.success("Subcategory added successfully");
   }
 
@@ -142,7 +161,6 @@ export default function CourseDetailPage() {
     });
     setSubEditOpen(false);
     setSelectedSub(null);
-    console.log("Subcategory updated:", data);
     toast.success("Subcategory updated successfully");
   }
 
@@ -151,58 +169,126 @@ export default function CourseDetailPage() {
     deleteSubcategory(selectedSub.id);
     setSubDeleteOpen(false);
     setSelectedSub(null);
-    console.log("Subcategory deleted:", selectedSub.id);
     toast.success("Subcategory deleted successfully");
   }
 
-  function handleAddItem(data: Record<string, string>) {
-    if (!itemParentId) return;
-    addItem(itemParentId, {
-      subcategoryId: itemParentId,
-      type: data.type as "video" | "pdf",
-      title: data.title,
-      description: data.description || "",
-      url: data.url,
-      duration: data.duration || undefined,
-      status: data.status as "paid" | "free",
-      hidden: data.hidden === "true",
-    });
-    setItemAddOpen(false);
-    setItemParentId(null);
-    console.log("Item added:", data);
-    toast.success("Item added successfully");
+  // Item handlers
+  function openAddItem(subcategoryId: string) {
+    setItemForm(defaultItemForm(subcategoryId));
+    setEditingItemId(null);
+    setPendingImageFiles([]);
+    setPendingImagePreviews([]);
+    setPendingPdfFile(null);
+    setItemModalOpen(true);
   }
 
-  function handleEditItem(data: Record<string, string>) {
-    if (!selectedItem || !selectedItem.subcategoryId) return;
-    updateItem(selectedItem.subcategoryId, selectedItem.id, {
-      type: data.type as "video" | "pdf",
-      title: data.title,
-      description: data.description || "",
-      url: data.url,
-      duration: data.duration || undefined,
-      status: data.status as "paid" | "free",
-      hidden: data.hidden === "true",
+  function openEditItem(item: ItemFormState) {
+    setItemForm({ ...item });
+    setEditingItemId(item.id ?? null);
+    setPendingImageFiles([]);
+    setPendingImagePreviews([]);
+    setPendingPdfFile(null);
+    setItemModalOpen(true);
+  }
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const previews = files.map((f) => URL.createObjectURL(f));
+    setPendingImageFiles((prev) => [...prev, ...files]);
+    setPendingImagePreviews((prev) => [...prev, ...previews]);
+    if (imageFilesRef.current) imageFilesRef.current.value = "";
+  }
+
+  function removePendingImage(index: number) {
+    setPendingImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setPendingImagePreviews((prev) => {
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
     });
-    setItemEditOpen(false);
-    setSelectedItem(null);
-    console.log("Item updated:", data);
-    toast.success("Item updated successfully");
+  }
+
+  function handlePdfSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPendingPdfFile(file);
+    if (pdfFileRef.current) pdfFileRef.current.value = "";
+  }
+
+  async function handleSaveItem() {
+    if (!itemForm.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    if (itemForm.type === "video" && !itemForm.url.trim()) {
+      toast.error("Video URL is required");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      let url = itemForm.url;
+      let images = itemForm.images;
+
+      // Upload pending files on save
+      if (pendingImageFiles.length > 0) {
+        const { urls } = await apiUploadMultiple(pendingImageFiles, "images");
+        images = [...images, ...urls];
+        if (!url) url = urls[0];
+      }
+
+      if (itemForm.type === "image" && images.length === 0) {
+        toast.error("Please select at least one image");
+        setUploading(false);
+        return;
+      }
+
+      if (pendingPdfFile) {
+        const { url: pdfUrl } = await apiUpload(pendingPdfFile, "pdfs");
+        url = pdfUrl;
+      }
+
+      const payload = {
+        subcategoryId: itemForm.subcategoryId,
+        type: itemForm.type,
+        title: itemForm.title,
+        description: itemForm.description,
+        url,
+        images: images.length > 0 ? images : undefined,
+        duration: itemForm.duration || undefined,
+        status: itemForm.status,
+        hidden: itemForm.hidden,
+      } as Record<string, unknown>;
+
+      if (editingItemId) {
+        updateItem(itemForm.subcategoryId, editingItemId, payload);
+        toast.success("Item updated successfully");
+      } else {
+        addItem(itemForm.subcategoryId, payload as any);
+        toast.success("Item added successfully");
+      }
+
+      setItemModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save item");
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleDeleteItem() {
     if (!selectedItem || !selectedItem.subcategoryId) return;
-    deleteItem(selectedItem.subcategoryId, selectedItem.id);
+    deleteItem(selectedItem.subcategoryId, selectedItem.id!);
     setItemDeleteOpen(false);
     setSelectedItem(null);
-    console.log("Item deleted:", selectedItem.id);
     toast.success("Item deleted successfully");
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/courses">
@@ -236,7 +322,7 @@ export default function CourseDetailPage() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div>
           {courseSubs.map((sub, i) => {
             const subItems = sub.items || [];
             return (
@@ -251,7 +337,7 @@ export default function CourseDetailPage() {
                     <div className="flex items-start gap-4">
                       {sub.thumbnail ? (
                         <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 relative">
-                          <Image src={sub.thumbnail} alt={sub.title} fill className="object-cover" />
+                          <Image src={sub.thumbnail} alt={sub.title} fill className="object-cover" unoptimized />
                         </div>
                       ) : (
                         <div className="w-20 h-20 rounded-xl bg-accent flex items-center justify-center shrink-0">
@@ -274,12 +360,10 @@ export default function CourseDetailPage() {
                           </div>
                           <div className="flex gap-1 shrink-0">
                             <button
-                              onClick={() => {
-                                setExpandedSub(expandedSub === sub.id ? null : sub.id);
-                              }}
+                              onClick={() => setExpandedSub(expandedSub === sub.id ? null : sub.id)}
                               className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
                             >
-                              <Play className="w-3.5 h-3.5" />
+                             {expandedSub !== null ? <ChevronUp className="w-3.5 h-3.5" />:<ChevronDown className="w-3.5 h-3.5" />} 
                             </button>
                             <button
                               onClick={() => {
@@ -340,10 +424,7 @@ export default function CourseDetailPage() {
                                   size="sm"
                                   variant="outline"
                                   className="h-7 text-xs"
-                                  onClick={() => {
-                                    setItemParentId(sub.id);
-                                    setItemAddOpen(true);
-                                  }}
+                                  onClick={() => openAddItem(sub.id)}
                                 >
                                   <Plus className="w-3 h-3 mr-1" />
                                   Add Item
@@ -351,7 +432,7 @@ export default function CourseDetailPage() {
                               </div>
 
                               {subItems.length === 0 ? (
-                                <p className="text-xs text-muted py-2">No items yet. Add videos or PDFs.</p>
+                                <p className="text-xs text-muted py-2">No items yet. Add videos, PDFs, or images.</p>
                               ) : (
                                 <div className="space-y-2">
                                   {subItems.map((item) => (
@@ -362,25 +443,33 @@ export default function CourseDetailPage() {
                                       }`}
                                     >
                                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                        item.type === "video" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                                        item.type === "video" ? "bg-blue-50 text-blue-600"
+                                        : item.type === "image" ? "bg-purple-50 text-purple-600"
+                                        : "bg-amber-50 text-amber-600"
                                       }`}>
                                         <button
                                           onClick={() => {
-                                            setPreviewItem({ type: item.type, title: item.title, url: item.url });
+                                            setPreviewItem({
+                                              type: item.type,
+                                              title: item.title,
+                                              url: item.url,
+                                              images: item.images,
+                                            });
                                             setPreviewOpen(true);
                                           }}
                                         >
-                                          {item.type === "video" ? (
-                                            <Play className="w-4 h-4" />
-                                          ) : (
-                                            <FileText className="w-4 h-4" />
-                                          )}
+                                          {item.type === "video" ? <Play className="w-4 h-4" />
+                                            : item.type === "image" ? <ImageIcon className="w-4 h-4" />
+                                            : <FileText className="w-4 h-4" />}
                                         </button>
                                       </div>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                           <span className="text-sm font-medium text-primary truncate">{item.title}</span>
                                           <Badge variant="outline" className="text-[9px] uppercase">{item.type}</Badge>
+                                          {item.images && item.images.length > 1 && (
+                                            <Badge variant="secondary" className="text-[9px]">{item.images.length} photos</Badge>
+                                          )}
                                           <Badge variant={item.status === "free" ? "secondary" : "default"} className="text-[9px]">
                                             {item.status}
                                           </Badge>
@@ -391,18 +480,18 @@ export default function CourseDetailPage() {
                                       <div className="flex gap-1 shrink-0">
                                         <button
                                           onClick={() => {
-                                            setSelectedItem({
+                                            openEditItem({
                                               id: item.id,
                                               subcategoryId: sub.id,
                                               type: item.type,
                                               title: item.title,
                                               description: item.description,
                                               url: item.url,
+                                              images: item.images || [],
                                               duration: item.duration || "",
                                               status: item.status,
                                               hidden: item.hidden,
                                             });
-                                            setItemEditOpen(true);
                                           }}
                                           className="p-1 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
                                         >
@@ -417,6 +506,7 @@ export default function CourseDetailPage() {
                                               title: item.title,
                                               description: item.description,
                                               url: item.url,
+                                              images: item.images || [],
                                               duration: item.duration || "",
                                               status: item.status,
                                               hidden: item.hidden,
@@ -479,34 +569,215 @@ export default function CourseDetailPage() {
         message={`Are you sure you want to delete "${selectedSub?.title}"? All items inside will also be removed.`}
       />
 
-      {/* Item Modals */}
-      <FormModal
-        open={itemAddOpen}
-        onClose={() => { setItemAddOpen(false); setItemParentId(null); }}
-        title="Add Item"
-        fields={itemFields}
-        onSubmit={handleAddItem}
-        submitLabel="Add Item"
-      />
+      {/* Item Add/Edit Modal */}
+      <Modal
+        open={itemModalOpen}
+        onClose={() => { setItemModalOpen(false); }}
+        title={editingItemId ? "Edit Item" : "Add Item"}
+        maxWidth="max-w-xl"
+      >
+        <div className="space-y-4">
+          {/* Type */}
+          <div>
+            <label className="text-sm font-medium text-primary mb-1 block">Type <span className="text-red-500">*</span></label>
+            <select
+              value={itemForm.type}
+              onChange={(e) => {
+                setItemForm((prev) => ({ ...prev, type: e.target.value as "video" | "pdf" | "image" }));
+                setPendingImageFiles([]);
+                setPendingImagePreviews([]);
+                setPendingPdfFile(null);
+              }}
+              className="flex h-10 w-full rounded-lg border border-primary/10 bg-white px-3 py-2 text-sm text-primary outline-none focus:border-primary/30 focus:ring-0"
+            >
+              <option value="video">Video</option>
+              <option value="pdf">PDF</option>
+              <option value="image">Image</option>
+            </select>
+          </div>
 
-      <FormModal
-        open={itemEditOpen}
-        onClose={() => { setItemEditOpen(false); setSelectedItem(null); }}
-        title="Edit Item"
-        fields={itemFields}
-        initialValues={selectedItem ? {
-          type: selectedItem.type,
-          title: selectedItem.title,
-          description: selectedItem.description,
-          url: selectedItem.url,
-          duration: selectedItem.duration,
-          status: selectedItem.status,
-          hidden: selectedItem.hidden ? "true" : "false",
-        } : undefined}
-        onSubmit={handleEditItem}
-        submitLabel="Update Item"
-      />
+          {/* Title */}
+          <div>
+            <label className="text-sm font-medium text-primary mb-1 block">Title <span className="text-red-500">*</span></label>
+            <Input
+              value={itemForm.title}
+              onChange={(e) => setItemForm((prev) => ({ ...prev, title: e.target.value }))}
+              placeholder="e.g. GK Chapter 1 - Introduction"
+            />
+          </div>
 
+          {/* Description */}
+          <div>
+            <label className="text-sm font-medium text-primary mb-1 block">Description</label>
+            <Textarea
+              value={itemForm.description}
+              onChange={(e) => setItemForm((prev) => ({ ...prev, description: e.target.value }))}
+              rows={2}
+              placeholder="Brief description of this item"
+            />
+          </div>
+
+          {/* Video URL */}
+          {itemForm.type === "video" && (
+            <div>
+              <label className="text-sm font-medium text-primary mb-1 block">Video URL <span className="text-red-500">*</span></label>
+              <Input
+                value={itemForm.url}
+                onChange={(e) => setItemForm((prev) => ({ ...prev, url: e.target.value }))}
+                placeholder="https://youtube.com/watch?v=... or https://..."
+              />
+            </div>
+          )}
+
+          {/* Duration (video only) */}
+          {itemForm.type === "video" && (
+            <div>
+              <label className="text-sm font-medium text-primary mb-1 block">Duration</label>
+              <Input
+                value={itemForm.duration}
+                onChange={(e) => setItemForm((prev) => ({ ...prev, duration: e.target.value }))}
+                placeholder="e.g. 15:30"
+              />
+            </div>
+          )}
+
+          {/* PDF upload */}
+          {itemForm.type === "pdf" && (
+            <div>
+              <label className="text-sm font-medium text-primary mb-1 block">PDF File</label>
+              <input
+                ref={pdfFileRef}
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={handlePdfSelect}
+              />
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => pdfFileRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="w-3.5 h-3.5 mr-2" />
+                  Select PDF
+                </Button>
+                {pendingPdfFile && (
+                  <span className="text-xs text-muted truncate flex-1">{pendingPdfFile.name}</span>
+                )}
+              </div>
+              <div className="mt-2">
+                <label className="text-sm font-medium text-primary mb-1 block">Or enter PDF URL</label>
+                <Input
+                  value={itemForm.url}
+                  onChange={(e) => setItemForm((prev) => ({ ...prev, url: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Image upload */}
+          {itemForm.type === "image" && (
+            <div>
+              <label className="text-sm font-medium text-primary mb-1 block">Images</label>
+              <input
+                ref={imageFilesRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => imageFilesRef.current?.click()}
+                disabled={uploading}
+              >
+                <Upload className="w-3.5 h-3.5 mr-2" />
+                Select Images
+              </Button>
+
+              {/* Local previews of pending images */}
+              {pendingImagePreviews.length > 0 && (
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {pendingImagePreviews.map((preview, i) => (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-accent group">
+                      <Image src={preview} alt={`Preview ${i + 1}`} fill className="object-cover" unoptimized />
+                      <button
+                        onClick={() => removePendingImage(i)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Already-saved images (when editing) */}
+              {itemForm.images.filter((img) => !pendingImagePreviews.includes(img)).length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs text-muted mb-2">Saved images:</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {itemForm.images
+                      .filter((img) => !pendingImagePreviews.some((p) => img.startsWith("blob:")))
+                      .map((img, i) => (
+                        <div key={i} className="relative aspect-square rounded-lg overflow-hidden bg-accent">
+                          <Image src={img} alt={`Photo ${i + 1}`} fill className="object-cover" unoptimized />
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Status */}
+          <div>
+            <label className="text-sm font-medium text-primary mb-1 block">Status <span className="text-red-500">*</span></label>
+            <select
+              value={itemForm.status}
+              onChange={(e) => setItemForm((prev) => ({ ...prev, status: e.target.value as "paid" | "free" }))}
+              className="flex h-10 w-full rounded-lg border border-primary/10 bg-white px-3 py-2 text-sm text-primary outline-none focus:border-primary/30 focus:ring-0"
+            >
+              <option value="free">Free</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+
+          {/* Visibility */}
+          <div>
+            <label className="text-sm font-medium text-primary mb-1 block">Visibility <span className="text-red-500">*</span></label>
+            <select
+              value={itemForm.hidden ? "true" : "false"}
+              onChange={(e) => setItemForm((prev) => ({ ...prev, hidden: e.target.value === "true" }))}
+              className="flex h-10 w-full rounded-lg border border-primary/10 bg-white px-3 py-2 text-sm text-primary outline-none focus:border-primary/30 focus:ring-0"
+            >
+              <option value="false">Visible</option>
+              <option value="true">Hidden</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3 justify-end pt-2">
+            <Button type="button" variant="outline" onClick={() => setItemModalOpen(false)} disabled={uploading}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveItem} disabled={uploading}>
+              {uploading ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading & Saving...</>
+              ) : (
+                editingItemId ? "Update Item" : "Add Item"
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Item Delete Modal */}
       <DeleteModal
         open={itemDeleteOpen}
         onClose={() => { setItemDeleteOpen(false); setSelectedItem(null); }}
@@ -521,6 +792,7 @@ export default function CourseDetailPage() {
         type={previewItem?.type || "video"}
         title={previewItem?.title || ""}
         url={previewItem?.url || ""}
+        images={previewItem?.images}
       />
     </div>
   );

@@ -19,7 +19,7 @@ const fields: FieldConfig[] = [
   { name: "role", label: "Role", type: "text", required: true, placeholder: "e.g. Head of Academics" },
   { name: "qualification", label: "Qualification", type: "text", required: true, placeholder: "e.g. M.Sc. in Mathematics" },
   { name: "experience", label: "Experience", type: "text", required: true, placeholder: "e.g. 12 Years" },
-  { name: "image", label: "Image URL", type: "url", placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
   { name: "subjects", label: "Subjects (comma separated)", type: "text", placeholder: "e.g. Math, Science, English" },
 ];
 
@@ -75,8 +75,8 @@ export default function DashboardFacultyPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Faculty Members</h1>
           <p className="text-sm text-muted">Manage academy faculty and staff.</p>
@@ -87,7 +87,7 @@ export default function DashboardFacultyPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input placeholder="Search faculty..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>

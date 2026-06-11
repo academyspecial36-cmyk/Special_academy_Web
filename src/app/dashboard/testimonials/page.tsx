@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { testimonials as initialTestimonials } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { Testimonial } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -24,11 +24,11 @@ const fields: FieldConfig[] = [
   { name: "rating", label: "Rating (1-5)", type: "number", required: true, placeholder: "5" },
   { name: "achievement", label: "Achievement (optional)", type: "text", placeholder: "e.g. Secured top rank in XYZ" },
   { name: "class", label: "Class (optional)", type: "text", placeholder: "e.g. Class 10" },
-  { name: "image", label: "Image URL (optional)", type: "url", placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
 ];
 
 export default function DashboardTestimonialsPage() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(initialTestimonials);
+  const { testimonials, addTestimonial, updateTestimonial, deleteTestimonial } = useAppContext();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -40,8 +40,7 @@ export default function DashboardTestimonialsPage() {
   );
 
   function handleAdd(data: Record<string, string>) {
-    const newTestimonial: Testimonial = {
-      id: `testimonial-${Date.now()}`,
+    addTestimonial({
       name: data.name,
       role: data.role as Testimonial["role"],
       content: data.content,
@@ -49,17 +48,14 @@ export default function DashboardTestimonialsPage() {
       achievement: data.achievement || undefined,
       class: data.class || undefined,
       image: data.image || undefined,
-    };
-    setTestimonials((prev) => [newTestimonial, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Testimonial added:", newTestimonial);
     toast.success("Testimonial added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Testimonial = {
-      ...selected,
+    updateTestimonial(selected.id, {
       name: data.name,
       role: data.role as Testimonial["role"],
       content: data.content,
@@ -67,26 +63,23 @@ export default function DashboardTestimonialsPage() {
       achievement: data.achievement || undefined,
       class: data.class || undefined,
       image: data.image || undefined,
-    };
-    setTestimonials((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Testimonial updated:", updated);
     toast.success("Testimonial updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setTestimonials((prev) => prev.filter((t) => t.id !== selected.id));
+    deleteTestimonial(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Testimonial deleted:", selected.id);
     toast.success("Testimonial deleted successfully");
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Testimonials</h1>
           <p className="text-sm text-muted">Manage student and parent testimonials.</p>
@@ -97,7 +90,7 @@ export default function DashboardTestimonialsPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input placeholder="Search testimonials..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>

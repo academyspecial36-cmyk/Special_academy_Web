@@ -55,8 +55,8 @@ export default function AdminExamDetailPage() {
       answer: data.answer,
       explanation: data.explanation,
     });
+    setShowAdd(false);
     toast.success("Question added");
-    console.log("Question added:", data);
   }
 
   function handleEdit(data: Record<string, string>) {
@@ -72,15 +72,15 @@ export default function AdminExamDetailPage() {
       answer: data.answer,
       explanation: data.explanation,
     });
+    setEditing(null);
     toast.success("Question updated");
-    console.log("Question updated:", data);
   }
 
   function handleDelete() {
     if (!deleting) return;
     deleteQuestion(deleting.id);
+    setDeleting(null);
     toast.success("Question deleted");
-    console.log("Question deleted:", deleting.id);
   }
 
   function handlePrint() {
@@ -100,7 +100,7 @@ export default function AdminExamDetailPage() {
 
   return (
     <>
-      <div ref={printRef} className="space-y-6 print:space-y-4">
+      <div ref={printRef} className="space-y-4 print:space-y-4">
         {/* Watermark for print */}
         <div className="hidden print:block fixed inset-0 pointer-events-none z-50">
           <div

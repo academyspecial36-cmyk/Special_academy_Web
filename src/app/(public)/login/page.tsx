@@ -7,8 +7,11 @@ import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { PageWrapper } from "@/components/shared/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth-context";
+import { getSupabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,22 +23,33 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    try {
-      const res = await fetch("/api/student-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (data.success) {
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      if (result.role === "student") {
+        try {
+          const res = await fetch("/api/enrollment-status");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status !== "approved") {
+              await getSupabase()?.auth.signOut();
+              setError("Your account is not yet approved. Please contact 986-0302036 for assistance.");
+              return;
+            }
+          }
+        } catch {
+          await getSupabase()?.auth.signOut();
+          setError("Unable to verify enrollment status. Please try again.");
+          return;
+        }
         window.location.href = "/student";
       } else {
-        setError(data.error || "Invalid credentials");
+        await getSupabase()?.auth.signOut();
+        setError("Access denied. Student account required.");
       }
-    } catch {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
+    } else {
+      setError(result.error || "Invalid credentials");
     }
   }
 

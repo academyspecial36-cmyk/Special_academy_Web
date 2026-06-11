@@ -10,29 +10,28 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { notices as initialNotices } from "@/mock";
-import { NOTICE_CATEGORIES } from "@/constants";
+import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 import type { Notice } from "@/types";
 
-const fields: FieldConfig[] = [
-  { name: "title", label: "Title", type: "text", required: true, placeholder: "Notice title" },
-  { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
-  { name: "category", label: "Category", type: "select", required: true, options: NOTICE_CATEGORIES.map((c) => ({ label: c.label, value: c.value })) },
-  { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
-];
-
-const editFields: FieldConfig[] = [
-  { name: "title", label: "Title", type: "text", required: true, placeholder: "Notice title" },
-  { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
-  { name: "category", label: "Category", type: "select", required: true, options: NOTICE_CATEGORIES.map((c) => ({ label: c.label, value: c.value })) },
-  { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
-  { name: "isPinned", label: "Pinned", type: "select", options: [{ label: "No", value: "false" }, { label: "Yes", value: "true" }] },
-];
-
 export default function DashboardNoticesPage() {
-  const [notices, setNotices] = useState<Notice[]>(initialNotices);
+  const { notices, addNotice, updateNotice, deleteNotice, noticeCategories } = useAppContext();
   const [search, setSearch] = useState("");
+
+  const fields: FieldConfig[] = [
+    { name: "title", label: "Title", type: "text", required: true, placeholder: "Notice title" },
+    { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
+    { name: "category", label: "Category", type: "select", required: true, options: noticeCategories.map((c) => ({ label: c.label, value: c.value })) },
+    { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
+  ];
+
+  const editFields: FieldConfig[] = [
+    { name: "title", label: "Title", type: "text", required: true, placeholder: "Notice title" },
+    { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
+    { name: "category", label: "Category", type: "select", required: true, options: noticeCategories.map((c) => ({ label: c.label, value: c.value })) },
+    { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
+    { name: "isPinned", label: "Pinned", type: "select", options: [{ label: "No", value: "false" }, { label: "Yes", value: "true" }] },
+  ];
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -43,55 +42,48 @@ export default function DashboardNoticesPage() {
   );
 
   const getCategoryStyle = (category: string) => {
-    const cat = NOTICE_CATEGORIES.find((c) => c.value === category);
+    const cat = noticeCategories.find((c) => c.value === category);
     return cat?.color || "bg-slate-100 text-slate-800";
   };
 
   function handleAdd(data: Record<string, string>) {
-    const newNotice: Notice = {
-      id: `notice-${Date.now()}`,
+    addNotice({
       title: data.title,
       content: data.content,
       category: data.category as Notice["category"],
       author: data.author,
       date: new Date().toISOString(),
       isPinned: false,
-    };
-    setNotices((prev) => [newNotice, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Notice added:", newNotice);
     toast.success("Notice published successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Notice = {
-      ...selected,
+    updateNotice(selected.id, {
       title: data.title,
       content: data.content,
       category: data.category as Notice["category"],
       author: data.author,
       isPinned: data.isPinned === "true",
-    };
-    setNotices((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Notice updated:", updated);
     toast.success("Notice updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setNotices((prev) => prev.filter((n) => n.id !== selected.id));
+    deleteNotice(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Notice deleted:", selected.id);
     toast.success("Notice deleted successfully");
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Notices</h1>
           <p className="text-sm text-muted">Publish and manage academy notices.</p>
@@ -102,7 +94,7 @@ export default function DashboardNoticesPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input
           placeholder="Search notices..."
@@ -126,7 +118,7 @@ export default function DashboardNoticesPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className={getCategoryStyle(notice.category)}>
-                        {NOTICE_CATEGORIES.find((c) => c.value === notice.category)?.label}
+                        {noticeCategories.find((c) => c.value === notice.category)?.label}
                       </Badge>
                       {notice.isPinned && (
                         <Pin className="w-3.5 h-3.5 text-secondary fill-secondary" />

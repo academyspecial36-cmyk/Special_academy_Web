@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Search, Filter, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { students as initialStudents, courses } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 import type { Student } from "@/types";
 
 const fields: FieldConfig[] = [
@@ -25,7 +26,9 @@ const fields: FieldConfig[] = [
 ];
 
 export default function StudentsPage() {
-  const [students, setStudents] = useState<Student[]>(initialStudents);
+  const { students, addStudent, updateStudent, deleteStudent, courses, loadAdminData } = useAppContext();
+
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -44,8 +47,7 @@ export default function StudentsPage() {
   }, [search, statusFilter, students]);
 
   function handleAdd(data: Record<string, string>) {
-    const newStudent: Student = {
-      id: `student-${Date.now()}`,
+    addStudent({
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -53,41 +55,35 @@ export default function StudentsPage() {
       status: data.status as "active" | "inactive",
       enrolledCourses: [],
       joinDate: new Date().toISOString().split("T")[0],
-    };
-    setStudents((prev) => [newStudent, ...prev]);
+    });
     setAddOpen(false);
-    console.log("Student added:", newStudent);
     toast.success("Student added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
-    const updated: Student = {
-      ...selected,
+    updateStudent(selected.id, {
       name: data.name,
       email: data.email,
       phone: data.phone,
       class: data.class,
       status: data.status as "active" | "inactive",
-    };
-    setStudents((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    });
     setEditOpen(false);
     setSelected(null);
-    console.log("Student updated:", updated);
     toast.success("Student updated successfully");
   }
 
   function handleDelete() {
     if (!selected) return;
-    setStudents((prev) => prev.filter((s) => s.id !== selected.id));
+    deleteStudent(selected.id);
     setDeleteOpen(false);
     setSelected(null);
-    console.log("Student deleted:", selected.id);
     toast.success("Student deleted successfully");
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Students</h1>
@@ -153,8 +149,12 @@ export default function StudentsPage() {
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
-                          {student.name.split(" ").map((n) => n[0]).join("")}
+                        <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
+                          {student.image ? (
+                            <Image src={student.image} alt={student.name} width={36} height={36} className="w-full h-full object-cover" unoptimized />
+                          ) : (
+                            student.name.split(" ").map((n) => n[0]).join("")
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-primary">{student.name}</p>

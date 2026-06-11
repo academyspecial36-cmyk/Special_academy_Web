@@ -7,11 +7,14 @@ import { Star, ChevronLeft, ChevronRight, Quote, ArrowRight } from "lucide-react
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { testimonials } from "@/mock";
+import { useAppContext } from "@/lib/app-context";
 
 export function TestimonialsSection() {
+  const { testimonials } = useAppContext();
   const [current, setCurrent] = useState(0);
   const featured = testimonials.slice(0, 3);
+
+  if (featured.length === 0) return null;
 
   const next = () => setCurrent((prev) => (prev + 1) % featured.length);
   const prev = () => setCurrent((prev) => (prev - 1 + featured.length) % featured.length);
