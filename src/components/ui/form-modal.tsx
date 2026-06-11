@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Modal } from "./modal";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
 import { Button } from "./button";
-import { Select } from "./select";
+import { Upload, Loader2 } from "lucide-react";
+import { apiUpload } from "@/lib/api-client";
 
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "email" | "tel" | "textarea" | "select" | "number" | "url";
+  type: "text" | "email" | "tel" | "textarea" | "select" | "number" | "url" | "image";
   required?: boolean;
   options?: { label: string; value: string }[];
   placeholder?: string;
@@ -38,6 +39,10 @@ export function FormModal({
   loading,
 }: FormModalProps) {
   const [form, setForm] = useState<Record<string, string>>({});
+  const [uploadingImg, setUploadingImg] = useState<Record<string, boolean>>({});
+  const [localPreviews, setLocalPreviews] = useState<Record<string, string>>({});
+  const previewRefs = useRef<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     if (open) {
@@ -50,6 +55,10 @@ export function FormModal({
         });
         setForm(defaults);
       }
+      Object.values(previewRefs.current).forEach((p) => URL.revokeObjectURL(p));
+      previewRefs.current = {};
+      setLocalPreviews({});
+      setUploadingImg({});
     }
   }, [open, initialValues, fields]);
 
@@ -93,6 +102,77 @@ export function FormModal({
                   </option>
                 ))}
               </select>
+            ) : field.type === "image" ? (
+              <div className="space-y-2">
+                <input
+                  ref={(el) => { fileInputRefs.current[field.name] = el; }}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploadingImg((p) => ({ ...p, [field.name]: true }));
+                    const prev = previewRefs.current[field.name];
+                    if (prev) URL.revokeObjectURL(prev);
+                    const blobUrl = URL.createObjectURL(file);
+                    previewRefs.current[field.name] = blobUrl;
+                    setLocalPreviews((p) => ({ ...p, [field.name]: blobUrl }));
+                    try {
+                      const { url } = await apiUpload(file, "images");
+                      updateField(field.name, url);
+                    } catch {
+                      setLocalPreviews((p) => {
+                        const next = { ...p };
+                        delete next[field.name];
+                        return next;
+                      });
+                    } finally {
+                      setUploadingImg((p) => ({ ...p, [field.name]: false }));
+                    }
+                    if (e.target) e.target.value = "";
+                  }}
+                />
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingImg[field.name]}
+                    onClick={() => fileInputRefs.current[field.name]?.click()}
+                  >
+                    {uploadingImg[field.name] ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="w-3.5 h-3.5 mr-2" /> Upload Image</>
+                    )}
+                  </Button>
+                  <span className="text-xs text-muted">or paste a URL</span>
+                </div>
+                <Input
+                  type="url"
+                  placeholder={field.placeholder || "https://..."}
+                  value={form[field.name] || ""}
+                  onChange={(e) => {
+                    updateField(field.name, e.target.value);
+                    setLocalPreviews((p) => {
+                      const next = { ...p };
+                      delete next[field.name];
+                      return next;
+                    });
+                  }}
+                />
+                {(localPreviews[field.name] || form[field.name]) && (
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden bg-[image:repeating-conic-gradient(#e5e5e5_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={localPreviews[field.name] || form[field.name]}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
             ) : (
               <Input
                 type={field.type}

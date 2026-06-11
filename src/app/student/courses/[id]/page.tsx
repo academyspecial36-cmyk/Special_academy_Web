@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle } from "lucide-react";
+import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ export default function StudentCourseDetailPage() {
   const { subcategories, completedItems, toggleItemComplete, courses } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf"; title: string; url: string } | null>(null);
+  const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);
 
   const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
 
@@ -97,6 +97,7 @@ export default function StudentCourseDetailPage() {
                     alt={sub.title}
                     fill
                     className="object-cover"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <div className="absolute top-3 left-3">
@@ -131,7 +132,12 @@ export default function StudentCourseDetailPage() {
                           </button>
                           <button
                             onClick={() => {
-                              setPreviewItem({ type: item.type, title: item.title, url: item.url });
+                              setPreviewItem({
+                                type: item.type,
+                                title: item.title,
+                                url: item.url,
+                                images: item.images,
+                              });
                               setPreviewOpen(true);
                             }}
                             className={`flex-1 flex items-center gap-3 p-2.5 rounded-lg transition-colors text-left ${
@@ -141,9 +147,13 @@ export default function StudentCourseDetailPage() {
                             }`}
                           >
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                              item.type === "video" ? "bg-blue-50 text-blue-600" : "bg-amber-50 text-amber-600"
+                              item.type === "video" ? "bg-blue-50 text-blue-600"
+                              : item.type === "image" ? "bg-purple-50 text-purple-600"
+                              : "bg-amber-50 text-amber-600"
                             }`}>
-                              {item.type === "video" ? <Play className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                              {item.type === "video" ? <Play className="w-4 h-4" />
+                                : item.type === "image" ? <ImageIcon className="w-4 h-4" />
+                                : <FileText className="w-4 h-4" />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
@@ -179,6 +189,7 @@ export default function StudentCourseDetailPage() {
         type={previewItem?.type || "video"}
         title={previewItem?.title || ""}
         url={previewItem?.url || ""}
+        images={previewItem?.images}
       />
     </div>
   );

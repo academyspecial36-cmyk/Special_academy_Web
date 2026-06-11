@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "./supabase-server";
+import { createServerSupabase, createServiceRoleSupabase } from "./supabase-server";
 
 type Entity = string;
 
@@ -82,9 +82,11 @@ export async function handleGet(table: string, id?: string) {
     if (authError) return authError;
   }
 
+  const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
+
   const { data, error } = id
-    ? await supabase.from(table).select("*").eq("id", id).maybeSingle()
-    : await supabase.from(table).select("*");
+    ? await svc.from(table).select("*").eq("id", id).maybeSingle()
+    : await svc.from(table).select("*");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const result = Array.isArray(data) ? data.map((d: Record<string, unknown>) => transformKeys(d, table, false)) : data ? transformKeys(data as Record<string, unknown>, table, false) : null;
@@ -102,8 +104,9 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
   if (authError) return authError;
 
   const dbBody = transformKeys(body, table, true);
+  const svc = createServiceRoleSupabase();
 
-  const { data, error } = await supabase.from(table).insert(dbBody).select().single();
+  const { data, error } = await svc.from(table).insert(dbBody).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json(transformKeys(data as Record<string, unknown>, table, false), { status: 201 });
@@ -120,8 +123,9 @@ export async function handlePut(table: string, id: string, body: Record<string, 
   if (authError) return authError;
 
   const dbBody = transformKeys(body, table, true);
+  const svc = createServiceRoleSupabase();
 
-  const { data, error } = await supabase.from(table).update(dbBody).eq("id", id).select().single();
+  const { data, error } = await svc.from(table).update(dbBody).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json(transformKeys(data as Record<string, unknown>, table, false));
@@ -137,7 +141,9 @@ export async function handleDelete(table: string, id: string) {
   const authError = await requireAdmin(supabase);
   if (authError) return authError;
 
-  const { error } = await supabase.from(table).delete().eq("id", id);
+  const svc = createServiceRoleSupabase();
+
+  const { error } = await svc.from(table).delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ success: true });

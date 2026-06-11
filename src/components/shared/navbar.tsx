@@ -61,7 +61,7 @@ export function Navbar() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="w-9 h-9 relative">
-                <Image src="/icon-image.png" alt="Special academy" width={36} height={36} className="object-contain" />
+                <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={36} height={36} className="object-contain" unoptimized />
               </div>
               <div className="flex flex-col">
                 <span className="text-primary font-bold text-lg leading-tight tracking-tight">

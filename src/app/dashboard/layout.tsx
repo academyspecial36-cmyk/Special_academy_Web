@@ -57,7 +57,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoading, logout } = useAuth();
-  const { loading } = useAppContext();
+  const { loading, settings } = useAppContext();
 
   useEffect(() => {
     if (isLoading) return;
@@ -105,7 +105,7 @@ export default function DashboardLayout({
         <div className="h-16 flex items-center px-6 border-b border-white/10">
           <Link href="/dashboard" className="flex items-center gap-2.5">
             <div className="w-8 h-8 relative">
-              <Image src="/icon-image.png" alt="Special academy" width={32} height={32} className="object-contain" />
+              <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={32} height={32} className="object-contain" unoptimized />
             </div>
             <div>
               <span className="font-bold text-sm">Special academy</span>

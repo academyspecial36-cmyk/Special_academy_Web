@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Save, Building2, Mail, Phone, Globe, Upload, Facebook, Youtube, Instagram, User, Lock, Eye, EyeOff } from "lucide-react";
+import { Save, Building2, Mail, Phone, Globe, Upload, Facebook, Youtube, Instagram, User, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { TikTokIcon } from "@/components/shared/tiktok-icon";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 import { useAuth } from "@/lib/auth-context";
 import { getSupabase } from "@/lib/supabase";
+import { apiUpload } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 
 type Tab = "profile" | "site";
@@ -23,6 +24,8 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("profile");
   const [form, setForm] = useState({ ...settings });
   const [iconPreview, setIconPreview] = useState<string | null>(null);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [profileName, setProfileName] = useState(user?.name ?? "");
@@ -37,15 +40,32 @@ export default function SettingsPage() {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  function handleSave() {
-    updateSettings(form);
-    toast.success("Settings saved");
+  async function handleSave() {
+    setSavingSettings(true);
+    try {
+      const payload = { ...form };
+      if (iconFile) {
+        const { url } = await apiUpload(iconFile, "images");
+        payload.appIcon = url;
+        setIconFile(null);
+        setIconPreview(null);
+      }
+      updateSettings(payload);
+      toast.success("Settings saved");
+    } catch {
+      toast.error("Failed to save settings");
+    } finally {
+      setSavingSettings(false);
+    }
   }
 
   function handleIconUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    const prev = iconPreview;
+    if (prev) URL.revokeObjectURL(prev);
     const url = URL.createObjectURL(file);
+    setIconFile(file);
     setIconPreview(url);
     setForm((prev) => ({ ...prev, appIcon: url }));
   }
@@ -404,9 +424,9 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex justify-end">
-            <Button size="lg" onClick={handleSave}>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
+            <Button size="lg" onClick={handleSave} disabled={savingSettings}>
+              {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {savingSettings ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </motion.div>

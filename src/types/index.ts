@@ -105,10 +105,11 @@ export interface Activity {
 export interface Item {
   id: string;
   subcategoryId: string;
-  type: "video" | "pdf";
+  type: "video" | "pdf" | "image";
   title: string;
   description: string;
   url: string;
+  images?: string[];
   duration?: string;
   createdAt: string;
   status: "paid" | "free";

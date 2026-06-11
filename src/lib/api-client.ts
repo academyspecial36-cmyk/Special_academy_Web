@@ -70,11 +70,20 @@ export async function apiDelete(table: string, id: string) {
   return res.json();
 }
 
-export async function apiUpload(file: File, bucket: "images" | "pdfs" = "images") {
+export async function apiUpload(file: File, folder: "images" | "pdfs" = "images") {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("bucket", bucket);
+  formData.append("folder", folder);
   const res = await fetch("/api/upload", { method: "POST", body: formData });
   if (!res.ok) throw new Error("Upload failed");
   return res.json() as Promise<{ url: string }>;
+}
+
+export async function apiUploadMultiple(files: File[], folder: "images" | "pdfs" = "images") {
+  const formData = new FormData();
+  files.forEach((f) => formData.append("files", f));
+  formData.append("folder", folder);
+  const res = await fetch("/api/upload", { method: "POST", body: formData });
+  if (!res.ok) throw new Error("Upload failed");
+  return res.json() as Promise<{ urls: string[] }>;
 }

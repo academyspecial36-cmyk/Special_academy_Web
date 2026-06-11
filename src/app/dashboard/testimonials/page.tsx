@@ -24,7 +24,7 @@ const fields: FieldConfig[] = [
   { name: "rating", label: "Rating (1-5)", type: "number", required: true, placeholder: "5" },
   { name: "achievement", label: "Achievement (optional)", type: "text", placeholder: "e.g. Secured top rank in XYZ" },
   { name: "class", label: "Class (optional)", type: "text", placeholder: "e.g. Class 10" },
-  { name: "image", label: "Image URL (optional)", type: "url", placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
 ];
 
 export default function DashboardTestimonialsPage() {

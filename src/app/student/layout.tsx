@@ -19,6 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { STUDENT_NAV } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
+import { useAppContext } from "@/lib/app-context";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -38,6 +39,7 @@ export default function StudentLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoading, logout } = useAuth();
+  const { settings } = useAppContext();
 
   useEffect(() => {
     if (isLoading) return;
@@ -82,7 +84,7 @@ export default function StudentLayout({
         <div className="h-16 flex items-center px-6 border-b border-primary/5">
           <Link href="/student" className="flex items-center gap-2.5">
             <div className="w-8 h-8 relative">
-              <Image src="/icon-image.png" alt="Special academy" width={32} height={32} className="object-contain" />
+              <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={32} height={32} className="object-contain" unoptimized />
             </div>
             <div>
               <span className="font-bold text-sm text-primary">Special academy</span>

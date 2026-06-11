@@ -35,7 +35,7 @@ export function CoursesSection() {
               {/* Image */}
               <div className="relative h-52 overflow-hidden">
                 <Image
-                  src={course.image}
+                  src={course.image || "/placeholder.svg"}
                   alt={course.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"

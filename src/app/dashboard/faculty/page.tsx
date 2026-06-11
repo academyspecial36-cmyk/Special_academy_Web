@@ -19,7 +19,7 @@ const fields: FieldConfig[] = [
   { name: "role", label: "Role", type: "text", required: true, placeholder: "e.g. Head of Academics" },
   { name: "qualification", label: "Qualification", type: "text", required: true, placeholder: "e.g. M.Sc. in Mathematics" },
   { name: "experience", label: "Experience", type: "text", required: true, placeholder: "e.g. 12 Years" },
-  { name: "image", label: "Image URL", type: "url", placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
   { name: "subjects", label: "Subjects (comma separated)", type: "text", placeholder: "e.g. Math, Science, English" },
 ];
 

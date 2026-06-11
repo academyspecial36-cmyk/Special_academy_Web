@@ -15,7 +15,7 @@ import { useAppContext } from "@/lib/app-context";
 import type { GalleryImage } from "@/types";
 
 const fields: FieldConfig[] = [
-  { name: "src", label: "Image URL", type: "url", required: true, placeholder: "https://..." },
+  { name: "src", label: "Image", type: "image" as const, required: true, placeholder: "https://..." },
   { name: "alt", label: "Alt Text", type: "text", required: true, placeholder: "Description of the image" },
   { name: "category", label: "Category", type: "select", required: true, options: [
     { label: "Campus", value: "campus" },

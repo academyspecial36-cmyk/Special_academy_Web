@@ -29,7 +29,7 @@ const fields: FieldConfig[] = [
     { label: "Leadership", value: "Leadership" },
   ]},
   { name: "price", label: "Price", type: "text", placeholder: "e.g. NPR 15,000" },
-  { name: "image", label: "Image URL", type: "url", placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
 ];
 
 export default function DashboardCoursesPage() {
@@ -53,7 +53,7 @@ export default function DashboardCoursesPage() {
       classLevel: data.classLevel,
       category: data.category,
       price: data.price || undefined,
-      image: data.image || "/placeholder.jpg",
+      image: data.image || "/placeholder.svg",
       features: [],
       isPopular: false,
     });
@@ -130,7 +130,7 @@ export default function DashboardCoursesPage() {
             <Card className="overflow-hidden group">
               <Link href={`/dashboard/courses/${course.id}`}>
                 <div className="relative h-40">
-                  <Image src={course.image} alt={course.title} fill className="object-cover" />
+                  <Image src={course.image || "/placeholder.svg"} alt={course.title} fill className="object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <div className="absolute top-3 left-3 flex gap-2">
                     {course.isPopular && (
