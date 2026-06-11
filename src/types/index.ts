@@ -62,6 +62,7 @@ export interface Student {
   enrolledCourses: string[];
   joinDate: string;
   status: "active" | "inactive";
+  image?: string;
 }
 
 export interface NavItem {

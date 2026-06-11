@@ -9,6 +9,7 @@ export interface AuthUser {
   email: string;
   role: string;
   name?: string;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: session.user.email ?? "",
         role: profile?.role ?? "student",
         name: session?.user?.user_metadata?.name,
+        avatar_url: profile?.avatar_url ?? undefined,
       });
     } catch {
       setUser(null);
@@ -77,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: data.user.email ?? "",
         role,
         name: profile?.name,
+        avatar_url: profile?.avatar_url ?? undefined,
       });
 
       return { success: true, role };

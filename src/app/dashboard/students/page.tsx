@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Search, Filter, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -148,8 +149,12 @@ export default function StudentsPage() {
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
-                          {student.name.split(" ").map((n) => n[0]).join("")}
+                        <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
+                          {student.image ? (
+                            <Image src={student.image} alt={student.name} width={36} height={36} className="w-full h-full object-cover" unoptimized />
+                          ) : (
+                            student.name.split(" ").map((n) => n[0]).join("")
+                          )}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-primary">{student.name}</p>

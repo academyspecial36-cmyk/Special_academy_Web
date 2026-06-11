@@ -149,8 +149,12 @@ export default function StudentLayout({
             </button>
             <div className="relative">
               <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                  {initials}
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
+                  {user?.avatar_url ? (
+                    <Image src={user.avatar_url} alt="" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                  ) : (
+                    initials
+                  )}
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-muted hidden sm:block" />
               </button>

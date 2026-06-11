@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Save, Building2, Mail, Phone, Globe, Upload, Facebook, Youtube, Instagram, User, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Save, Building2, Mail, Phone, Globe, Upload, Facebook, Youtube, Instagram, User, Lock, Eye, EyeOff, Loader2, Camera } from "lucide-react";
 import { TikTokIcon } from "@/components/shared/tiktok-icon";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,10 @@ export default function SettingsPage() {
 
   const [profileName, setProfileName] = useState(user?.name ?? "");
   const [savingName, setSavingName] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [savingAvatar, setSavingAvatar] = useState(false);
+  const avatarRef = useRef<HTMLInputElement>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -79,14 +83,35 @@ export default function SettingsPage() {
     try {
       if (user?.id) {
         const supabase = getSupabase();
-        await supabase.from("profiles").update({ name: profileName }).eq("id", user.id);
+        let avatarUrl = user.avatar_url;
+        if (avatarFile) {
+          const { url } = await apiUpload(avatarFile, "images");
+          avatarUrl = url;
+          setAvatarFile(null);
+          setAvatarPreview(null);
+        }
+        await supabase.from("profiles").update({
+          name: profileName,
+          ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
+        }).eq("id", user.id);
+        user.name = profileName;
+        user.avatar_url = avatarUrl;
       }
-      toast.success("Name updated");
+      toast.success("Profile updated");
     } catch {
-      toast.error("Failed to update name");
+      toast.error("Failed to update profile");
     } finally {
       setSavingName(false);
     }
+  }
+
+  function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const prev = avatarPreview;
+    if (prev) URL.revokeObjectURL(prev);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
   }
 
   async function handleChangePassword() {
@@ -183,10 +208,23 @@ export default function SettingsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4 pb-4 border-b border-primary/5">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                  {initials}
-                </div>
+                <div className="flex items-center gap-4 pb-4 border-b border-primary/5">
+                  <div className="relative group">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg overflow-hidden">
+                      {(avatarPreview || user?.avatar_url) ? (
+                        <Image src={avatarPreview || user!.avatar_url!} alt="Avatar" width={56} height={56} className="w-full h-full object-cover" unoptimized />
+                      ) : (
+                        <span>{initials}</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => avatarRef.current?.click()}
+                      className="absolute inset-0 rounded-full bg-black/0 hover:bg-black/30 flex items-center justify-center transition-colors opacity-0 hover:opacity-100"
+                    >
+                      <Camera className="w-5 h-5 text-white" />
+                    </button>
+                    <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                  </div>
                 <div>
                   <p className="font-medium text-primary">{user?.name ?? "Admin"}</p>
                   <p className="text-sm text-muted">{user?.email ?? ""}</p>

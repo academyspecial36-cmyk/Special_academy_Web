@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { User, Mail, Phone, MapPin, School, Calendar, Edit3, Save, Loader2, UserCheck } from "lucide-react";
+import { User, Mail, Phone, MapPin, School, Calendar, Edit3, Save, Loader2, UserCheck, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
+import { apiUpload } from "@/lib/api-client";
+import Image from "next/image";
 import { toast } from "sonner";
 
 interface StudentData {
@@ -48,6 +50,10 @@ export default function StudentProfilePage() {
     guardianName: "",
     guardianContact: "",
   });
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -57,6 +63,7 @@ export default function StudentProfilePage() {
         const data = await res.json();
         setStudent(data.student);
         setEnrollment(data.enrollment);
+        setAvatarUrl(data.profile?.avatar_url ?? null);
         setForm({
           name: data.student?.name ?? data.enrollment?.full_name ?? "",
           phone: data.student?.phone ?? "",
@@ -76,10 +83,18 @@ export default function StudentProfilePage() {
   async function handleSave() {
     setSaving(true);
     try {
+      let payload: Record<string, string> = { ...form };
+      if (avatarFile) {
+        const { url } = await apiUpload(avatarFile, "images");
+        payload.avatar_url = url;
+        setAvatarUrl(url);
+        setAvatarFile(null);
+        setAvatarPreview(null);
+      }
       const res = await fetch("/api/student-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to save");
       const data = await res.json();
@@ -117,8 +132,28 @@ export default function StudentProfilePage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="text-center">
             <CardContent className="p-8">
-              <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl font-bold text-primary">{initials}</span>
+              <div className="relative w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden">
+                {(avatarPreview || avatarUrl) ? (
+                  <Image src={avatarPreview || avatarUrl!} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />
+                ) : (
+                  <span className="text-2xl font-bold text-primary">{initials}</span>
+                )}
+                {editing && (
+                  <>
+                    <button
+                      onClick={() => avatarRef.current?.click()}
+                      className="absolute inset-0 bg-black/0 hover:bg-black/30 flex items-center justify-center transition-colors rounded-full"
+                    >
+                      <Camera className="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity" />
+                    </button>
+                    <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setAvatarFile(file);
+                      setAvatarPreview(URL.createObjectURL(file));
+                    }} />
+                  </>
+                )}
               </div>
               <h3 className="text-lg font-bold text-primary">{form.name || "Student"}</h3>
               <p className="text-sm text-muted mb-1">{student?.class ?? enrollment?.interested_course ?? ""}</p>

@@ -23,9 +23,16 @@ export async function GET() {
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
+    const { data: profile } = await svc
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+
     return NextResponse.json({
       student: student || null,
       enrollment: enrollment || null,
+      profile: profile || null,
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 });
@@ -62,6 +69,13 @@ export async function POST(request: Request) {
         .update({ phone: body.phone })
         .eq("email", user.email);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (body.avatar_url) {
+      const { error: avatarError } = await svc
+        .from("profiles")
+        .upsert({ id: user.id, avatar_url: body.avatar_url, name: body.name || "Student" });
+      if (avatarError) return NextResponse.json({ error: avatarError.message }, { status: 500 });
     }
 
     const enrollmentData: Record<string, unknown> = {};

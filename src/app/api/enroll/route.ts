@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServiceRoleSupabase, createServerSupabase } from "@/lib/supabase-server";
+import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { sendEnrollmentEmail } from "@/lib/email";
 
 function generateCode(): string {
@@ -44,9 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createServerSupabase();
-
-    await supabase.from("profiles").upsert({
+    await serviceSupabase.from("profiles").upsert({
       id: authData.user.id,
       name: fullName,
       email,
@@ -58,7 +56,7 @@ export async function POST(request: Request) {
 
     console.log(`[Enroll] Verification code for ${email}: ${verificationCode}`);
 
-    const { error: enrollError } = await supabase.from("enrollments").insert({
+    const { error: enrollError } = await serviceSupabase.from("enrollments").insert({
       full_name: fullName,
       email,
       phone,
