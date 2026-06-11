@@ -199,25 +199,25 @@ export default function EnrollmentPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Stepper */}
           <div className="mb-10">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-1 sm:gap-0">
               {steps.map((s, i) => (
-                <div key={i} className="flex items-center flex-1 last:flex-none">
+                <div key={i} className="flex items-center flex-1 last:flex-none min-w-0">
                   <div className="flex flex-col items-center">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
                         i <= step
                           ? "bg-primary text-white"
                           : "bg-white text-muted border border-primary/10"
                       }`}
                     >
-                      {i < step ? <CheckCircle2 className="w-5 h-5" /> : i + 1}
+                      {i < step ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : i + 1}
                     </div>
-                    <span className={`text-xs mt-2 font-medium ${i <= step ? "text-primary" : "text-muted"}`}>
+                    <span className={`hidden sm:block text-xs mt-2 font-medium text-center leading-tight ${i <= step ? "text-primary" : "text-muted"}`}>
                       {s.label}
                     </span>
                   </div>
                   {i < steps.length - 1 && (
-                    <div className={`flex-1 h-px mx-2 md:mx-4 ${i < step ? "bg-primary" : "bg-primary/10"}`} />
+                    <div className={`flex-1 h-px mx-1 sm:mx-4 ${i < step ? "bg-primary" : "bg-primary/10"}`} />
                   )}
                 </div>
               ))}

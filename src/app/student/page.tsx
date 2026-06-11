@@ -14,10 +14,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 
 export default function StudentDashboardPage() {
+  const { user } = useAuth();
   const { subcategories, completedItems, notices, courses } = useAppContext();
   const enrolledCourses = courses.slice(0, 3);
 
@@ -53,7 +55,7 @@ export default function StudentDashboardPage() {
     <div className="space-y-8">
       {/* Welcome */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-primary">Welcome back, Arafat!</h1>
+        <h1 className="text-2xl font-bold text-primary">Welcome back, {user?.name?.split(" ")[0] ?? "Mr.Onboarding"}!</h1>
         <p className="text-sm text-muted">Here&apos;s your academic overview for today.</p>
       </motion.div>
 
@@ -97,12 +99,15 @@ export default function StudentDashboardPage() {
                 const total = getTotalCount(course.id);
                 return (
                   <Link key={course.id} href={`/student/courses/${course.id}`} className="block group">
-                    <div className="flex items-center gap-4 p-4 bg-accent rounded-xl border border-primary/5 group-hover:border-secondary/20 transition-colors">
-                      <div className="w-12 h-12 rounded-lg bg-primary/5 flex items-center justify-center">
+                    <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-accent rounded-xl border border-primary/5 group-hover:border-secondary/20 transition-colors">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
                         <BookOpen className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-primary text-sm truncate">{course.title}</p>
+                        <div className="flex items-start sm:items-center gap-2">
+                          <p className="font-medium text-primary text-sm truncate">{course.title}</p>
+                          <Badge variant="outline" className="text-[10px] shrink-0 sm:hidden">{progress}%</Badge>
+                        </div>
                         <p className="text-xs text-muted">{course.duration} · {course.classLevel}</p>
                         <div className="mt-2 flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-primary/10 rounded-full overflow-hidden">
@@ -111,7 +116,7 @@ export default function StudentDashboardPage() {
                           <span className="text-[10px] text-muted">{completed}/{total}</span>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px] shrink-0">{progress}%</Badge>
+                      <Badge variant="outline" className="text-[10px] shrink-0 hidden sm:block">{progress}%</Badge>
                     </div>
                   </Link>
                 );

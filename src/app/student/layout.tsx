@@ -77,7 +77,7 @@ export default function StudentLayout({
 
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 h-screen w-64 bg-white border-r border-primary/5 flex flex-col transition-transform duration-300 lg:translate-x-0",
+          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-64 bg-white border-r border-primary/5 flex flex-col transition-transform duration-300 lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -96,7 +96,7 @@ export default function StudentLayout({
           </button>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {STUDENT_NAV.map((item) => {
             const Icon = iconMap[item.icon || ""];
             const isActive = pathname === item.href;
@@ -104,6 +104,7 @@ export default function StudentLayout({
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                   isActive
@@ -119,7 +120,7 @@ export default function StudentLayout({
         </nav>
 
         <div className="p-3 border-t border-primary/5">
-          <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-accent hover:text-primary transition-all">
+          <Link href="/" onClick={() => setSidebarOpen(false)} className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-accent hover:text-primary transition-all">
             <LogOut className="w-4 h-4" />
             Back to Website
           </Link>

@@ -64,19 +64,19 @@ export default function StudentExamResultPage() {
           <p className="text-muted mb-6">
             {passed ? "You passed the exam." : "You need 40% to pass. Review the answers below."}
           </p>
-          <div className="flex items-center justify-center gap-8 mb-8">
+          <div className="flex items-center justify-center gap-6 sm:gap-8 mb-8 flex-wrap">
             <div>
-              <p className="text-4xl font-bold text-primary">{score}</p>
+              <p className="text-2xl sm:text-4xl font-bold text-primary">{score}</p>
               <p className="text-sm text-muted">Correct</p>
             </div>
             <div className="w-px h-12 bg-primary/10" />
             <div>
-              <p className="text-4xl font-bold text-muted">{total - score}</p>
+              <p className="text-2xl sm:text-4xl font-bold text-muted">{total - score}</p>
               <p className="text-sm text-muted">Incorrect</p>
             </div>
             <div className="w-px h-12 bg-primary/10" />
             <div>
-              <p className="text-4xl font-bold text-secondary">{percentage}%</p>
+              <p className="text-2xl sm:text-4xl font-bold text-secondary">{percentage}%</p>
               <p className="text-sm text-muted">Score</p>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function StudentExamResultPage() {
                       </div>
 
                       {q.type === "mcq" && (
-                        <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div className="grid sm:grid-cols-2 gap-2 mt-2">
                           {q.options.map((opt, oi) => {
                             const isSelected = userAnswer === opt;
                             const isRight = opt === q.answer;
@@ -120,7 +120,7 @@ export default function StudentExamResultPage() {
                                 <span className={`w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-medium shrink-0 ${isRight ? "border-emerald-500" : "border-primary/10"}`}>
                                   {String.fromCharCode(65 + oi)}
                                 </span>
-                                <span className={isRight ? "font-medium" : ""}>{opt}</span>
+                                <span className={`break-words ${isRight ? "font-medium" : ""}`}>{opt}</span>
                                 {isRight && <CheckCircle className="w-3.5 h-3.5 text-emerald-500 ml-auto shrink-0" />}
                                 {isSelected && !isRight && <XCircle className="w-3.5 h-3.5 text-red-500 ml-auto shrink-0" />}
                               </div>

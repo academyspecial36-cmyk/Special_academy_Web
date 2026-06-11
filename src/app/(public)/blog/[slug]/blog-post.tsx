@@ -116,7 +116,7 @@ export function BlogPostPage({ slugPromise }: { slugPromise: Promise<{ slug: str
           </div>
 
           <div
-            className="prose prose-sm md:prose-base max-w-none prose-headings:text-primary prose-p:text-muted prose-a:text-secondary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-strong:text-primary prose-code:text-secondary prose-pre:bg-primary/5 prose-pre:border prose-pre:border-primary/10"
+            className="prose prose-sm md:prose-base max-w-none prose-headings:text-primary prose-p:text-muted prose-a:text-secondary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-strong:text-primary prose-code:text-secondary prose-pre:bg-primary/5 prose-pre:border prose-pre:border-primary/10 overflow-x-auto break-words"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
         </motion.div>

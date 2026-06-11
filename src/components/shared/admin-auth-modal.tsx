@@ -38,7 +38,12 @@ export function AdminAuthModal() {
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    function handleCustom() { setOpen(true); setStep("passcode"); setPasscode(""); setError(""); }
+    window.addEventListener("open-admin-modal", handleCustom);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("open-admin-modal", handleCustom);
+    };
   }, [handleKeyDown]);
 
   function close() {

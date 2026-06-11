@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -18,6 +18,19 @@ import { useAppContext } from "@/lib/app-context";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const tapCount = useRef(0);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  function handleLogoTap() {
+    tapCount.current += 1;
+    if (tapTimer.current) clearTimeout(tapTimer.current);
+    if (tapCount.current >= 5) {
+      tapCount.current = 0;
+      window.dispatchEvent(new CustomEvent("open-admin-modal"));
+      return;
+    }
+    tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 2000);
+  }
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
    const { settings } = useAppContext();
@@ -35,7 +48,7 @@ export function Navbar() {
   return (
     <>
       {/* Announcement Bar */}
-      <div className="bg-primary text-white text-center py-2 px-4 text-xs md:text-sm font-medium">
+      <div className="hidden md:block bg-primary text-white text-center py-2 px-4 text-xs md:text-sm font-medium">
         <span className="inline-flex items-center gap-2">
           <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
             Admission Open
@@ -57,21 +70,23 @@ export function Navbar() {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-18">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 relative">
-                <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={36} height={36} className="object-contain" unoptimized />
-              </div>
-              <div className="flex flex-col">
+            <div onClick={handleLogoTap} className="flex items-center gap-2.5 group cursor-pointer">
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <div className="w-9 h-9 relative">
+                  <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={36} height={36} className="object-contain" unoptimized />
+                </div>
+              </Link>
+              <Link href="/" className="flex flex-col">
                 <span className="text-primary font-bold text-lg leading-tight tracking-tight">
                  {settings?.academyName}
                 </span>
                 <span className="text-[10px] text-muted leading-tight tracking-wide uppercase">
                  {settings?.tagline}
                 </span>
-              </div>
-            </Link>
+              </Link>
+            </div>
 
             {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-1">
@@ -131,7 +146,7 @@ export function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-[280px] bg-white shadow-elevated z-50 lg:hidden flex flex-col"
+              className="fixed right-0 top-0 h-[100dvh] w-full max-w-xs bg-white shadow-elevated z-50 lg:hidden flex flex-col"
             >
               <div className="flex items-center justify-between p-4 border-b">
                 <span className="font-bold text-primary">Menu</span>

@@ -41,7 +41,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
           <p className="text-sm text-muted">Welcome back, Admin. Here&apos;s what&apos;s happening today.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard/enrollments">View Enrollments</Link>
           </Button>
@@ -101,7 +101,25 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            {/* Mobile: stacked cards */}
+            <div className="space-y-3 sm:hidden">
+              {students.slice(0, 5).map((student) => (
+                <div key={student.id} className="flex items-center gap-3 p-3 bg-accent rounded-xl border border-primary/5">
+                  <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                    {student.name.split(" ").map((n) => n[0]).join("")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-primary truncate">{student.name}</p>
+                    <p className="text-xs text-muted truncate">{student.class} · {courses.find((c) => c.id === student.enrolledCourses[0])?.title || "N/A"}</p>
+                  </div>
+                  <Badge variant={student.status === "active" ? "success" : "destructive"} className="text-[10px] shrink-0">
+                    {student.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-primary/5">
@@ -116,17 +134,17 @@ export default function DashboardPage() {
                     <tr key={student.id} className="border-b border-primary/5 last:border-0">
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
+                          <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                             {student.name.split(" ").map((n) => n[0]).join("")}
                           </div>
-                          <div>
-                            <p className="text-sm font-medium text-primary">{student.name}</p>
-                            <p className="text-xs text-muted">{student.email}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-primary truncate">{student.name}</p>
+                            <p className="text-xs text-muted truncate">{student.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="py-3 pr-4 text-sm text-muted">{student.class}</td>
-                      <td className="py-3 pr-4 text-sm text-muted">
+                      <td className="py-3 pr-4 text-sm text-muted truncate max-w-[200px]">
                         {courses.find((c) => c.id === student.enrolledCourses[0])?.title || "N/A"}
                       </td>
                       <td className="py-3">
@@ -153,13 +171,13 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {notices.slice(0, 4).map((notice) => (
-                <div key={notice.id} className="pb-4 border-b border-primary/5 last:border-0 last:pb-0">
-                  <p className="text-sm font-medium text-primary line-clamp-1 mb-1">{notice.title}</p>
-                  <div className="flex items-center justify-between">
+                <div key={notice.id} className="pb-3 sm:pb-4 border-b border-primary/5 last:border-0 last:pb-0">
+                  <p className="text-sm font-medium text-primary line-clamp-2 mb-1.5">{notice.title}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-muted">{formatShortDate(notice.date)}</span>
-                    <Badge variant="outline" className="text-[10px]">{notice.category}</Badge>
+                    <Badge variant="outline" className="text-[10px] shrink-0">{notice.category}</Badge>
                   </div>
                 </div>
               ))}

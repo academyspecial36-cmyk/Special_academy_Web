@@ -131,7 +131,7 @@ export default function StudentProfilePage() {
       <div className="grid lg:grid-cols-3 gap-6">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="text-center">
-            <CardContent className="p-8">
+            <CardContent className="p-6 sm:p-8">
               <div className="relative w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden">
                 {(avatarPreview || avatarUrl) ? (
                   <Image src={avatarPreview || avatarUrl!} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />

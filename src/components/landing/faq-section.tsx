@@ -58,7 +58,7 @@ export function FaqSection() {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 pb-5 pl-13">
+                    <div className="px-5 pb-5 pl-12">
                       <p className="text-sm text-muted leading-relaxed pl-8">
                         {faq.answer}
                       </p>

@@ -105,7 +105,7 @@ export default function StudentTakeExamPage() {
                         </div>
 
                         {q.type === "mcq" ? (
-                          <div className="grid grid-cols-2 gap-2 mt-2">
+                          <div className="grid sm:grid-cols-2 gap-2 mt-2">
                             {q.options.map((opt, oi) => (
                               <label
                                 key={oi}
@@ -121,9 +121,9 @@ export default function StudentTakeExamPage() {
                                   value={opt}
                                   checked={answers[q.id] === opt}
                                   onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                                  className="accent-secondary"
+                                  className="accent-secondary shrink-0"
                                 />
-                                <span>{opt}</span>
+                                <span className="break-words">{opt}</span>
                               </label>
                             ))}
                           </div>

@@ -28,7 +28,7 @@ export function AboutSection() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="relative"
+            className="relative overflow-hidden"
           >
             <div className="relative rounded-2xl overflow-hidden shadow-elevated">
               <Image

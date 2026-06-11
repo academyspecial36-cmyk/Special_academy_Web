@@ -106,7 +106,7 @@ export function PreviewModal({ open, onClose, type, title, url, images }: Previe
   const imageContent = (
     <div
       ref={imageRef}
-      className={`relative overflow-hidden bg-accent rounded-lg ${isFullscreen ? "flex-1" : "aspect-video"}`}
+      className={`relative overflow-hidden bg-accent rounded-lg ${isFullscreen ? "flex-1" : "max-h-[60vh] min-h-[250px] sm:aspect-video sm:max-h-none sm:min-h-0"}`}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -248,7 +248,7 @@ export function PreviewModal({ open, onClose, type, title, url, images }: Previe
       ) : (
         <Modal open={open} onClose={onClose} title={title} maxWidth={getMaxWidth()}>
           {type === "video" ? (
-            <div className="aspect-video rounded-lg overflow-hidden bg-black">
+            <div className="aspect-video sm:aspect-video rounded-lg overflow-hidden bg-black">
               <iframe
                 src={getYouTubeEmbed(url)}
                 className="w-full h-full"
@@ -331,7 +331,7 @@ export function PreviewModal({ open, onClose, type, title, url, images }: Previe
               )}
             </div>
           ) : (
-            <div className="h-[500px] rounded-lg overflow-hidden border border-primary/5">
+            <div className="h-[60vh] sm:h-[500px] min-h-[300px] rounded-lg overflow-hidden border border-primary/5">
               {isGoogleDriveUrl(url) ? (
                 <iframe
                   src={getGoogleDriveEmbed(url)}

@@ -333,37 +333,37 @@ export default function CourseDetailPage() {
                 transition={{ delay: i * 0.03 }}
               >
                 <Card className={`overflow-hidden ${sub.hidden ? "opacity-60" : ""}`}>
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-4">
+                    <CardContent className="p-4 sm:p-5">
+                    <div className="flex items-start gap-3 sm:gap-4">
                       {sub.thumbnail ? (
-                        <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 relative">
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 relative">
                           <Image src={sub.thumbnail} alt={sub.title} fill className="object-cover" unoptimized />
                         </div>
                       ) : (
-                        <div className="w-20 h-20 rounded-xl bg-accent flex items-center justify-center shrink-0">
-                          <Video className="w-6 h-6 text-muted" />
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl bg-accent flex items-center justify-center shrink-0">
+                          <Video className="w-5 h-5 sm:w-6 sm:h-6 text-muted" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-primary">{sub.title}</h3>
-                              {sub.hidden && <EyeOff className="w-3.5 h-3.5 text-muted" />}
-                              <Badge variant={sub.status === "free" ? "secondary" : "default"} className="text-[10px] capitalize">
-                                {sub.status === "free" ? <Unlock className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
+                              <h3 className="font-semibold text-primary text-sm sm:text-base truncate">{sub.title}</h3>
+                              {sub.hidden && <EyeOff className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted shrink-0" />}
+                              <Badge variant={sub.status === "free" ? "secondary" : "default"} className="text-[9px] sm:text-[10px] capitalize shrink-0">
+                                {sub.status === "free" ? <Unlock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" /> : <Lock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />}
                                 {sub.status}
                               </Badge>
                             </div>
                             <p className="text-xs text-muted line-clamp-2">{sub.shortDescription}</p>
                             <p className="text-xs text-muted/60 mt-1">{formatShortDate(sub.createdAt)}</p>
                           </div>
-                          <div className="flex gap-1 shrink-0">
+                          <div className="flex gap-0.5 sm:gap-1 shrink-0">
                             <button
                               onClick={() => setExpandedSub(expandedSub === sub.id ? null : sub.id)}
-                              className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                              className="p-1 sm:p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
                             >
-                             {expandedSub !== null ? <ChevronUp className="w-3.5 h-3.5" />:<ChevronDown className="w-3.5 h-3.5" />} 
+                             {expandedSub !== null ? <ChevronUp className="w-3 h-3 sm:w-3.5 sm:h-3.5" />:<ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5" />} 
                             </button>
                             <button
                               onClick={() => {
@@ -377,9 +377,9 @@ export default function CourseDetailPage() {
                                 });
                                 setSubEditOpen(true);
                               }}
-                              className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                              className="p-1 sm:p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
                             >
-                              <Pencil className="w-3.5 h-3.5" />
+                              <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                             </button>
                             <button
                               onClick={() => {
@@ -393,9 +393,9 @@ export default function CourseDetailPage() {
                                 });
                                 setSubDeleteOpen(true);
                               }}
-                              className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                              className="p-1 sm:p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                             </button>
                           </div>
                         </div>
@@ -436,89 +436,89 @@ export default function CourseDetailPage() {
                               ) : (
                                 <div className="space-y-2">
                                   {subItems.map((item) => (
-                                    <div
-                                      key={item.id}
-                                      className={`flex items-center gap-3 p-3 rounded-lg border border-primary/5 ${
-                                        item.hidden ? "opacity-50" : ""
-                                      }`}
-                                    >
-                                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                                        item.type === "video" ? "bg-blue-50 text-blue-600"
-                                        : item.type === "image" ? "bg-purple-50 text-purple-600"
-                                        : "bg-amber-50 text-amber-600"
-                                      }`}>
-                                        <button
-                                          onClick={() => {
-                                            setPreviewItem({
-                                              type: item.type,
-                                              title: item.title,
-                                              url: item.url,
-                                              images: item.images,
-                                            });
-                                            setPreviewOpen(true);
-                                          }}
-                                        >
-                                          {item.type === "video" ? <Play className="w-4 h-4" />
-                                            : item.type === "image" ? <ImageIcon className="w-4 h-4" />
-                                            : <FileText className="w-4 h-4" />}
-                                        </button>
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-sm font-medium text-primary truncate">{item.title}</span>
-                                          <Badge variant="outline" className="text-[9px] uppercase">{item.type}</Badge>
-                                          {item.images && item.images.length > 1 && (
-                                            <Badge variant="secondary" className="text-[9px]">{item.images.length} photos</Badge>
-                                          )}
-                                          <Badge variant={item.status === "free" ? "secondary" : "default"} className="text-[9px]">
-                                            {item.status}
-                                          </Badge>
-                                          {item.hidden && <EyeOff className="w-3 h-3 text-muted" />}
+                                      <div
+                                        key={item.id}
+                                        className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border border-primary/5 ${
+                                          item.hidden ? "opacity-50" : ""
+                                        }`}
+                                      >
+                                        <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                          item.type === "video" ? "bg-blue-50 text-blue-600"
+                                          : item.type === "image" ? "bg-purple-50 text-purple-600"
+                                          : "bg-amber-50 text-amber-600"
+                                        }`}>
+                                          <button
+                                            onClick={() => {
+                                              setPreviewItem({
+                                                type: item.type,
+                                                title: item.title,
+                                                url: item.url,
+                                                images: item.images,
+                                              });
+                                              setPreviewOpen(true);
+                                            }}
+                                          >
+                                            {item.type === "video" ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                              : item.type === "image" ? <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                              : <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                                          </button>
                                         </div>
-                                        <p className="text-xs text-muted truncate">{item.description || item.url}</p>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                                            <span className="text-xs sm:text-sm font-medium text-primary truncate max-w-full">{item.title}</span>
+                                            <Badge variant="outline" className="text-[7px] sm:text-[9px] uppercase shrink-0">{item.type}</Badge>
+                                            {item.images && item.images.length > 1 && (
+                                              <Badge variant="secondary" className="text-[7px] sm:text-[9px]">{item.images.length} photos</Badge>
+                                            )}
+                                            <Badge variant={item.status === "free" ? "secondary" : "default"} className="text-[7px] sm:text-[9px]">
+                                              {item.status}
+                                            </Badge>
+                                            {item.hidden && <EyeOff className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted shrink-0" />}
+                                          </div>
+                                          <p className="text-xs text-muted truncate">{item.description || item.url}</p>
+                                        </div>
+                                        <div className="flex gap-0.5 sm:gap-1 shrink-0">
+                                          <button
+                                            onClick={() => {
+                                              openEditItem({
+                                                id: item.id,
+                                                subcategoryId: sub.id,
+                                                type: item.type,
+                                                title: item.title,
+                                                description: item.description,
+                                                url: item.url,
+                                                images: item.images || [],
+                                                duration: item.duration || "",
+                                                status: item.status,
+                                                hidden: item.hidden,
+                                              });
+                                            }}
+                                            className="p-0.5 sm:p-1 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                                          >
+                                            <Pencil className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              setSelectedItem({
+                                                id: item.id,
+                                                subcategoryId: sub.id,
+                                                type: item.type,
+                                                title: item.title,
+                                                description: item.description,
+                                                url: item.url,
+                                                images: item.images || [],
+                                                duration: item.duration || "",
+                                                status: item.status,
+                                                hidden: item.hidden,
+                                              });
+                                              setItemDeleteOpen(true);
+                                            }}
+                                            className="p-0.5 sm:p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+                                          >
+                                            <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                          </button>
+                                        </div>
                                       </div>
-                                      <div className="flex gap-1 shrink-0">
-                                        <button
-                                          onClick={() => {
-                                            openEditItem({
-                                              id: item.id,
-                                              subcategoryId: sub.id,
-                                              type: item.type,
-                                              title: item.title,
-                                              description: item.description,
-                                              url: item.url,
-                                              images: item.images || [],
-                                              duration: item.duration || "",
-                                              status: item.status,
-                                              hidden: item.hidden,
-                                            });
-                                          }}
-                                          className="p-1 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
-                                        >
-                                          <Pencil className="w-3 h-3" />
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            setSelectedItem({
-                                              id: item.id,
-                                              subcategoryId: sub.id,
-                                              type: item.type,
-                                              title: item.title,
-                                              description: item.description,
-                                              url: item.url,
-                                              images: item.images || [],
-                                              duration: item.duration || "",
-                                              status: item.status,
-                                              hidden: item.hidden,
-                                            });
-                                            setItemDeleteOpen(true);
-                                          }}
-                                          className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
-                                        >
-                                          <Trash2 className="w-3 h-3" />
-                                        </button>
-                                      </div>
-                                    </div>
                                   ))}
                                 </div>
                               )}

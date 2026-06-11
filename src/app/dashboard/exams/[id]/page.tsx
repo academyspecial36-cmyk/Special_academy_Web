@@ -114,29 +114,29 @@ export default function AdminExamDetailPage() {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between no-print">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 no-print">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Button variant="ghost" size="icon" asChild>
               <Link href="/dashboard/exams">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold text-primary">{category.name}</h1>
-              <p className="text-sm text-muted">{category.description}</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold text-primary truncate">{category.name}</h1>
+              <p className="text-xs sm:text-sm text-muted truncate">{category.description}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="sm" asChild>
               <Link href={`/dashboard/exams/${categoryId}/results`}>
-                <BarChart3 className="w-4 h-4 mr-2" /> Results
+                <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Results
               </Link>
             </Button>
-            <Button variant="outline" onClick={handlePrint}>
-              <Printer className="w-4 h-4 mr-2" /> Print PDF
+            <Button variant="outline" size="sm" onClick={handlePrint}>
+              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Print PDF
             </Button>
-            <Button onClick={() => setShowAdd(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Add Question
+            <Button size="sm" onClick={() => setShowAdd(true)}>
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Add Question
             </Button>
           </div>
         </div>
@@ -163,21 +163,19 @@ export default function AdminExamDetailPage() {
               <motion.div key={q.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                 <Card className="print:break-inside-avoid print:shadow-none print:border print:border-gray-300">
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                          {i + 1}
-                        </span>
-                        <div>
-                          <CardTitle className="text-sm font-medium">{q.question}</CardTitle>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className={`text-[9px] ${q.type === "mcq" ? "text-blue-600" : "text-amber-600"}`}>
-                              {q.type === "mcq" ? "MCQ" : "Subjective"}
-                            </Badge>
-                          </div>
+                    <div className="flex items-start gap-2">
+                      <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <CardTitle className="text-sm font-medium">{q.question}</CardTitle>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className={`text-[9px] ${q.type === "mcq" ? "text-blue-600" : "text-amber-600"}`}>
+                            {q.type === "mcq" ? "MCQ" : "Subjective"}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="flex gap-1 no-print">
+                      <div className="flex gap-1 no-print shrink-0">
                         <button
                           onClick={() => setEditing(q)}
                           className="p-1.5 rounded-md hover:bg-accent text-muted hover:text-primary"
@@ -195,7 +193,7 @@ export default function AdminExamDetailPage() {
                   </CardHeader>
                   <CardContent>
                     {q.type === "mcq" && q.options.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mb-3">
+                      <div className="grid sm:grid-cols-2 gap-2 mb-3">
                         {q.options.map((opt, oi) => {
                           const isCorrect = opt === q.answer;
                           return (
@@ -208,8 +206,8 @@ export default function AdminExamDetailPage() {
                               <span className="w-5 h-5 rounded-full bg-white border border-primary/10 flex items-center justify-center text-[10px] font-medium shrink-0">
                                 {String.fromCharCode(65 + oi)}
                               </span>
-                              {opt}
-                              {isCorrect && <Badge className="ml-auto text-[8px] bg-emerald-500 text-white border-0">Correct</Badge>}
+                              <span className="break-words">{opt}</span>
+                              {isCorrect && <Badge className="ml-auto text-[8px] bg-emerald-500 text-white border-0 shrink-0">Correct</Badge>}
                             </div>
                           );
                         })}
