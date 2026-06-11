@@ -162,7 +162,7 @@ export default function StudentLayout({
                   >
                     <div className="px-4 py-2 border-b border-primary/5">
                       <p className="text-sm font-medium text-primary">{user?.name ?? "Student"}</p>
-                      <p className="text-xs text-muted">{user?.email ?? ""}</p>
+                      <p className="text-xs text-muted">{user?.role ?? ""}</p>
                     </div>
                     <Link href="/student/profile" className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors">Profile</Link>
                     <button onClick={logout} className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">Sign Out</button>

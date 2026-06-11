@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: session.user.id,
         email: session.user.email ?? "",
         role: profile?.role ?? "student",
-        name: profile?.name,
+        name: session?.user?.user_metadata?.name,
       });
     } catch {
       setUser(null);
@@ -104,14 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         role: "student",
       });
-
       setUser({
         id: data.user.id,
         email: data.user.email ?? "",
         role: "student",
         name,
       });
-
       return { success: true };
     }
 
