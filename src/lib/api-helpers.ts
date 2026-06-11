@@ -10,6 +10,7 @@ const ALLOWED_TABLES: Entity[] = [
   "exam_categories", "questions", "exam_attempts", "exam_answers",
   "course_categories", "notice_categories", "progress", "profiles",
   "students",
+  "blog_posts",
 ];
 
 const RESTRICTED_TABLES: Entity[] = [
@@ -32,8 +33,9 @@ const COLUMN_MAP: Record<string, Record<string, string>> = {
   course_categories: {},
   enrollments: { fullName: "full_name", interestedCourse: "interested_course", currentClass: "current_class", guardianName: "guardian_name", guardianContact: "guardian_contact", previousSchool: "previous_school", createdAt: "created_at", rejectionMessage: "rejection_message", authUserId: "auth_user_id" },
   notice_categories: {},
-  settings: { academyName: "academy_name", admissionEmail: "admission_email", secondaryPhone: "secondary_phone", officeHours: "office_hours", appIcon: "app_icon", socialLinks: "social_links" },
+  settings: { academyName: "academy_name", admissionEmail: "admission_email", secondaryPhone: "secondary_phone", officeHours: "office_hours", appIcon: "app_icon", socialLinks: "social_links", enableBlog: "enable_blog" },
   progress: { studentId: "student_id", itemId: "item_id", completedAt: "completed_at" },
+  blog_posts: { createdAt: "created_at", updatedAt: "updated_at", publishedAt: "published_at" },
 };
 
 function toDbColumn(table: string, key: string): string {

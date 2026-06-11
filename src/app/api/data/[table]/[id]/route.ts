@@ -1,5 +1,13 @@
 import { NextRequest } from "next/server";
-import { handlePut, handleDelete } from "@/lib/api-helpers";
+import { handleGet, handlePut, handleDelete } from "@/lib/api-helpers";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ table: string; id: string }> }
+) {
+  const { table, id } = await params;
+  return handleGet(table, id);
+}
 
 export async function PUT(
   request: NextRequest,

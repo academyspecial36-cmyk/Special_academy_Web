@@ -148,6 +148,21 @@ export interface Question {
   createdAt: string;
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  author?: string;
+  image?: string;
+  status: "draft" | "published";
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+}
+
 export interface ExamAttempt {
   id: string;
   categoryId: string;

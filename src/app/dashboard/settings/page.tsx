@@ -417,6 +417,27 @@ export default function SettingsPage() {
                     <label className="text-sm font-medium text-primary mb-1.5 block">Weekly Holiday</label>
                     <Input value={form.holiday} onChange={(e) => setForm((p) => ({ ...p, holiday: e.target.value }))} />
                   </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-primary/5">
+                    <div>
+                      <label className="text-sm font-medium text-primary">Enable Blog</label>
+                      <p className="text-xs text-muted">Show blog section on landing page</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={form.enableBlog !== false}
+                      onClick={() => setForm((p) => ({ ...p, enableBlog: p.enableBlog === false ? true : false }))}
+                      className={cn(
+                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                        form.enableBlog !== false ? "bg-primary" : "bg-primary/20"
+                      )}
+                    >
+                      <span className={cn(
+                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                        form.enableBlog !== false ? "translate-x-6" : "translate-x-1"
+                      )} />
+                    </button>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>

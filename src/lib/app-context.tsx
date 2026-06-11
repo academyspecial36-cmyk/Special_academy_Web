@@ -39,6 +39,7 @@ interface AppSettings {
   holiday: string;
   appIcon: string;
   socialLinks: SocialLinks;
+  enableBlog?: boolean;
 }
 
 interface Enrollment {
@@ -396,6 +397,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             holiday: String(s.holiday ?? defaultSettings.holiday),
             appIcon: String(s.app_icon ?? s.appIcon ?? defaultSettings.appIcon),
             socialLinks: (s.social_links ?? s.socialLinks ?? defaultSettings.socialLinks) as SocialLinks,
+            enableBlog: (s.enable_blog ?? s.enableBlog ?? true) as boolean,
           });
         }
       } catch (err) {

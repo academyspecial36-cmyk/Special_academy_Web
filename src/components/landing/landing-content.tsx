@@ -16,6 +16,7 @@ import { FacilitiesSection } from "./facilities-section";
 import { ActivitiesSection } from "./activities-section";
 import { GalleryPreviewSection } from "./gallery-preview-section";
 import { EnrollmentCtaSection } from "./enrollment-cta-section";
+import { BlogSection } from "./blog-section";
 import { FaqSection } from "./faq-section";
 import { ContactSection } from "./contact-section";
 
@@ -38,6 +39,7 @@ export function LandingContent() {
       <FacultySection />
       <FacilitiesSection />
       <ActivitiesSection />
+      <BlogSection />
       <GalleryPreviewSection />
       <EnrollmentCtaSection />
       <FaqSection />
