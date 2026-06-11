@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, CheckCircle2, XCircle, Clock, Eye, Trash2, ThumbsUp, ThumbsDown } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +25,9 @@ interface Enrollment {
 }
 
 export default function EnrollmentsPage() {
-  const { enrollments, deleteEnrollment, updateEnrollment } = useAppContext();
+  const { enrollments, deleteEnrollment, updateEnrollment, setEnrollments, loadAdminData } = useAppContext();
+
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "unverified" | "pending" | "approved" | "rejected">("pending");
   const [viewOpen, setViewOpen] = useState(false);
@@ -71,9 +73,12 @@ export default function EnrollmentsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      updateEnrollment(selected.id, { status: "approved" });
+      setEnrollments((prev) =>
+        prev.map((e) => (e.id === selected.id ? { ...e, status: "approved" as const } : e))
+      );
       setApproveOpen(false);
       setSelected(null);
+      loadAdminData();
       toast.success("Enrollment approved! Student record created.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to approve");
@@ -99,10 +104,17 @@ export default function EnrollmentsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      updateEnrollment(selected.id, { status: "rejected", rejectionMessage: rejectMessage.trim() });
+      setEnrollments((prev) =>
+        prev.map((e) =>
+          e.id === selected.id
+            ? { ...e, status: "rejected" as const, rejectionMessage: rejectMessage.trim() }
+            : e
+        )
+      );
       setRejectOpen(false);
       setSelected(null);
       setRejectMessage("");
+      loadAdminData();
       toast.success("Enrollment rejected");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to reject");
@@ -112,15 +124,15 @@ export default function EnrollmentsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Enrollments</h1>
           <p className="text-sm text-muted">Review and manage student enrollment applications.</p>
         </div>
       </div>
 
-      <Card>
+      <Card className="mb-4 lg:mb-6">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-sm">

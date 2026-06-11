@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { NOTICE_CATEGORIES, COURSE_CATEGORIES } from "@/constants";
 import type { FacultyMember, Subcategory, Item, ExamCategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
-import { apiList, apiCreate, apiUpdate, apiDelete } from "./api-client";
+import { apiList, apiCreate, apiUpdate, apiDelete, clearCache } from "./api-client";
 
 interface FAQ {
   id: string;
@@ -54,6 +54,7 @@ interface Enrollment {
 
 interface AppContextValue {
   loading: boolean;
+  loadAdminData: () => Promise<void>;
   faqs: FAQ[];
   facultyMembers: FacultyMember[];
   courses: Course[];
@@ -93,6 +94,7 @@ interface AppContextValue {
   addEnrollment: (e: Omit<Enrollment, "id">) => void;
   updateEnrollment: (id: string, data: Partial<Enrollment>) => void;
   deleteEnrollment: (id: string) => void;
+  setEnrollments: React.Dispatch<React.SetStateAction<Enrollment[]>>;
   setCourseCategories: (cats: string[]) => void;
   addCourseCategory: (cat: string) => void;
   deleteCourseCategory: (cat: string) => void;
@@ -345,23 +347,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     async function loadAll() {
       try {
-        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, studentData, catData, noticeCatData, subData, itemsData, examCatData, qData, attData, settingsData, enrollmentData] = await Promise.all([
+        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData, settingsData] = await Promise.all([
           apiList("faqs"),
           apiList("faculty_members"),
           apiList("courses"),
           apiList("notices"),
           apiList("testimonials"),
           apiList("gallery_images"),
-          apiList("students"),
           apiList("course_categories"),
           apiList("notice_categories"),
           apiList("subcategories"),
           apiList("items"),
           apiList("exam_categories"),
           apiList("questions"),
-          apiList("exam_attempts"),
           apiList("settings"),
-          apiList("enrollments"),
         ]);
 
         if (Array.isArray(faqData) && faqData.length) setFaqs(faqData);
@@ -370,8 +369,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (Array.isArray(noticeData) && noticeData.length) setNotices(noticeData);
         if (Array.isArray(testimonialData) && testimonialData.length) setTestimonials(testimonialData);
         if (Array.isArray(galleryData) && galleryData.length) setGalleryImages(galleryData);
-        if (Array.isArray(studentData) && studentData.length) setStudents(studentData);
-        if (Array.isArray(enrollmentData) && enrollmentData.length) setEnrollments(enrollmentData);
         if (Array.isArray(catData) && catData.length) setCourseCategories(catData.map((c: { name: string }) => c.name));
         if (Array.isArray(noticeCatData) && noticeCatData.length) setNoticeCategories(noticeCatData);
         if (Array.isArray(subData) && subData.length) {
@@ -383,7 +380,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         if (Array.isArray(examCatData) && examCatData.length) setExamCategories(examCatData);
         if (Array.isArray(qData) && qData.length) setQuestions(qData);
-        if (Array.isArray(attData) && attData.length) setAttempts(attData);
         if (Array.isArray(settingsData) && settingsData.length) {
           const s = settingsData[0] as Record<string, unknown>;
           setSettings({
@@ -410,6 +406,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     loadAll();
+  }, []);
+
+  const loadAdminData = useCallback(async () => {
+    try {
+      clearCache("students");
+      clearCache("enrollments");
+      clearCache("exam_attempts");
+      const [studentData, enrollmentData, attemptData] = await Promise.all([
+        apiList("students").catch(() => []),
+        apiList("enrollments").catch(() => []),
+        apiList("exam_attempts").catch(() => []),
+      ]);
+      if (Array.isArray(studentData)) setStudents(studentData);
+      if (Array.isArray(enrollmentData)) setEnrollments(enrollmentData);
+      if (Array.isArray(attemptData)) setAttempts(attemptData);
+    } catch {
+      // admin data unavailable — likely not authenticated as admin
+    }
   }, []);
 
   const toggleItemComplete = useCallback((itemId: string) => {
@@ -681,7 +695,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        loading,
+        loading, loadAdminData,
         faqs, facultyMembers,
         courses, notices, testimonials, galleryImages, students, enrollments,
         courseCategories, noticeCategories, settings,
@@ -693,7 +707,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addTestimonial, updateTestimonial, deleteTestimonial,
         addGalleryImage, updateGalleryImage, deleteGalleryImage,
         addStudent, updateStudent, deleteStudent,
-        addEnrollment, updateEnrollment, deleteEnrollment,
+        addEnrollment, updateEnrollment, deleteEnrollment, setEnrollments,
         setCourseCategories, addCourseCategory, deleteCourseCategory,
         addNoticeCategory, deleteNoticeCategory, updateNoticeCategory,
         updateSettings,

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -25,7 +26,9 @@ const stats = [
 ];
 
 export default function DashboardPage() {
-  const { notices, students, courses } = useAppContext();
+  const { notices, students, courses, loadAdminData } = useAppContext();
+
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
   return (
     <div className="space-y-8">
       {/* Welcome */}

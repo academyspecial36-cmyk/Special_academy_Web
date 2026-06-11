@@ -202,9 +202,9 @@ export default function CourseDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href="/dashboard/courses">
@@ -238,7 +238,7 @@ export default function CourseDetailPage() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div>
           {courseSubs.map((sub, i) => {
             const subItems = sub.items || [];
             return (

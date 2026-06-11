@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "@/lib/supabase-server";
+import { createServerSupabase, createServiceRoleSupabase } from "@/lib/supabase-server";
 import { sendRejectionEmail, sendApprovalEmail } from "@/lib/email";
 
 export async function POST(
@@ -24,14 +24,14 @@ export async function POST(
       );
     }
 
-    const supabase = await createServerSupabase();
+    const auth = await createServerSupabase();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await auth.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await auth
       .from("profiles")
       .select("role")
       .eq("id", user.id)
@@ -44,7 +44,9 @@ export async function POST(
       );
     }
 
-    const { data: enrollment, error: fetchError } = await supabase
+    const svc = createServiceRoleSupabase();
+
+    const { data: enrollment, error: fetchError } = await svc
       .from("enrollments")
       .select("*")
       .eq("id", id)
@@ -65,7 +67,7 @@ export async function POST(
     }
 
     if (action === "approved") {
-      const { error: updateError } = await supabase
+      const { error: updateError } = await svc
         .from("enrollments")
         .update({ status: "approved" })
         .eq("id", id);
@@ -74,7 +76,7 @@ export async function POST(
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
-      await supabase.from("students").insert({
+      await svc.from("students").insert({
         name: enrollment.full_name,
         email: enrollment.email,
         phone: enrollment.phone,
@@ -93,7 +95,7 @@ export async function POST(
       return NextResponse.json({ success: true, message: "Enrollment approved" });
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await svc
       .from("enrollments")
       .update({
         status: "rejected",

@@ -65,8 +65,8 @@ export default function AdminExamsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="mb-4 lg:mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-primary">Exam Categories</h1>
           <p className="text-sm text-muted">Manage exam categories and questions.</p>

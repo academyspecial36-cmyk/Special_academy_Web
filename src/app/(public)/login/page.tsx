@@ -28,6 +28,21 @@ export default function LoginPage() {
 
     if (result.success) {
       if (result.role === "student") {
+        try {
+          const res = await fetch("/api/enrollment-status");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status !== "approved") {
+              await getSupabase()?.auth.signOut();
+              setError("Your account is not yet approved. Please contact 986-0302036 for assistance.");
+              return;
+            }
+          }
+        } catch {
+          await getSupabase()?.auth.signOut();
+          setError("Unable to verify enrollment status. Please try again.");
+          return;
+        }
         window.location.href = "/student";
       } else {
         await getSupabase()?.auth.signOut();

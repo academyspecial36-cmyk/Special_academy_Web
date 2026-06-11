@@ -82,8 +82,8 @@ export default function DashboardNoticesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Notices</h1>
           <p className="text-sm text-muted">Publish and manage academy notices.</p>
@@ -94,7 +94,7 @@ export default function DashboardNoticesPage() {
         </Button>
       </div>
 
-      <div className="relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input
           placeholder="Search notices..."

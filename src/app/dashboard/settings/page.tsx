@@ -32,8 +32,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div>
+      <div className="mb-4 lg:mb-6">
         <h1 className="text-2xl font-bold text-primary">Settings</h1>
         <p className="text-sm text-muted">Manage academy settings and configurations.</p>
       </div>

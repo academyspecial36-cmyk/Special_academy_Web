@@ -58,8 +58,8 @@ export default function DashboardCategoriesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div>
+      <div className="mb-4 lg:mb-6">
         <h1 className="text-2xl font-bold text-primary">Categories</h1>
         <p className="text-sm text-muted">Manage course and notice categories.</p>
       </div>

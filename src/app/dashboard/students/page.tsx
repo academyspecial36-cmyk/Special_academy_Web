@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +25,9 @@ const fields: FieldConfig[] = [
 ];
 
 export default function StudentsPage() {
-  const { students, addStudent, updateStudent, deleteStudent, courses } = useAppContext();
+  const { students, addStudent, updateStudent, deleteStudent, courses, loadAdminData } = useAppContext();
+
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [addOpen, setAddOpen] = useState(false);
@@ -80,7 +82,7 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Students</h1>

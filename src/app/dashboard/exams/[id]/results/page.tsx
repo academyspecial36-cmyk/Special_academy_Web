@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download, BarChart3, CheckCircle, XCircle, Facebook, MessageCircle } from "lucide-react";
@@ -12,7 +13,9 @@ import { toast } from "sonner";
 export default function AdminExamResultsPage() {
   const params = useParams();
   const categoryId = params.id as string;
-  const { examCategories, questions, attempts } = useAppContext();
+  const { examCategories, questions, attempts, loadAdminData } = useAppContext();
+
+  useEffect(() => { loadAdminData(); }, [loadAdminData]);
 
   const category = examCategories.find((c) => c.id === categoryId);
   const categoryQuestions = questions.filter((q) => q.categoryId === categoryId);
@@ -92,8 +95,8 @@ export default function AdminExamResultsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div>
+      <div className="mb-4 lg:mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
             <Link href={`/dashboard/exams/${categoryId}`}>
@@ -220,7 +223,7 @@ export default function AdminExamResultsPage() {
               <CardTitle>Detailed Breakdown</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div>
                 {categoryAttempts.map((attempt, i) => {
                   const pct = attempt.total > 0 ? Math.round((attempt.score / attempt.total) * 100) : 0;
                   const passed = pct >= 40;

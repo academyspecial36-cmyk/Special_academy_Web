@@ -12,7 +12,7 @@ function setCache(key: string, data: unknown) {
   cache.set(key, { data, expiry: Date.now() + CACHE_TTL });
 }
 
-function clearCache(table?: string) {
+export function clearCache(table?: string) {
   if (!table) { cache.clear(); return; }
   for (const key of cache.keys()) {
     if (key.startsWith(table)) cache.delete(key);
