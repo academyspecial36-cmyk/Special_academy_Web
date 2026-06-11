@@ -21,29 +21,30 @@ import { FaqSection } from "./faq-section";
 import { ContactSection } from "./contact-section";
 
 export function LandingContent() {
-  const { loading } = useAppContext();
+  const { loading, settings } = useAppContext();
+  const s = (settings.config?.sections || {}) as Record<string, boolean>;
 
   if (loading) return <LandingLoader />;
 
   return (
     <>
-      <HeroSection />
-      <AboutSection />
-      <WhyChooseSection />
-      <CadetOverviewSection />
-      <StatsSection />
-      <CoursesSection />
-      <FreeResourcesSection />
-      <NoticesSection />
-      <TestimonialsSection />
-      <FacultySection />
-      <FacilitiesSection />
-      <ActivitiesSection />
-      <BlogSection />
-      <GalleryPreviewSection />
-      <EnrollmentCtaSection />
-      <FaqSection />
-      <ContactSection />
+      {(s.hero ?? true) && <HeroSection />}
+      {(s.about ?? true) && <AboutSection />}
+      {(s.whyChoose ?? true) && <WhyChooseSection />}
+      {(s.cadetOverview ?? true) && <CadetOverviewSection />}
+      {(s.stats ?? true) && <StatsSection />}
+      {(s.courses ?? true) && <CoursesSection />}
+      {(s.freeResources ?? true) && <FreeResourcesSection />}
+      {(s.notices ?? true) && <NoticesSection />}
+      {(s.testimonials ?? true) && <TestimonialsSection />}
+      {(s.faculty ?? true) && <FacultySection />}
+      {(s.facilities ?? true) && <FacilitiesSection />}
+      {(s.activities ?? true) && <ActivitiesSection />}
+      {(s.blog ?? true) && <BlogSection />}
+      {(s.gallery ?? true) && <GalleryPreviewSection />}
+      {(s.enrollmentCta ?? true) && <EnrollmentCtaSection />}
+      {(s.faq ?? true) && <FaqSection />}
+      {(s.contact ?? true) && <ContactSection />}
     </>
   );
 }

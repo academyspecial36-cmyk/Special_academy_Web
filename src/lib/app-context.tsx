@@ -18,14 +18,30 @@ interface NoticeCategory {
   color: string;
 }
 
-interface SocialLinks {
+export interface SocialLinks {
   facebook: string;
   instagram: string;
   tiktok: string;
   youtube: string;
 }
 
-interface AppSettings {
+export type SectionKey =
+  | "hero" | "about" | "whyChoose" | "cadetOverview" | "stats"
+  | "courses" | "freeResources" | "notices" | "testimonials" | "faculty"
+  | "facilities" | "activities" | "gallery" | "enrollmentCta" | "faq"
+  | "contact" | "blog";
+
+interface LandingConfig {
+  hero: { title: string; subtitle: string; badge: string; image: string };
+  about: { title: string; description: string; image: string; values: { title: string; description: string }[] };
+  stats: { label: string; value: string; suffix?: string; description?: string }[];
+  seo?: { metaDescription: string; gaTrackingId: string };
+  sections?: Record<SectionKey, boolean>;
+  cta?: { title: string; subtitle: string; buttonText: string; buttonLink: string };
+  footer?: { copyright: string; description: string };
+}
+
+export interface AppSettings {
   academyName: string;
   tagline: string;
   description: string;
@@ -39,7 +55,10 @@ interface AppSettings {
   holiday: string;
   appIcon: string;
   socialLinks: SocialLinks;
-  enableBlog?: boolean;
+  enableBlog: boolean;
+  maintenanceMode: boolean;
+  config: LandingConfig;
+  seo: { metaDescription: string; gaTrackingId: string };
 }
 
 interface Enrollment {
@@ -126,24 +145,68 @@ function generateId() {
 }
 
 const defaultSettings: AppSettings = {
-  academyName: "Special academy",
+  academyName: "Special Academy",
   tagline: "Preparing Future Leaders Through Discipline & Excellence",
-  description: "Nepal's premier cadet preparation academy since 2010.",
-  address: "M8RP+363 New baneshwor, Devkota Sadak, Kathmandu 44600",
+  description: "Nepal's premier cadet preparation academy.",
+  address: "Kathmandu, Nepal",
   email: "info@cadetacademy.edu",
   admissionEmail: "admission@cadetacademy.edu",
   phone: "986-0302036",
   secondaryPhone: "986-0302036",
   website: "https://cadetacademy.edu",
-  officeHours: "Sun–Thu: 9:00 AM – 5:00 PM",
+  officeHours: "Sun-Thu: 9:00 AM - 5:00 PM",
   holiday: "Friday & Public Holidays",
   appIcon: "/icon-image.png",
   socialLinks: {
-    facebook: "https://facebook.com/specialacademy",
-    instagram: "https://instagram.com/specialacademy",
-    tiktok: "https://tiktok.com/@specialacademy",
-    youtube: "https://youtube.com/@specialacademy",
+    facebook: "",
+    instagram: "",
+    tiktok: "",
+    youtube: "",
   },
+  enableBlog: true,
+  maintenanceMode: false,
+  config: {
+    hero: {
+      title: "Preparing Future Cadets Through Discipline & Excellence",
+      subtitle: "We help students develop academic excellence, leadership skills, confidence, and discipline for cadet entrance success. Join Nepal's most trusted cadet preparation academy.",
+      badge: "Admission Open for 2026-27 Session",
+      image: "https://images.unsplash.com/photo-1763656443687-c3de11b68813?q=80&w=687&auto=format&fit=crop",
+    },
+    about: {
+      title: "Building Future Leaders Since 2010",
+      description: "Special academy has been the trusted choice for parents and students aspiring for cadet college admissions. Our holistic approach combines academic rigor with character building.",
+      image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80",
+      values: [
+        { title: "Mission", description: "To prepare disciplined, academically excellent, and morally upright future leaders through comprehensive cadet preparation programs." },
+        { title: "Discipline", description: "We instill military-grade discipline, punctuality, and self-control that forms the foundation of successful cadet life." },
+        { title: "Excellence", description: "Pursuit of academic and personal excellence is at the core of everything we teach, ensuring our students stand out." },
+        { title: "Character", description: "Building strong character, integrity, and leadership qualities that last a lifetime beyond cadet college admission." },
+      ],
+    },
+    stats: [
+      { label: "Students Enrolled", value: "2500", suffix: "+", description: "Since 2010" },
+      { label: "Success Rate", value: "94", suffix: "%", description: "College admission" },
+      { label: "Expert Faculty", value: "35", suffix: "+", description: "Qualified instructors" },
+      { label: "Years Experience", value: "15", suffix: "+", description: "In education" },
+    ],
+    sections: {
+      hero: true, about: true, whyChoose: true, cadetOverview: true,
+      stats: true, courses: true, freeResources: true, notices: true,
+      testimonials: true, faculty: true, facilities: true, activities: true,
+      gallery: true, enrollmentCta: true, faq: true, contact: true, blog: true,
+    },
+    cta: {
+      title: "Start Your Cadet Journey Today",
+      subtitle: "Join Nepal's most trusted cadet preparation academy and take the first step toward a disciplined, successful future.",
+      buttonText: "Enroll Now",
+      buttonLink: "/enroll",
+    },
+    footer: {
+      copyright: "© 2026 Special Academy. All rights reserved.",
+      description: "Special Academy is Nepal's premier cadet preparation institution, dedicated to shaping disciplined, academically excellent, and morally upright future leaders.",
+    },
+  },
+  seo: { metaDescription: "", gaTrackingId: "" },
 };
 
 const initialEnrollments: Enrollment[] = [
@@ -348,7 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     async function loadAll() {
       try {
-        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData, settingsData] = await Promise.all([
+        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData] = await Promise.all([
           apiList("faqs"),
           apiList("faculty_members"),
           apiList("courses"),
@@ -361,7 +424,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           apiList("items"),
           apiList("exam_categories"),
           apiList("questions"),
-          apiList("settings"),
         ]);
 
         if (Array.isArray(faqData) && faqData.length) setFaqs(faqData);
@@ -381,25 +443,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         if (Array.isArray(examCatData) && examCatData.length) setExamCategories(examCatData);
         if (Array.isArray(qData) && qData.length) setQuestions(qData);
-        if (Array.isArray(settingsData) && settingsData.length) {
-          const s = settingsData[0] as Record<string, unknown>;
-          setSettings({
-            academyName: String(s.academy_name ?? s.academyName ?? defaultSettings.academyName),
-            tagline: String(s.tagline ?? defaultSettings.tagline),
-            description: String(s.description ?? defaultSettings.description),
-            address: String(s.address ?? defaultSettings.address),
-            email: String(s.email ?? defaultSettings.email),
-            admissionEmail: String(s.admission_email ?? s.admissionEmail ?? defaultSettings.admissionEmail),
-            phone: String(s.phone ?? defaultSettings.phone),
-            secondaryPhone: String(s.secondary_phone ?? s.secondaryPhone ?? defaultSettings.secondaryPhone),
-            website: String(s.website ?? defaultSettings.website),
-            officeHours: String(s.office_hours ?? s.officeHours ?? defaultSettings.officeHours),
-            holiday: String(s.holiday ?? defaultSettings.holiday),
-            appIcon: String(s.app_icon ?? s.appIcon ?? defaultSettings.appIcon),
-            socialLinks: (s.social_links ?? s.socialLinks ?? defaultSettings.socialLinks) as SocialLinks,
-            enableBlog: (s.enable_blog ?? s.enableBlog ?? true) as boolean,
-          });
-        }
+
+        try {
+          const settingsRes = await fetch("/api/settings");
+          if (settingsRes.ok) {
+            const { settings: merged } = await settingsRes.json();
+            setSettings(merged);
+          }
+        } catch { /* fallback to defaults */ }
       } catch (err) {
         console.log("API load failed:", err);
       } finally {

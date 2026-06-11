@@ -26,6 +26,7 @@ export const DASHBOARD_NAV = [
   { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
   { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
   { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
+  { label: "Contact Submissions", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
   { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
 ];
 
