@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { STUDENT_NAV } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
+import { NotificationsProvider } from "@/lib/notifications-context";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -128,6 +130,7 @@ export default function StudentLayout({
       </aside>
 
       <div className="flex-1 min-w-0">
+        <NotificationsProvider>
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-primary/5 h-16 flex items-center px-4 lg:px-8">
           <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-md hover:bg-accent text-primary mr-3">
             <Menu className="w-5 h-5" />
@@ -144,10 +147,7 @@ export default function StudentLayout({
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
-            <button className="relative p-2 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
+            <NotificationBell />
             <div className="relative">
               <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
@@ -181,6 +181,7 @@ export default function StudentLayout({
         </header>
 
         <main className="p-4 lg:p-8">{children}</main>
+        </NotificationsProvider>
       </div>
     </div>
   );

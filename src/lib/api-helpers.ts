@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase, createServiceRoleSupabase } from "./supabase-server";
+import { createNotificationForRole } from "./notifications";
 
 type Entity = string;
 
@@ -112,6 +113,28 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
 
   const { data, error } = await svc.from(table).insert(dbBody).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (table === "notices" && data) {
+    const d = data as Record<string, unknown>;
+    await createNotificationForRole(
+      "student",
+      "notice",
+      "New Notice",
+      (d.title as string) || "A new notice has been published.",
+      "/student/notices",
+    );
+  }
+
+  if (table === "items" && data) {
+    const d = data as Record<string, unknown>;
+    await createNotificationForRole(
+      "student",
+      "course_item",
+      "New Course Material",
+      `New ${d.type as string}: ${(d.title as string) || "A new item has been added to your course."}`,
+      "/student/courses",
+    );
+  }
 
   return NextResponse.json(transformKeys(data as Record<string, unknown>, table, false), { status: 201 });
 }

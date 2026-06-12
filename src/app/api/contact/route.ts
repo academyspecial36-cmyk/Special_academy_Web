@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { createNotificationForRole } from "@/lib/notifications";
 
 export async function POST(request: Request) {
   try {
@@ -28,6 +29,14 @@ export async function POST(request: Request) {
       console.error("Contact insert error:", error);
       return NextResponse.json({ error: "Failed to submit message" }, { status: 500 });
     }
+
+    await createNotificationForRole(
+      "admin",
+      "contact",
+      "New Contact Message",
+      `${name} (${email}) sent a message${subject ? ` about "${subject}"` : ""}.`,
+      "/dashboard/contact-submissions",
+    );
 
     return NextResponse.json({ success: true });
   } catch {

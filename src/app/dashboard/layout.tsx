@@ -21,7 +21,6 @@ import {
   Menu,
   X,
   Search,
-  Bell as BellIcon,
   ChevronDown,
   LogOut,
 } from "lucide-react";
@@ -31,6 +30,8 @@ import { DASHBOARD_NAV } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
 import { LandingLoader } from "@/components/landing/landing-loader";
+import { NotificationsProvider } from "@/lib/notifications-context";
+import { NotificationBell } from "@/components/shared/notification-bell";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -162,6 +163,7 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className="flex-1 min-w-0">
+        <NotificationsProvider>
         {/* Top Bar */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-primary/5 h-16 flex items-center px-4 lg:px-8">
           <button
@@ -183,21 +185,7 @@ export default function DashboardLayout({
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
-            {/* Search */}
-            <div className="hidden sm:flex items-center bg-accent rounded-lg px-3 py-1.5">
-              <Search className="w-4 h-4 text-muted mr-2" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="bg-transparent text-sm outline-none placeholder:text-muted w-40"
-              />
-            </div>
-
-            {/* Notifications */}
-            <button className="relative p-2 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors">
-              <BellIcon className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
+            <NotificationBell />
 
             {/* Profile */}
             <div className="relative">
@@ -243,6 +231,7 @@ export default function DashboardLayout({
         <main className="p-4 lg:p-8">
           {loading ? <LandingLoader /> : children}
         </main>
+        </NotificationsProvider>
       </div>
       <Toaster
         position="top-right"

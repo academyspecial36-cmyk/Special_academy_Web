@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { sendEnrollmentEmail } from "@/lib/email";
+import { createNotificationForRole } from "@/lib/notifications";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -83,6 +84,14 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error("[Enroll] Resend email failed:", e);
     }
+
+    await createNotificationForRole(
+      "admin",
+      "enrollment",
+      "New Enrollment Request",
+      `${fullName} (${email}) has submitted an enrollment request.`,
+      "/dashboard/enrollments",
+    );
 
     return NextResponse.json({
       success: true,
