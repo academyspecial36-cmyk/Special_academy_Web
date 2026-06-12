@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerSupabase } from "@/lib/supabase-server";
+import { createServerSupabase, createServiceRoleSupabase } from "@/lib/supabase-server";
 
 export async function GET() {
   const supabase = await createServerSupabase();
@@ -9,7 +9,8 @@ export async function GET() {
     return NextResponse.json({ user: null });
   }
 
-  const { data: profile } = await supabase
+  const serviceClient = createServiceRoleSupabase();
+  const { data: profile } = await serviceClient
     .from("profiles")
     .select("*")
     .eq("id", user.id)
@@ -19,8 +20,9 @@ export async function GET() {
     user: {
       id: user.id,
       email: user.email,
-      role: profile?.role,
+      role: profile?.role ?? "student",
       name: profile?.name,
+      avatar_url: profile?.avatar_url ?? undefined,
     },
   });
 }

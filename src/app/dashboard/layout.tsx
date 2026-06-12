@@ -61,9 +61,12 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (isLoading) return;
-    if (!user) router.replace("/");
-    else if (user.role !== "admin") router.replace("/login");
-  }, [user, isLoading, router]);
+    if (!user) { router.replace("/"); return; }
+    if (user.role !== "admin") { router.replace("/login"); return; }
+    if (typeof window !== "undefined" && !sessionStorage.getItem("admin_session")) {
+      logout();
+    }
+  }, [user, isLoading, router, logout]);
 
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
