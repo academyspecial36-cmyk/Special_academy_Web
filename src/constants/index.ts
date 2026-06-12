@@ -28,6 +28,7 @@ export const DASHBOARD_NAV = [
   { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
   { label: "Contact Submissions", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
   { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
+  { label: "Guide", href: "/dashboard/guide", icon: "BookOpen" },
 ];
 
 export const STUDENT_NAV = [
@@ -36,6 +37,7 @@ export const STUDENT_NAV = [
   { label: "Exams", href: "/student/exams", icon: "ClipboardCheck" },
   { label: "Notices", href: "/student/notices", icon: "Bell" },
   { label: "Profile", href: "/student/profile", icon: "User" },
+  { label: "Guide", href: "/student/guide", icon: "BookOpen" },
 ];
 
 export const NOTICE_CATEGORIES = [

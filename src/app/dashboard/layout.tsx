@@ -217,6 +217,9 @@ export default function DashboardLayout({
                     <Link href="/dashboard/settings" className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors">
                       Settings
                     </Link>
+                    <Link href="/dashboard/guide" className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors">
+                      Guide
+                    </Link>
                     <button onClick={logout} className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                       Sign Out
                     </button>
