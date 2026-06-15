@@ -20,6 +20,7 @@ export interface Notice {
   date: string;
   isPinned: boolean;
   author: string;
+  image?: string;
 }
 
 export interface Testimonial {

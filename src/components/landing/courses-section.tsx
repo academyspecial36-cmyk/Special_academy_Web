@@ -10,16 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
 
 export function CoursesSection() {
-  const { courses } = useAppContext();
+  const { courses, settings } = useAppContext();
   const featuredCourses = courses.slice(0, 3);
+  const labels = settings.config.sectionLabels?.courses;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
   return (
     <section className="py-20 md:py-28 bg-accent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Our Programs"
-          title="Popular Preparation Courses"
-          description="Choose from our range of specialized courses designed to prepare you for cadet college admissions and academic excellence."
+          label={labels?.label || "Our Programs"}
+          title={labels?.title || "Popular Preparation Courses"}
+          description={labels?.description || ""}
         />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -87,7 +89,7 @@ export function CoursesSection() {
                   <span className="text-lg font-bold text-primary">{course.price}</span>
                   <Button variant="ghost" size="sm" className="text-secondary hover:text-secondary hover:bg-secondary/5" asChild>
                     <Link href={`/courses`}>
-                      Learn More
+                      {btns.learnMore || "Learn More"}
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </Link>
                   </Button>
@@ -105,7 +107,7 @@ export function CoursesSection() {
         >
           <Button size="lg" asChild>
             <Link href="/courses">
-              View All Courses
+              {btns.viewAllCourses || "View All Courses"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>

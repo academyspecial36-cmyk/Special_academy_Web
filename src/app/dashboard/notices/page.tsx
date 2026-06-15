@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Search, Plus, Pin, Pencil, Trash2, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +24,7 @@ export default function DashboardNoticesPage() {
     { name: "content", label: "Content", type: "textarea", required: true, placeholder: "Notice content..." },
     { name: "category", label: "Category", type: "select", required: true, options: noticeCategories.map((c) => ({ label: c.label, value: c.value })) },
     { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
+    { name: "image", label: "Image", type: "image", placeholder: "https://..." },
   ];
 
   const editFields: FieldConfig[] = [
@@ -31,15 +33,19 @@ export default function DashboardNoticesPage() {
     { name: "category", label: "Category", type: "select", required: true, options: noticeCategories.map((c) => ({ label: c.label, value: c.value })) },
     { name: "author", label: "Author", type: "text", required: true, placeholder: "e.g. Admin" },
     { name: "isPinned", label: "Pinned", type: "select", options: [{ label: "No", value: "false" }, { label: "Yes", value: "true" }] },
+    { name: "image", label: "Image", type: "image", placeholder: "https://..." },
   ];
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Notice | null>(null);
 
-  const filtered = notices.filter((n) =>
-    n.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = [...notices]
+    .filter((n) => n.title.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
   const getCategoryStyle = (category: string) => {
     const cat = noticeCategories.find((c) => c.value === category);
@@ -54,6 +60,7 @@ export default function DashboardNoticesPage() {
       author: data.author,
       date: new Date().toISOString(),
       isPinned: false,
+      image: data.image || undefined,
     });
     setAddOpen(false);
     toast.success("Notice published successfully");
@@ -67,6 +74,7 @@ export default function DashboardNoticesPage() {
       category: data.category as Notice["category"],
       author: data.author,
       isPinned: data.isPinned === "true",
+      image: data.image || undefined,
     });
     setEditOpen(false);
     setSelected(null);
@@ -114,8 +122,13 @@ export default function DashboardNoticesPage() {
           >
             <Card>
               <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                    <div className="flex items-start justify-between gap-4">
+                  {notice.image && (
+                    <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-accent">
+                      <Image src={notice.image} alt="" width={64} height={64} className="w-full h-full object-cover" unoptimized />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className={getCategoryStyle(notice.category)}>
                         {noticeCategories.find((c) => c.value === notice.category)?.label}
@@ -175,6 +188,7 @@ export default function DashboardNoticesPage() {
           category: selected.category,
           author: selected.author,
           isPinned: selected.isPinned ? "true" : "false",
+          image: selected.image || "",
         } : undefined}
         onSubmit={handleEdit}
         submitLabel="Update Notice"

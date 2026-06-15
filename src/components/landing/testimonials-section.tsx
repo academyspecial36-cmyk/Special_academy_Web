@@ -10,9 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
 
 export function TestimonialsSection() {
-  const { testimonials } = useAppContext();
+  const { testimonials, settings } = useAppContext();
   const [current, setCurrent] = useState(0);
   const featured = testimonials.slice(0, 3);
+  const labels = settings.config.sectionLabels?.testimonials;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
   if (featured.length === 0) return null;
 
@@ -29,9 +31,9 @@ export function TestimonialsSection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <SectionHeader
-          label="Success Stories"
-          title="What Our Students & Parents Say"
-          description="Real stories from real students who achieved their dreams of joining cadet colleges through our preparation programs."
+          label={labels?.label || "Success Stories"}
+          title={labels?.title || "What Our Students & Parents Say"}
+          description={labels?.description || ""}
           className="[&_h2]:text-white [&_p]:text-white/60"
         />
 
@@ -138,7 +140,7 @@ export function TestimonialsSection() {
         >
           <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" asChild>
             <Link href="/testimonials">
-              View All Testimonials
+              {btns.viewAllTestimonials || "View All Testimonials"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Search, Plus, Pencil, Trash2, Images } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Images, FolderOpen } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { AssetPicker } from "@/components/shared/asset-picker";
 import { useAppContext } from "@/lib/app-context";
 import type { GalleryImage } from "@/types";
+import type { MediaFile } from "@/types/media";
 
 const fields: FieldConfig[] = [
   { name: "src", label: "Image", type: "image" as const, required: true, placeholder: "https://..." },
@@ -33,30 +35,50 @@ export default function DashboardGalleryPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<GalleryImage | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<"add" | "edit">("add");
+  const [pickerSrc, setPickerSrc] = useState("");
 
   const filtered = images.filter((g) =>
     g.alt.toLowerCase().includes(search.toLowerCase())
   );
 
+  function handleMediaSelect(file: MediaFile) {
+    setPickerSrc(file.url);
+    if (pickerTarget === "add") {
+      setAddOpen(true);
+    } else if (selected) {
+      setEditOpen(true);
+    }
+  }
+
+  function openPicker(target: "add" | "edit") {
+    setPickerTarget(target);
+    setPickerSrc("");
+    setPickerOpen(true);
+  }
+
   function handleAdd(data: Record<string, string>) {
     addGalleryImage({
-      src: data.src,
+      src: data.src || pickerSrc,
       alt: data.alt,
       category: data.category,
     });
     setAddOpen(false);
+    setPickerSrc("");
     toast.success("Image added successfully");
   }
 
   function handleEdit(data: Record<string, string>) {
     if (!selected) return;
     updateGalleryImage(selected.id, {
-      src: data.src,
+      src: data.src || pickerSrc,
       alt: data.alt,
       category: data.category,
     });
     setEditOpen(false);
     setSelected(null);
+    setPickerSrc("");
     toast.success("Image updated successfully");
   }
 
@@ -79,6 +101,10 @@ export default function DashboardGalleryPage() {
           <Plus className="w-4 h-4 mr-2" />
           Upload Image
         </Button>
+        <Button size="sm" variant="outline" onClick={() => openPicker("add")}>
+          <FolderOpen className="w-4 h-4 mr-2" />
+          Browse Media
+        </Button>
       </div>
 
       <div className="mb-4 lg:mb-6 relative max-w-sm">
@@ -95,10 +121,17 @@ export default function DashboardGalleryPage() {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => { setSelected(img); setEditOpen(true); }}
+                      onClick={() => { setSelected(img); setPickerSrc(img.src); setEditOpen(true); }}
                       className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors"
                     >
                       <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { setSelected(img); openPicker("edit"); }}
+                      className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                      title="Pick from Media Manager"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => { setSelected(img); setDeleteOpen(true); }}
@@ -127,21 +160,29 @@ export default function DashboardGalleryPage() {
 
       <FormModal
         open={addOpen}
-        onClose={() => setAddOpen(false)}
+        onClose={() => { setAddOpen(false); setPickerSrc(""); }}
         title="Upload Image"
         fields={fields}
+        initialValues={pickerSrc ? { src: pickerSrc, alt: "", category: "" } : undefined}
         onSubmit={handleAdd}
         submitLabel="Upload"
       />
 
       <FormModal
         open={editOpen}
-        onClose={() => { setEditOpen(false); setSelected(null); }}
+        onClose={() => { setEditOpen(false); setSelected(null); setPickerSrc(""); }}
         title="Edit Image"
         fields={fields}
-        initialValues={selected ? { src: selected.src, alt: selected.alt, category: selected.category } : undefined}
+        initialValues={selected ? { src: pickerSrc || selected.src, alt: selected.alt, category: selected.category } : undefined}
         onSubmit={handleEdit}
         submitLabel="Update Image"
+      />
+
+      <AssetPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={handleMediaSelect}
+        filterMime="image/"
       />
 
       <DeleteModal

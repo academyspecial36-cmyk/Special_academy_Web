@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Pin, Calendar } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -10,8 +11,10 @@ import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 
 export function NoticesSection() {
-  const { notices, noticeCategories } = useAppContext();
+  const { notices, noticeCategories, settings } = useAppContext();
   const featuredNotices = notices.slice(0, 4);
+  const labels = settings.config.sectionLabels?.notices;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
   const getCategoryStyle = (category: string) => {
     const cat = noticeCategories.find((c) => c.value === category);
@@ -22,9 +25,9 @@ export function NoticesSection() {
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Updates"
-          title="Latest Notices & Announcements"
-          description="Stay informed with the latest updates, admission notices, exam schedules, and important announcements from Special academy."
+          label={labels?.label || "Updates"}
+          title={labels?.title || "Latest Notices & Announcements"}
+          description={labels?.description || ""}
         />
 
         <div className="grid md:grid-cols-2 gap-5">
@@ -37,6 +40,11 @@ export function NoticesSection() {
               transition={{ duration: 0.4, delay: index * 0.08 }}
               className="group p-6 rounded-xl bg-accent border border-primary/5 hover:border-primary/10 hover:shadow-soft transition-all duration-300"
             >
+              {notice.image && (
+                <div className="w-full h-40 rounded-lg overflow-hidden bg-accent mb-3">
+                  <Image src={notice.image} alt="" width={400} height={160} className="w-full h-full object-cover" unoptimized />
+                </div>
+              )}
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex items-center gap-2">
                   <Badge className={getCategoryStyle(notice.category)}>
@@ -78,7 +86,7 @@ export function NoticesSection() {
         >
           <Button variant="outline" asChild>
             <Link href="/notices">
-              View All Notices
+              {btns.viewAllNotices || "View All Notices"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>

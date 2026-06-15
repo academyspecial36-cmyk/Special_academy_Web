@@ -13,22 +13,49 @@ export const NAV_ITEMS = [
   { label: "Contact", href: "/contact" },
 ];
 
-export const DASHBOARD_NAV = [
-  { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
-  { label: "Students", href: "/dashboard/students", icon: "Users" },
-  { label: "Courses", href: "/dashboard/courses", icon: "BookOpen" },
-  { label: "Exams", href: "/dashboard/exams", icon: "ClipboardCheck" },
-  { label: "Notices", href: "/dashboard/notices", icon: "Bell" },
-  { label: "Enrollments", href: "/dashboard/enrollments", icon: "FileText" },
-  { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
-  { label: "Faculty", href: "/dashboard/faculty", icon: "GraduationCap" },
-  { label: "Blog", href: "/dashboard/blog", icon: "FileText" },
-  { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
-  { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
-  { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
-  { label: "Contact Submissions", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
-  { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
-  { label: "Guide", href: "/dashboard/guide", icon: "BookOpen" },
+export type SidebarItem =
+  | { type: "link"; label: string; href: string; icon: string }
+  | { type: "group"; label: string; icon: string; children: { label: string; href: string; icon: string }[] };
+
+export const DASHBOARD_SIDEBAR: SidebarItem[] = [
+  { type: "link", label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+  {
+    type: "group", label: "Content", icon: "BookOpen",
+    children: [
+      { label: "Courses", href: "/dashboard/courses", icon: "BookOpen" },
+      { label: "Media", href: "/dashboard/media", icon: "ImageIcon" },
+      { label: "Notices", href: "/dashboard/notices", icon: "Bell" },
+      { label: "Blog", href: "/dashboard/blog", icon: "FileText" },
+      { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
+      { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
+      { label: "Notes", href: "/dashboard/notes", icon: "StickyNote" },
+      { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
+      { label: "Faculty", href: "/dashboard/faculty", icon: "GraduationCap" },
+    ],
+  },
+  {
+    type: "group", label: "People", icon: "Users",
+    children: [
+      { label: "Students", href: "/dashboard/students", icon: "Users" },
+      { label: "Enrollments", href: "/dashboard/enrollments", icon: "FileText" },
+    ],
+  },
+  {
+    type: "group", label: "Academics", icon: "ClipboardCheck",
+    children: [
+      { label: "Exams", href: "/dashboard/exams", icon: "ClipboardCheck" },
+    ],
+  },
+  {
+    type: "group", label: "System", icon: "Settings",
+    children: [
+      { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
+      { label: "Communications", href: "/dashboard/communications", icon: "Megaphone" },
+      { label: "Contact", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
+      { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
+      { label: "Guide", href: "/dashboard/guide", icon: "BookOpen" },
+    ],
+  },
 ];
 
 export const STUDENT_NAV = [

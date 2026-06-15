@@ -16,6 +16,8 @@ export function BlogSection() {
   const { settings } = useAppContext();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const labels = settings.config.sectionLabels?.blog;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
   useEffect(() => {
     async function fetchPosts() {
@@ -58,9 +60,9 @@ export function BlogSection() {
     <section className="py-20 md:py-28 bg-accent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="From Our Blog"
-          title="Latest Articles & Tips"
-          description="Expert advice, study tips, and updates to help you succeed in your cadet entrance journey."
+          label={labels?.label || "From Our Blog"}
+          title={labels?.title || "Latest Articles & Tips"}
+          description={labels?.description || ""}
         />
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
@@ -126,7 +128,7 @@ export function BlogSection() {
         >
           <Button size="lg" asChild>
             <Link href="/blog">
-              View All Articles
+              {btns.viewAllArticles || "View All Articles"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>

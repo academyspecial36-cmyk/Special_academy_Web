@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "@/styles/globals.css";
 import { AppProviderWrapper } from "@/components/providers/app-provider";
 import { AuthProviderWrapper } from "@/components/providers/auth-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { OfflineDetector } from "@/components/offline-detector";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -47,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="font-sans" suppressHydrationWarning>
-        <AuthProviderWrapper><AppProviderWrapper>{children}</AppProviderWrapper></AuthProviderWrapper>
+        <AuthProviderWrapper><AppProviderWrapper><ThemeProvider><OfflineDetector>{children}</OfflineDetector></ThemeProvider></AppProviderWrapper></AuthProviderWrapper>
       </body>
     </html>
   );

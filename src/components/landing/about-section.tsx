@@ -16,7 +16,7 @@ export function AboutSection() {
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="About Us"
+          label={settings.config.sectionLabels?.about?.label || "About Us"}
           title={about.title}
           description={about.description}
         />

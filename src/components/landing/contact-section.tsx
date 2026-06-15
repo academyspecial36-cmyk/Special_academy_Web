@@ -22,6 +22,8 @@ import { toast } from "sonner";
 
 export function ContactSection() {
   const { settings } = useAppContext();
+  const labels = settings.config.sectionLabels?.contact;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -76,9 +78,9 @@ export function ContactSection() {
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Get in Touch"
-          title={`Contact ${settings.academyName}`}
-          description="Have questions? We would love to hear from you. Reach out to us for admission inquiries, course details, or campus visits."
+          label={labels?.label || "Get in Touch"}
+          title={labels?.title || `Contact ${settings.academyName}`}
+          description={labels?.description || ""}
         />
 
         <div className="grid lg:grid-cols-5 gap-10 lg:gap-16">
@@ -190,7 +192,7 @@ export function ContactSection() {
                 </div>
                 <Button className="w-full" size="lg" type="submit" disabled={sending}>
                   {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                  {sending ? "Sending..." : "Send Message"}
+                  {sending ? "Sending..." : (btns.sendMessage || "Send Message")}
                 </Button>
               </form>
             </div>

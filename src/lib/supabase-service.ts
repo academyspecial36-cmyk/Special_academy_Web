@@ -217,6 +217,7 @@ export async function fetchNotices(): Promise<Notice[]> {
     date: String(n.date),
     isPinned: Boolean(n.is_pinned),
     author: String(n.author ?? ""),
+    image: n.image ? String(n.image) : undefined,
   }));
 }
 

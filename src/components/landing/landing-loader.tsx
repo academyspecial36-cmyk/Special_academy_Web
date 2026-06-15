@@ -3,26 +3,20 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GraduationCap } from "lucide-react";
+import { useAppContext } from "@/lib/app-context";
 
-const quotes = [
+const defaultQuotes = [
   "Discipline is the bridge between goals and accomplishment.",
-  "The only way to do great work is to love what you do.",
-  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-  "Leadership is not about being in charge. It is about taking care of those in your charge.",
-  "The future belongs to those who believe in the beauty of their dreams.",
-  "Excellence is not a skill. It is an attitude.",
-  "Strive not to be a success, but rather to be of value.",
-  "Perseverance is the hard work you do after you get tired of doing the hard work.",
-  "A leader is one who knows the way, goes the way, and shows the way.",
-  "The difference between ordinary and extraordinary is that little extra.",
 ];
 
 export function LandingLoader() {
+  const { settings } = useAppContext();
+  const quotes = settings.config.loaderQuotes || defaultQuotes;
   const [quote, setQuote] = useState("");
 
   useEffect(() => {
-    setQuote(quotes[Math.floor(Math.random() * quotes.length)]);
-  }, []);
+    setQuote(quotes[Math.floor(Math.random() * quotes.length)] || quotes[0] || "");
+  }, [quotes]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-primary via-primary to-primary-800">
