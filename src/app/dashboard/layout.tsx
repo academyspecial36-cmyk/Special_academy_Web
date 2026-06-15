@@ -18,6 +18,8 @@ import {
   GraduationCap,
   Tags,
   ClipboardCheck,
+  Megaphone,
+  StickyNote,
   Menu,
   X,
   Search,
@@ -49,6 +51,8 @@ const iconMap: Record<string, React.ElementType> = {
   GraduationCap,
   Tags,
   ClipboardCheck,
+  Megaphone,
+  StickyNote,
 };
 
 export default function DashboardLayout({

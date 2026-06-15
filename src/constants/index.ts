@@ -23,10 +23,12 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
     type: "group", label: "Content", icon: "BookOpen",
     children: [
       { label: "Courses", href: "/dashboard/courses", icon: "BookOpen" },
+      { label: "Media", href: "/dashboard/media", icon: "ImageIcon" },
       { label: "Notices", href: "/dashboard/notices", icon: "Bell" },
       { label: "Blog", href: "/dashboard/blog", icon: "FileText" },
       { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
       { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
+      { label: "Notes", href: "/dashboard/notes", icon: "StickyNote" },
       { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
       { label: "Faculty", href: "/dashboard/faculty", icon: "GraduationCap" },
     ],
@@ -48,6 +50,7 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
     type: "group", label: "System", icon: "Settings",
     children: [
       { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
+      { label: "Communications", href: "/dashboard/communications", icon: "Megaphone" },
       { label: "Contact", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
       { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
       { label: "Guide", href: "/dashboard/guide", icon: "BookOpen" },
