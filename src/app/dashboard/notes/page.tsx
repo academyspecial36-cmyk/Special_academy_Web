@@ -9,8 +9,8 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { cn, formatShortDate } from "@/lib/utils";
+import { RichEditor } from "@/components/shared/rich-editor";
 
 interface Note {
   id: string;
@@ -31,12 +31,17 @@ const NOTE_COLORS = [
 
 const MAX_TAG_SUGGESTIONS = 8;
 
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, "");
+}
+
 function getWordCount(text: string) {
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
+  const stripped = stripHtml(text);
+  return stripped.trim() ? stripped.trim().split(/\s+/).length : 0;
 }
 
 function getCharCount(text: string) {
-  return text.length;
+  return stripHtml(text).length;
 }
 
 export default function NotesPage() {
@@ -53,6 +58,7 @@ export default function NotesPage() {
   const [formTagInput, setFormTagInput] = useState("");
   const [formColor, setFormColor] = useState("#FFFFFF");
   const [saving, setSaving] = useState(false);
+  const [pinningId, setPinningId] = useState<string | null>(null);
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -158,6 +164,7 @@ export default function NotesPage() {
   }
 
   async function handlePin(note: Note) {
+    setPinningId(note.id);
     try {
       const res = await fetch(`/api/notes/${note.id}`, {
         method: "PUT",
@@ -169,6 +176,8 @@ export default function NotesPage() {
       fetchNotes();
     } catch (e) {
       toast.error((e as Error).message);
+    } finally {
+      setPinningId(null);
     }
   }
 
@@ -189,6 +198,36 @@ export default function NotesPage() {
 
   return (
     <div>
+      <style jsx global>{`
+        .note-content ul[data-type="taskList"] {
+          list-style: none;
+          padding-left: 0;
+        }
+        .note-content ul[data-type="taskList"] li {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.5rem;
+        }
+        .note-content ul[data-type="taskList"] li > label {
+          flex-shrink: 0;
+          margin-top: 0.1rem;
+        }
+        .note-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+          width: 0.75rem;
+          height: 0.75rem;
+          accent-color: hsl(var(--primary));
+          cursor: pointer;
+        }
+        .note-content ul[data-type="taskList"] li[data-checked="true"] > div {
+          text-decoration: line-through;
+          opacity: 0.6;
+        }
+        .note-content hr {
+          border: none;
+          border-top: 1px solid hsl(var(--primary) / 0.1);
+          margin: 0.5rem 0;
+        }
+      `}</style>
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -247,20 +286,33 @@ export default function NotesPage() {
           )}
         </div>
       ) : (
-        <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+        <div className="space-y-8">
           {pinnedNotes.length > 0 && (
-            <div className="break-inside-avoid mb-1">
+            <section>
               <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
                 <Pin className="w-3 h-3" /> Pinned ({pinnedNotes.length})
               </div>
-            </div>
+              <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                {pinnedNotes.map((note) => (
+                  <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={handleDelete} pinningId={pinningId} />
+                ))}
+              </div>
+            </section>
           )}
-          {pinnedNotes.map((note) => (
-            <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={handleDelete} />
-          ))}
-          {unpinnedNotes.map((note) => (
-            <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={handleDelete} />
-          ))}
+          {unpinnedNotes.length > 0 && (
+            <section>
+              {pinnedNotes.length > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-muted mb-3">
+                  <StickyNote className="w-3 h-3" /> All Notes
+                </div>
+              )}
+              <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
+                {unpinnedNotes.map((note) => (
+                  <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={handleDelete} pinningId={pinningId} />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       )}
 
@@ -298,9 +350,8 @@ export default function NotesPage() {
                   className="text-lg font-semibold border-0 px-0 focus-visible:ring-0 placeholder:text-muted/40" />
 
                 {/* Content */}
-                <Textarea placeholder="Start writing..." value={formContent}
-                  onChange={(e) => setFormContent(e.target.value)}
-                  rows={8} className="border-0 px-0 focus-visible:ring-0 resize-none placeholder:text-muted/40" />
+                <RichEditor content={formContent} onChange={setFormContent}
+                  placeholder="Start writing..." className="min-h-[200px]" />
 
                 {/* Word/Char Count */}
                 <div className="flex items-center gap-3 text-[11px] text-muted">
@@ -333,21 +384,33 @@ export default function NotesPage() {
 
                 {/* Color Picker */}
                 <div>
-                  <label className="text-xs font-medium text-muted block mb-1.5">Color</label>
-                  <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-muted block mb-2">Background Color</label>
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     {NOTE_COLORS.map((c) => (
                       <button key={c} onClick={() => setFormColor(c)}
-                        className={cn("w-7 h-7 rounded-lg border-2 transition-all",
-                          formColor === c ? "border-primary scale-110" : "border-transparent hover:scale-110"
+                        className={cn("w-8 h-8 rounded-xl border-2 transition-all relative",
+                          formColor === c
+                            ? "border-primary ring-2 ring-primary/20 scale-110"
+                            : "border-primary/10 hover:scale-105 hover:border-primary/30"
                         )}
                         style={{ backgroundColor: c }}
-                      />
+                      >
+                        {formColor === c && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <Check className={cn("w-4 h-4", c === "#FFFFFF" || c === "#FEF3C7" ? "text-primary" : "text-white")} />
+                          </span>
+                        )}
+                      </button>
                     ))}
-                    <div className="w-7 h-7 rounded-lg overflow-hidden border">
+                    <div className="w-px h-8 bg-primary/10 mx-1" />
+                    <label className="relative w-8 h-8 rounded-xl overflow-hidden border-2 border-primary/10 cursor-pointer hover:border-primary/30 transition-colors">
                       <input type="color" value={formColor}
                         onChange={(e) => setFormColor(e.target.value)}
-                        className="w-8 h-8 -m-0.5 cursor-pointer border-0" />
-                    </div>
+                        className="absolute inset-0 w-10 h-10 -m-1 cursor-pointer border-0" />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Palette className="w-3.5 h-3.5 text-muted" />
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>
@@ -374,13 +437,15 @@ export default function NotesPage() {
   );
 }
 
-function NoteCard({ note, onEdit, onPin, onDelete }: {
+function NoteCard({ note, onEdit, onPin, onDelete, pinningId }: {
   note: Note;
   onEdit: (n: Note) => void;
   onPin: (n: Note) => void;
   onDelete: (id: string) => void;
+  pinningId: string | null;
 }) {
   const hasColor = note.color !== "#FFFFFF";
+  const isPinning = pinningId === note.id;
 
   return (
     <motion.div layout className="break-inside-avoid">
@@ -392,13 +457,6 @@ function NoteCard({ note, onEdit, onPin, onDelete }: {
         )}
         style={{ backgroundColor: note.color }}
       >
-        {/* Pin badge */}
-        {note.is_pinned && (
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-            <span className="text-[10px] text-primary/40"><Pin className="w-3 h-3 inline" /> Pinned</span>
-          </div>
-        )}
-
         <div className="p-4">
           {/* Title */}
           {note.title && (
@@ -407,11 +465,9 @@ function NoteCard({ note, onEdit, onPin, onDelete }: {
 
           {/* Content preview */}
           {note.content && (
-            <p className={cn("text-xs leading-relaxed whitespace-pre-wrap",
-              hasColor ? "text-primary/80" : "text-muted"
-            )}>
-              {note.content.length > 300 ? note.content.slice(0, 300) + "..." : note.content}
-            </p>
+            <div
+              className="text-xs leading-relaxed [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-0.5 line-clamp-[10] note-content"
+              dangerouslySetInnerHTML={{ __html: note.content }} />
           )}
 
           {/* Tags */}
@@ -437,8 +493,9 @@ function NoteCard({ note, onEdit, onPin, onDelete }: {
         {/* Hover actions */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button onClick={(e) => { e.stopPropagation(); onPin(note); }}
-            className="w-7 h-7 rounded-lg bg-white/90 shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary transition-colors">
-            {note.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+            className="w-7 h-7 rounded-lg bg-white/90 shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary transition-colors"
+            disabled={isPinning}>
+            {isPinning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : note.is_pinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
           </button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}
             className="w-7 h-7 rounded-lg bg-white/90 shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-red-600 transition-colors">
