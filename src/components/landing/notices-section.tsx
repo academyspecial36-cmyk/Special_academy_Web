@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Pin, Calendar } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -39,6 +40,11 @@ export function NoticesSection() {
               transition={{ duration: 0.4, delay: index * 0.08 }}
               className="group p-6 rounded-xl bg-accent border border-primary/5 hover:border-primary/10 hover:shadow-soft transition-all duration-300"
             >
+              {notice.image && (
+                <div className="w-full h-40 rounded-lg overflow-hidden bg-accent mb-3">
+                  <Image src={notice.image} alt="" width={400} height={160} className="w-full h-full object-cover" unoptimized />
+                </div>
+              )}
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="flex items-center gap-2">
                   <Badge className={getCategoryStyle(notice.category)}>

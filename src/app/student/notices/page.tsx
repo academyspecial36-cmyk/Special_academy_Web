@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Pin, Calendar, X, Bell } from "lucide-react";
+import Image from "next/image";
+import { Pin, Calendar, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
@@ -12,6 +13,13 @@ import { formatDate } from "@/lib/utils";
 export default function StudentNoticesPage() {
   const { notices, noticeCategories } = useAppContext();
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
+
+  const sorted = useMemo(() => {
+    return [...notices].sort((a, b) => {
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+  }, [notices]);
 
   const getCategoryStyle = (category: string) => {
     const cat = noticeCategories.find((c) => c.value === category);
@@ -26,7 +34,7 @@ export default function StudentNoticesPage() {
       </div>
 
       <div className="space-y-3">
-        {notices.map((notice, i) => (
+        {sorted.map((notice, i) => (
           <motion.div
             key={notice.id}
             initial={{ opacity: 0, y: 10 }}
@@ -38,8 +46,13 @@ export default function StudentNoticesPage() {
               onClick={() => setSelectedNotice(notice)}
             >
               <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                <div className="flex items-start gap-4">
+                  {notice.image && (
+                    <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-accent">
+                      <Image src={notice.image} alt="" width={64} height={64} className="w-full h-full object-cover" unoptimized />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className={getCategoryStyle(notice.category)}>
                         {noticeCategories.find((c) => c.value === notice.category)?.label}
@@ -57,9 +70,6 @@ export default function StudentNoticesPage() {
                       </span>
                       <span>By {notice.author}</span>
                     </div>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
-                    <Bell className="w-4 h-4 text-primary" />
                   </div>
                 </div>
               </CardContent>
@@ -97,6 +107,11 @@ export default function StudentNoticesPage() {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
+                {selectedNotice.image && (
+                  <div className="w-full h-48 rounded-lg overflow-hidden bg-accent mb-4">
+                    <Image src={selectedNotice.image} alt="" width={500} height={200} className="w-full h-full object-cover" unoptimized />
+                  </div>
+                )}
                 <h2 className="text-xl font-bold text-primary mb-4">{selectedNotice.title}</h2>
                 <div className="flex items-center gap-4 text-sm text-muted mb-6">
                   <span className="flex items-center gap-1">

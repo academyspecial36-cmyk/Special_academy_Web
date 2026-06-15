@@ -39,6 +39,19 @@ export interface LandingConfig {
     primaryColor: string;
     fontFamily: string;
   };
+  enablePinnedPopup?: boolean;
+  privacyPolicy?: {
+    title: string;
+    description: string;
+    lastUpdated: string;
+    sections: { title: string; content: string[] }[];
+  };
+  terms?: {
+    title: string;
+    description: string;
+    lastUpdated: string;
+    sections: { title: string; content: string[] }[];
+  };
 }
 
 export interface AppSettings {
@@ -234,6 +247,31 @@ const defaultLandingConfig: LandingConfig = {
     primaryColor: "#07220B",
     fontFamily: "Inter",
   },
+  enablePinnedPopup: true,
+  privacyPolicy: {
+    title: "Privacy Policy",
+    description: "Learn how we collect, use, and protect your personal information.",
+    lastUpdated: "June 2026",
+    sections: [
+      { title: "Information We Collect", content: ["We collect information you provide directly to us, including your name, email address, phone number, and academic details.", "We automatically collect certain information when you visit our website, including your IP address, browser type, and browsing patterns.", "We may collect photographs and video footage during academy events with appropriate consent."] },
+      { title: "How We Use Your Information", content: ["To process admissions, enrollments, and academic record management.", "To communicate with you regarding program updates and academy-related information.", "To improve our educational services and website experience.", "To comply with legal obligations and maintain academic records."] },
+      { title: "Information Sharing", content: ["We do not sell or rent your personal information to third parties.", "We may share information with trusted partners under confidentiality agreements.", "We may disclose information when required by law."] },
+      { title: "Data Security", content: ["We implement security measures to protect your personal information.", "All sensitive data is encrypted using industry-standard protocols.", "Access to personal information is restricted to authorized personnel."] },
+      { title: "Your Rights", content: ["You have the right to access, update, or request deletion of your data.", "You may opt out of promotional communications at any time.", "You can request a copy of the information we hold about you."] },
+    ],
+  },
+  terms: {
+    title: "Terms of Service",
+    description: "Review the terms governing the use of our website, programs, and services.",
+    lastUpdated: "June 2026",
+    sections: [
+      { title: "Acceptance of Terms", content: ["By accessing or using our website and services, you agree to these Terms.", "We reserve the right to update these terms at any time.", "Continued use after changes constitutes acceptance."] },
+      { title: "Eligibility", content: ["Admission is subject to meeting eligibility criteria.", "All information provided must be accurate and truthful.", "We reserve the right to refuse or cancel enrollment."] },
+      { title: "User Responsibilities", content: ["Users agree to use our services only for lawful purposes.", "You are responsible for maintaining account confidentiality.", "Students must adhere to the academy's code of conduct."] },
+      { title: "Intellectual Property", content: ["All content is the property of Special academy.", "You may not reproduce or distribute content without permission.", "Course materials are for personal educational use only."] },
+      { title: "Limitation of Liability", content: ["We shall not be liable for indirect damages arising from use of our services.", "We make no warranties regarding completeness or accuracy of content.", "Liability is limited to fees paid for the specific program."] },
+    ],
+  },
 };
 
 export function getDefaultSettings(): AppSettings {
@@ -290,6 +328,9 @@ export async function fetchSettings(): Promise<AppSettings> {
       buttonLabels: { ...defaultLC.buttonLabels, ...((rawConfig.buttonLabels as Record<string, unknown>) || {}) } as typeof defaultLC.buttonLabels,
       loaderQuotes: Array.isArray(rawConfig.loaderQuotes) ? (rawConfig.loaderQuotes as typeof defaultLC.loaderQuotes) : defaultLC.loaderQuotes,
       theme: { ...defaultLC.theme, ...((rawConfig.theme as Record<string, unknown>) || {}) } as typeof defaultLC.theme,
+      enablePinnedPopup: rawConfig.enablePinnedPopup != null ? Boolean(rawConfig.enablePinnedPopup) : defaultLC.enablePinnedPopup,
+      privacyPolicy: { ...defaultLC.privacyPolicy, ...((rawConfig.privacyPolicy as Record<string, unknown>) || {}) } as typeof defaultLC.privacyPolicy,
+      terms: { ...defaultLC.terms, ...((rawConfig.terms as Record<string, unknown>) || {}) } as typeof defaultLC.terms,
     };
     const socialLinks = (row.social_links as SocialLinks) || getDefaultSettings().socialLinks;
 

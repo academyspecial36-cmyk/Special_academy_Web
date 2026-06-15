@@ -11,7 +11,10 @@ const FONT_URLS: Record<string, string> = {
   Lato: "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap",
   Montserrat: "https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap",
   Poppins: "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap",
-  "Plus Jakarta Sans": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap",
+  Nunito: "https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap",
+  Raleway: "https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap",
+  "Playfair Display": "https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&display=swap",
+  Merriweather: "https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap",
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   Search,
   Pin,
@@ -25,13 +26,18 @@ export default function NoticesPage() {
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 
   const filtered = useMemo(() => {
-    return notices.filter((n) => {
-      const matchesSearch =
-        n.title.toLowerCase().includes(search.toLowerCase()) ||
-        n.content.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = activeCategory === "all" || n.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    });
+    return notices
+      .filter((n) => {
+        const matchesSearch =
+          n.title.toLowerCase().includes(search.toLowerCase()) ||
+          n.content.toLowerCase().includes(search.toLowerCase());
+        const matchesCategory = activeCategory === "all" || n.category === activeCategory;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
   }, [search, activeCategory, notices]);
 
   const getCategoryStyle = (category: string) => {
@@ -103,8 +109,13 @@ export default function NoticesPage() {
                   className="bg-white rounded-xl p-6 border border-primary/5 hover:border-primary/10 hover:shadow-soft transition-all cursor-pointer group"
                   onClick={() => setSelectedNotice(notice)}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
+                  <div className="flex items-start gap-4">
+                    {notice.image && (
+                      <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-accent hidden sm:block">
+                        <Image src={notice.image} alt="" width={80} height={80} className="w-full h-full object-cover" unoptimized />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className={getCategoryStyle(notice.category)}>
                           {noticeCategories.find((c) => c.value === notice.category)?.label}
@@ -119,12 +130,13 @@ export default function NoticesPage() {
                       <p className="text-sm text-muted line-clamp-2">
                         {notice.content}
                       </p>
-                    </div>
-                    <div className="text-right shrink-0 hidden sm:block">
-                      <span className="text-xs text-muted flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(notice.date)}
-                      </span>
+                      <div className="mt-2 flex items-center gap-3 text-xs text-muted">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(notice.date)}
+                        </span>
+                        <span>By {notice.author}</span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -170,6 +182,11 @@ export default function NoticesPage() {
                     <X className="w-4 h-4" />
                   </button>
                 </div>
+                {selectedNotice.image && (
+                  <div className="w-full h-48 rounded-lg overflow-hidden bg-accent mb-4">
+                    <Image src={selectedNotice.image} alt="" width={500} height={200} className="w-full h-full object-cover" unoptimized />
+                  </div>
+                )}
                 <h2 className="text-xl font-bold text-primary mb-4">
                   {selectedNotice.title}
                 </h2>

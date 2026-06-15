@@ -188,6 +188,36 @@ values (
     "theme": {
       "primaryColor": "#07220B",
       "fontFamily": "Inter"
+    },
+    "enablePinnedPopup": true,
+    "privacyPolicy": {
+      "title": "Privacy Policy",
+      "description": "Learn how we collect, use, and protect your personal information.",
+      "lastUpdated": "June 2026",
+      "sections": [
+        { "title": "Information We Collect", "content": ["We collect information you provide directly to us, including your name, email address, phone number, and academic details when you fill out admission forms, contact forms, or register for our programs.", "We automatically collect certain information when you visit our website, including your IP address, browser type, device information, and browsing patterns through cookies and similar technologies.", "We may collect photographs and video footage during academy events and activities for promotional and record-keeping purposes with appropriate consent."] },
+        { "title": "How We Use Your Information", "content": ["To process admissions, enrollments, and academic record management for our cadet preparation programs.", "To communicate with you regarding program updates, admissions notices, examination schedules, and other academy-related information.", "To improve our educational services, curriculum, and website experience based on usage patterns and feedback.", "To comply with legal obligations and maintain academic records as required by educational regulatory authorities."] },
+        { "title": "Information Sharing and Disclosure", "content": ["We do not sell, trade, or rent your personal information to third parties for marketing purposes.", "We may share information with trusted educational partners and service providers who assist in operating our academy and programs, under strict confidentiality agreements.", "We may disclose information when required by law, to enforce our policies, or to protect the rights and safety of our academy, students, or others.", "Aggregated, anonymized data may be used for statistical analysis and reporting without personally identifying individuals."] },
+        { "title": "Data Security", "content": ["We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction.", "All sensitive data transmitted through our website is encrypted using industry-standard SSL/TLS protocols.", "Access to personal information is restricted to authorized personnel only, who are bound by confidentiality obligations.", "We regularly review and update our security practices to maintain the integrity and confidentiality of your data."] },
+        { "title": "Cookies and Tracking", "content": ["Our website uses cookies to enhance your browsing experience, analyze site traffic, and understand where our visitors come from.", "You can control cookie preferences through your browser settings. Please note that disabling certain cookies may affect website functionality.", "We use essential cookies for basic site operations, analytics cookies to understand usage patterns, and occasionally marketing cookies for targeted communications."] },
+        { "title": "Your Rights and Choices", "content": ["You have the right to access, update, or request deletion of your personal information held by us.", "You may opt out of receiving promotional communications at any time by contacting us or using the unsubscribe link in our emails.", "You can request a copy of the information we hold about you, subject to verification of your identity.", "You have the right to withdraw consent for data processing where consent was previously provided."] },
+        { "title": "Contact Us", "content": ["If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at our academy address, phone number, or email address listed on our Contact page.", "We will respond to your inquiry within a reasonable timeframe and work to address any concerns you may have about your privacy."] },
+        { "title": "Children''s Privacy", "content": ["Our services are primarily directed toward students and prospective cadets. We collect information about minors only with parental or guardian consent.", "Parents and guardians have the right to review, update, or request deletion of their child''s personal information.", "If we become aware that we have collected personal information from a minor without proper consent, we will take steps to delete that information promptly."] }
+      ]
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "description": "Review the terms and conditions governing the use of our website, programs, and services. Understand your rights and responsibilities.",
+      "lastUpdated": "June 2026",
+      "sections": [
+        { "title": "Acceptance of Terms", "content": ["By accessing or using the Special academy website, enrolling in our programs, or interacting with our services, you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you should not use our website or services.", "These terms apply to all visitors, students, parents, and any other users of our platform and services.", "We reserve the right to update or modify these terms at any time without prior notice. Continued use of our services after any changes constitutes acceptance of the modified terms."] },
+        { "title": "Eligibility and Enrollment", "content": ["Admission to our cadet preparation programs is subject to meeting the eligibility criteria specified for each program, including age requirements, academic qualifications, and physical fitness standards.", "All information provided during enrollment must be accurate, complete, and truthful. Providing false or misleading information may result in immediate termination of enrollment.", "Enrollment confirmation is subject to availability and completion of all required documentation and fee payment.", "We reserve the right to refuse or cancel enrollment at our discretion, with appropriate refunds issued as per our refund policy."] },
+        { "title": "User Responsibilities", "content": ["Users agree to use our website and services only for lawful purposes and in accordance with these terms.", "You are responsible for maintaining the confidentiality of any account credentials provided to you and for all activities that occur under your account.", "You agree not to engage in any conduct that could damage, disable, or impair our website or interfere with other users'' access and enjoyment.", "Students enrolled in our programs must adhere to the academy''s code of conduct, discipline policies, and academic requirements."] },
+        { "title": "Intellectual Property", "content": ["All content on our website, including text, graphics, logos, images, course materials, and software, is the property of Special academy or its content providers and is protected by applicable intellectual property laws.", "You may not reproduce, distribute, modify, create derivative works from, or commercially exploit any content from our website without our prior written consent.", "Course materials provided to enrolled students are for personal educational use only and may not be shared, reproduced, or distributed to third parties."] },
+        { "title": "Prohibited Activities", "content": ["You agree not to use our website or services for any unlawful purpose or in violation of any applicable laws or regulations.", "Prohibited activities include, but are not limited to: hacking, introducing malicious code, attempting to gain unauthorized access, scraping data, or interfering with website security features.", "Harassment, discrimination, or any form of misconduct towards academy staff, faculty, or fellow students will not be tolerated and may result in immediate dismissal from programs.", "Any attempt to circumvent payment requirements, access restricted areas without authorization, or impersonate another individual is strictly prohibited."] },
+        { "title": "Limitation of Liability", "content": ["Special academy shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our website or services.", "While we strive to provide accurate and up-to-date information, we make no warranties regarding the completeness, reliability, or accuracy of content on our website.", "We are not responsible for the content or practices of third-party websites linked from our site. Such links are provided for convenience only.", "Our total liability for any claim arising from these terms or your use of our services shall not exceed the total fees paid by you for the specific program in question."] },
+        { "title": "Contact and Communication", "content": ["By providing your contact information, you consent to receive communications from us regarding your enrollment, program updates, and academy announcements via phone, email, or SMS.", "You may opt out of promotional communications at any time; however, transactional and administrative communications related to your enrollment will continue as necessary.", "For questions or concerns regarding these terms, please contact us through the information provided on our Contact page."] }
+      ]
     }
   }'::jsonb
 )
@@ -367,6 +397,31 @@ begin
         "theme": {
           "primaryColor": "#07220B",
           "fontFamily": "Inter"
+        },
+        "enablePinnedPopup": true,
+        "privacyPolicy": {
+          "title": "Privacy Policy",
+          "description": "Learn how we collect, use, and protect your personal information.",
+          "lastUpdated": "June 2026",
+          "sections": [
+            { "title": "Information We Collect", "content": ["We collect information you provide directly to us, including your name, email address, phone number, and academic details.", "We automatically collect certain information when you visit our website, including your IP address, browser type, and browsing patterns.", "We may collect photographs and video footage during academy events with appropriate consent."] },
+            { "title": "How We Use Your Information", "content": ["To process admissions, enrollments, and academic record management.", "To communicate with you regarding program updates and academy-related information.", "To improve our educational services and website experience.", "To comply with legal obligations and maintain academic records."] },
+            { "title": "Information Sharing", "content": ["We do not sell or rent your personal information to third parties.", "We may share information with trusted partners under confidentiality agreements.", "We may disclose information when required by law."] },
+            { "title": "Data Security", "content": ["We implement security measures to protect your personal information.", "All sensitive data is encrypted using industry-standard protocols.", "Access to personal information is restricted to authorized personnel."] },
+            { "title": "Your Rights", "content": ["You have the right to access, update, or request deletion of your data.", "You may opt out of promotional communications at any time.", "You can request a copy of the information we hold about you."] }
+          ]
+        },
+        "terms": {
+          "title": "Terms of Service",
+          "description": "Review the terms governing the use of our website, programs, and services.",
+          "lastUpdated": "June 2026",
+          "sections": [
+            { "title": "Acceptance of Terms", "content": ["By accessing or using our website and services, you agree to these Terms.", "We reserve the right to update these terms at any time.", "Continued use after changes constitutes acceptance."] },
+            { "title": "Eligibility", "content": ["Admission is subject to meeting eligibility criteria.", "All information provided must be accurate and truthful.", "We reserve the right to refuse or cancel enrollment."] },
+            { "title": "User Responsibilities", "content": ["Users agree to use our services only for lawful purposes.", "You are responsible for maintaining account confidentiality.", "Students must adhere to the academy''s code of conduct."] },
+            { "title": "Intellectual Property", "content": ["All content is the property of Special academy.", "You may not reproduce or distribute content without permission.", "Course materials are for personal educational use only."] },
+            { "title": "Limitation of Liability", "content": ["We shall not be liable for indirect damages arising from use of our services.", "We make no warranties regarding completeness or accuracy of content.", "Liability is limited to fees paid for the specific program."] }
+          ]
         }
       }'::jsonb
     where id = existing_id

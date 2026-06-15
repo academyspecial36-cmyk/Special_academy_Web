@@ -7,7 +7,7 @@ import {
   Save, Building2, Mail, Globe, Upload, Facebook, Youtube, Instagram,
   User, Lock, Eye, EyeOff, Loader2, Camera, Layout, Search, TrendingUp,
   Palette, ToggleLeft, FileText, BookOpen, Dumbbell, School, Sun,
-  Quote, Star,
+  Quote, Star, Plus, X,
 } from "lucide-react";
 import { TikTokIcon } from "@/components/shared/tiktok-icon";
 import { toast } from "sonner";
@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import type { AppSettings } from "@/lib/app-context";
 import { generateShadeCssVars } from "@/lib/theme-utils";
 
-type Tab = "profile" | "site" | "landing" | "sections" | "features" | "content" | "theme";
+type Tab = "profile" | "site" | "landing" | "sections" | "features" | "content" | "theme" | "legal";
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useAppContext();
@@ -58,6 +58,7 @@ export default function SettingsPage() {
   }));
   const [seoForm, setSeoForm] = useState({ ...settings.seo });
   const [sectionsForm, setSectionsForm] = useState<Record<string, boolean>>({});
+  const [pinnedPopupEnabled, setPinnedPopupEnabled] = useState(true);
   const [contentForm, setContentForm] = useState(() => ({
     whyChoose: [] as { icon: string; title: string; description: string }[],
     cadetOverview: { title: "", description: "", heading: "", steps: [] as string[], images: [] as string[] },
@@ -71,6 +72,7 @@ export default function SettingsPage() {
     loaderQuotes: [] as string[],
   }));
   const [themeForm, setThemeForm] = useState({ primaryColor: "#07220B", fontFamily: "Inter" });
+  const [legalForm, setLegalForm] = useState({ privacyPolicy: { title: "", description: "", lastUpdated: "", sections: [] as { title: string; content: string[] }[] }, terms: { title: "", description: "", lastUpdated: "", sections: [] as { title: string; content: string[] }[] } });
 
   useEffect(() => {
     setForm({ ...settings });
@@ -101,6 +103,7 @@ export default function SettingsPage() {
     });
     setSeoForm({ ...settings.seo });
     setSectionsForm({ ...(settings.config?.sections || {}) });
+    setPinnedPopupEnabled(settings.config?.enablePinnedPopup !== false);
     setContentForm({
       whyChoose: settings.config?.whyChoose?.length ? settings.config.whyChoose : [],
       cadetOverview: settings.config?.cadetOverview || { title: "", description: "", heading: "", steps: [], images: [] },
@@ -116,6 +119,10 @@ export default function SettingsPage() {
     setThemeForm({
       primaryColor: settings.config?.theme?.primaryColor || "#07220B",
       fontFamily: settings.config?.theme?.fontFamily || "Inter",
+    });
+    setLegalForm({
+      privacyPolicy: settings.config?.privacyPolicy || { title: "", description: "", lastUpdated: "", sections: [] },
+      terms: settings.config?.terms || { title: "", description: "", lastUpdated: "", sections: [] },
     });
   }, [settings]);
 
@@ -143,6 +150,7 @@ export default function SettingsPage() {
       }
       if (activeTab === "features") {
         mergedConfig.seo = seoForm;
+        mergedConfig.enablePinnedPopup = pinnedPopupEnabled;
       }
       if (activeTab === "theme") {
         mergedConfig.theme = themeForm;
@@ -158,6 +166,10 @@ export default function SettingsPage() {
         mergedConfig.sectionLabels = contentForm.sectionLabels;
         mergedConfig.buttonLabels = contentForm.buttonLabels as typeof mergedConfig.buttonLabels;
         mergedConfig.loaderQuotes = contentForm.loaderQuotes;
+      }
+      if (activeTab === "legal") {
+        mergedConfig.privacyPolicy = legalForm.privacyPolicy;
+        mergedConfig.terms = legalForm.terms;
       }
       payload.config = mergedConfig;
       updateSettings(payload as Partial<AppSettings>);
@@ -253,6 +265,7 @@ export default function SettingsPage() {
     { key: "features", label: "SEO & Features", icon: <TrendingUp className="w-4 h-4" /> },
     { key: "content", label: "Content", icon: <FileText className="w-4 h-4" /> },
     { key: "theme", label: "Theme", icon: <Palette className="w-4 h-4" /> },
+    { key: "legal", label: "Legal", icon: <FileText className="w-4 h-4" /> },
   ];
 
   return (
@@ -267,6 +280,7 @@ export default function SettingsPage() {
           {activeTab === "features" && "SEO, analytics, and feature toggles."}
           {activeTab === "content" && "Edit section labels, button text, Why Choose Us, Facilities, Daily Schedule, and more."}
           {activeTab === "theme" && "Customize your site colors, fonts, and preview changes live."}
+          {activeTab === "legal" && "Edit Privacy Policy and Terms of Service pages."}
         </p>
       </div>
 
@@ -594,27 +608,46 @@ export default function SettingsPage() {
                 {[
                   { key: "enableBlog", label: "Enable Blog", desc: "Show blog section on landing page" },
                   { key: "maintenanceMode", label: "Maintenance Mode", desc: "Show maintenance page to visitors" },
+                  { key: "pinnedPopup", label: "Pinned Notice Popup", desc: "Show pinned notice as popup on landing page" },
                 ].map(({ key, label, desc }) => (
                   <div key={key} className="flex items-center justify-between pb-4 border-b border-primary/5 last:border-0 last:pb-0">
                     <div>
                       <label className="text-sm font-medium text-primary">{label}</label>
                       <p className="text-xs text-muted">{desc}</p>
                     </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={(form as Record<string, unknown>)[key] as boolean}
-                      onClick={() => setForm((p) => ({ ...p, [key]: !(p as Record<string, unknown>)[key] }))}
-                      className={cn(
-                        "relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0",
-                        (form as Record<string, unknown>)[key] ? "bg-primary" : "bg-primary/20"
-                      )}
-                    >
-                      <span className={cn(
-                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                        (form as Record<string, unknown>)[key] ? "translate-x-6" : "translate-x-1"
-                      )} />
-                    </button>
+                    {key === "pinnedPopup" ? (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={pinnedPopupEnabled}
+                        onClick={() => setPinnedPopupEnabled((p) => !p)}
+                        className={cn(
+                          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0",
+                          pinnedPopupEnabled ? "bg-primary" : "bg-primary/20"
+                        )}
+                      >
+                        <span className={cn(
+                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                          pinnedPopupEnabled ? "translate-x-6" : "translate-x-1"
+                        )} />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={(form as Record<string, unknown>)[key] as boolean}
+                        onClick={() => setForm((p) => ({ ...p, [key]: !(p as Record<string, unknown>)[key] }))}
+                        className={cn(
+                          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0",
+                          (form as Record<string, unknown>)[key] ? "bg-primary" : "bg-primary/20"
+                        )}
+                      >
+                        <span className={cn(
+                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                          (form as Record<string, unknown>)[key] ? "translate-x-6" : "translate-x-1"
+                        )} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </CardContent>
@@ -849,7 +882,7 @@ export default function SettingsPage() {
                   <div>
                     <label className="text-sm font-medium text-primary mb-1.5 block">Font Family</label>
                     <select value={themeForm.fontFamily} onChange={(e) => setThemeForm((p) => ({ ...p, fontFamily: e.target.value }))} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      {["Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Plus Jakarta Sans"].map((f) => (
+                      {["Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Nunito", "Raleway", "Playfair Display", "Merriweather"].map((f) => (
                         <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
                       ))}
                     </select>
@@ -941,6 +974,103 @@ export default function SettingsPage() {
             <Button size="lg" onClick={handleSave} disabled={savingSettings}>
               {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {savingSettings ? "Saving..." : "Save Theme"}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === "legal" && (
+        <motion.div key="legal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Privacy Policy</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Title</label>
+                <Input value={legalForm.privacyPolicy.title} onChange={(e) => setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, title: e.target.value } }))} />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Description</label>
+                <Input value={legalForm.privacyPolicy.description} onChange={(e) => setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, description: e.target.value } }))} />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Last Updated</label>
+                <Input value={legalForm.privacyPolicy.lastUpdated} onChange={(e) => setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, lastUpdated: e.target.value } }))} />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-primary">Sections</label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, sections: [...p.privacyPolicy.sections, { title: "", content: [""] }] } }))}><Plus className="w-3.5 h-3.5 mr-1" /> Add Section</Button>
+                </div>
+                <div className="space-y-4">
+                  {legalForm.privacyPolicy.sections.map((section, si) => (
+                    <div key={si} className="border border-primary/10 rounded-lg p-4 space-y-3 relative">
+                      <div className="flex items-start justify-between gap-2">
+                        <Input value={section.title} onChange={(e) => { const s = [...legalForm.privacyPolicy.sections]; s[si] = { ...s[si], title: e.target.value }; setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, sections: s } })); }} placeholder="Section title" className="flex-1" />
+                        <button onClick={() => setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, sections: p.privacyPolicy.sections.filter((_, i) => i !== si) } }))} className="p-1 text-muted hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+                      </div>
+                      {section.content.map((para, pi) => (
+                        <div key={pi} className="flex items-start gap-2">
+                          <Textarea value={para} onChange={(e) => { const s = [...legalForm.privacyPolicy.sections]; s[si] = { ...s[si], content: s[si].content.map((c, i) => i === pi ? e.target.value : c) }; setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, sections: s } })); }} placeholder={`Paragraph ${pi + 1}`} className="flex-1 min-h-[60px]" />
+                          {section.content.length > 1 && (
+                            <button onClick={() => { const s = [...legalForm.privacyPolicy.sections]; s[si] = { ...s[si], content: s[si].content.filter((_, i) => i !== pi) }; setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, sections: s } })); }} className="p-1 text-muted hover:text-red-500 transition-colors shrink-0 mt-1"><X className="w-3.5 h-3.5" /></button>
+                          )}
+                        </div>
+                      ))}
+                      <Button type="button" variant="ghost" size="sm" onClick={() => { const s = [...legalForm.privacyPolicy.sections]; s[si] = { ...s[si], content: [...s[si].content, ""] }; setLegalForm((p) => ({ ...p, privacyPolicy: { ...p.privacyPolicy, sections: s } })); }}><Plus className="w-3 h-3 mr-1" /> Add Paragraph</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Terms of Service</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Title</label>
+                <Input value={legalForm.terms.title} onChange={(e) => setLegalForm((p) => ({ ...p, terms: { ...p.terms, title: e.target.value } }))} />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Description</label>
+                <Input value={legalForm.terms.description} onChange={(e) => setLegalForm((p) => ({ ...p, terms: { ...p.terms, description: e.target.value } }))} />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Last Updated</label>
+                <Input value={legalForm.terms.lastUpdated} onChange={(e) => setLegalForm((p) => ({ ...p, terms: { ...p.terms, lastUpdated: e.target.value } }))} />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-primary">Sections</label>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setLegalForm((p) => ({ ...p, terms: { ...p.terms, sections: [...p.terms.sections, { title: "", content: [""] }] } }))}><Plus className="w-3.5 h-3.5 mr-1" /> Add Section</Button>
+                </div>
+                <div className="space-y-4">
+                  {legalForm.terms.sections.map((section, si) => (
+                    <div key={si} className="border border-primary/10 rounded-lg p-4 space-y-3 relative">
+                      <div className="flex items-start justify-between gap-2">
+                        <Input value={section.title} onChange={(e) => { const s = [...legalForm.terms.sections]; s[si] = { ...s[si], title: e.target.value }; setLegalForm((p) => ({ ...p, terms: { ...p.terms, sections: s } })); }} placeholder="Section title" className="flex-1" />
+                        <button onClick={() => setLegalForm((p) => ({ ...p, terms: { ...p.terms, sections: p.terms.sections.filter((_, i) => i !== si) } }))} className="p-1 text-muted hover:text-red-500 transition-colors"><X className="w-4 h-4" /></button>
+                      </div>
+                      {section.content.map((para, pi) => (
+                        <div key={pi} className="flex items-start gap-2">
+                          <Textarea value={para} onChange={(e) => { const s = [...legalForm.terms.sections]; s[si] = { ...s[si], content: s[si].content.map((c, i) => i === pi ? e.target.value : c) }; setLegalForm((p) => ({ ...p, terms: { ...p.terms, sections: s } })); }} placeholder={`Paragraph ${pi + 1}`} className="flex-1 min-h-[60px]" />
+                          {section.content.length > 1 && (
+                            <button onClick={() => { const s = [...legalForm.terms.sections]; s[si] = { ...s[si], content: s[si].content.filter((_, i) => i !== pi) }; setLegalForm((p) => ({ ...p, terms: { ...p.terms, sections: s } })); }} className="p-1 text-muted hover:text-red-500 transition-colors shrink-0 mt-1"><X className="w-3.5 h-3.5" /></button>
+                          )}
+                        </div>
+                      ))}
+                      <Button type="button" variant="ghost" size="sm" onClick={() => { const s = [...legalForm.terms.sections]; s[si] = { ...s[si], content: [...s[si].content, ""] }; setLegalForm((p) => ({ ...p, terms: { ...p.terms, sections: s } })); }}><Plus className="w-3 h-3 mr-1" /> Add Paragraph</Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end mt-6">
+            <Button size="lg" onClick={handleSave} disabled={savingSettings}>
+              {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {savingSettings ? "Saving..." : "Save Legal Pages"}
             </Button>
           </div>
         </motion.div>
