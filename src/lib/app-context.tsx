@@ -54,6 +54,19 @@ interface LandingConfig {
     fontFamily: string;
   };
   enablePinnedPopup?: boolean;
+  backup?: {
+    autoBackup: { enabled: boolean; frequency: string; lastBackup: string | null };
+  };
+  backupHistory?: {
+    id: string;
+    timestamp: string;
+    type: string;
+    destination: string;
+    status: string;
+    fileSize: number | null;
+    errorMessage: string | null;
+    fileName: string | null;
+  }[];
   privacyPolicy?: {
     title: string;
     description: string;

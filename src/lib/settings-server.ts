@@ -40,6 +40,19 @@ export interface LandingConfig {
     fontFamily: string;
   };
   enablePinnedPopup?: boolean;
+  backup?: {
+    autoBackup: { enabled: boolean; frequency: string; lastBackup: string | null };
+  };
+  backupHistory?: {
+    id: string;
+    timestamp: string;
+    type: string;
+    destination: string;
+    status: string;
+    fileSize: number | null;
+    errorMessage: string | null;
+    fileName: string | null;
+  }[];
   privacyPolicy?: {
     title: string;
     description: string;
@@ -301,11 +314,41 @@ export function getDefaultSettings(): AppSettings {
   };
 }
 
+export async function seedSettings() {
+  const svc = createServiceRoleSupabase();
+  const defaults = { ...getDefaultSettings(), ...envDefaults };
+  const { error } = await svc.from("settings").insert({
+    academy_name: defaults.academyName,
+    tagline: defaults.tagline,
+    description: defaults.description,
+    address: defaults.address,
+    email: defaults.email,
+    admission_email: defaults.admissionEmail,
+    phone: defaults.phone,
+    secondary_phone: defaults.secondaryPhone,
+    website: defaults.website,
+    office_hours: defaults.officeHours,
+    holiday: defaults.holiday,
+    app_icon: defaults.appIcon,
+    social_links: defaults.socialLinks,
+    enable_blog: defaults.enableBlog,
+    maintenance_mode: defaults.maintenanceMode,
+    config: defaults.config,
+    seo: defaults.seo,
+  });
+  if (error) console.error("Failed to seed settings:", error.message);
+}
+
 export async function fetchSettings(): Promise<AppSettings> {
   try {
     const svc = createServiceRoleSupabase();
-    const { data } = await svc.from("settings").select("*").maybeSingle();
-    if (!data) return { ...getDefaultSettings(), ...envDefaults };
+    let { data } = await svc.from("settings").select("*").maybeSingle();
+    if (!data) {
+      await seedSettings();
+      const { data: newData } = await svc.from("settings").select("*").maybeSingle();
+      data = newData;
+      if (!data) return { ...getDefaultSettings(), ...envDefaults };
+    }
 
     const row = data as Record<string, unknown>;
     const rawConfig = (row.config as Record<string, unknown>) || {};
