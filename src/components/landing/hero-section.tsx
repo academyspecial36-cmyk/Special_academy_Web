@@ -5,18 +5,38 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  BookOpen,
-  Users,
-  Trophy,
   Star,
   ChevronRight,
+  Trophy,
+  Users,
+  BookOpen,
+  Dumbbell,
+  ClipboardCheck,
+  TrendingUp,
+  HeadphonesIcon,
+  School,
+  Monitor,
+  FlaskConical,
+  UtensilsCrossed,
+  Sunrise,
+  Lightbulb,
+  GraduationCap,
+  Phone,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 
+const heroIconMap: Record<string, React.ElementType> = {
+  Trophy, Users, BookOpen, Dumbbell, ClipboardCheck, TrendingUp, HeadphonesIcon,
+};
+
 export function HeroSection() {
   const { settings } = useAppContext();
   const hero = settings.config.hero;
+  const cards = settings.config.heroCards || [];
+  const trust = settings.config.trustIndicators || { studentsCount: "2,500+", rating: "4.9" };
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-primary-800 text-white min-h-[90vh] flex items-center">
       {/* Background Pattern */}
@@ -75,7 +95,7 @@ export function HeroSection() {
                 asChild
               >
                 <Link href="/enrollment">
-                  Apply for Admission
+                  {btns.applyNow || "Apply for Admission"}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
@@ -85,7 +105,7 @@ export function HeroSection() {
                 className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
                 asChild
               >
-                <Link href="/courses">Explore Courses</Link>
+                <Link href="/courses">{btns.exploreCourses || "Explore Courses"}</Link>
               </Button>
             </div>
 
@@ -103,7 +123,7 @@ export function HeroSection() {
                   ))}
                 </div>
                 <span className="text-sm text-white/60">
-                  <strong className="text-white">2,500+</strong> students enrolled
+                  <strong className="text-white">{trust.studentsCount}</strong> students enrolled
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -116,7 +136,7 @@ export function HeroSection() {
                   ))}
                 </div>
                 <span className="text-sm text-white/60">
-                  <strong className="text-white">4.9</strong> rating
+                  <strong className="text-white">{trust.rating}</strong> rating
                 </span>
               </div>
             </div>
@@ -144,56 +164,35 @@ export function HeroSection() {
               </div>
 
               {/* Floating Achievement Cards */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="absolute -left-8 top-1/4 bg-white rounded-xl p-4 shadow-elevated border border-primary/5"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-primary">94%</p>
-                    <p className="text-xs text-muted">Success Rate</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
-                className="absolute -right-4 bottom-1/4 bg-white rounded-xl p-4 shadow-elevated border border-primary/5"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-secondary" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-primary">35+</p>
-                    <p className="text-xs text-muted">Expert Faculty</p>
-                  </div>
-                </div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1 }}
-                className="absolute left-1/4 -bottom-6 bg-white rounded-xl p-4 shadow-elevated border border-primary/5"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-bold text-primary">15+</p>
-                    <p className="text-xs text-muted">Years Experience</p>
-                  </div>
-                </div>
-              </motion.div>
+              {cards.map((card, idx) => {
+                const CardIcon = heroIconMap[card.icon] || Trophy;
+                const positions = [
+                  "absolute -left-8 top-1/4",
+                  "absolute -right-4 bottom-1/4",
+                  "absolute left-1/4 -bottom-6",
+                ];
+                const delays = [0.6, 0.8, 1];
+                const colors = ["bg-emerald-50 text-emerald-600", "bg-secondary/10 text-secondary", "bg-amber-50 text-amber-600"];
+                return idx < 3 ? (
+                  <motion.div
+                    key={card.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: delays[idx] || 0.6 }}
+                    className={`${positions[idx] || positions[0]} bg-white rounded-xl p-4 shadow-elevated border border-primary/5`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg ${colors[idx] || colors[0]} flex items-center justify-center`}>
+                        <CardIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-bold text-primary">{card.value}</p>
+                        <p className="text-xs text-muted">{card.label}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : null;
+              })}
             </div>
           </motion.div>
         </div>

@@ -6,7 +6,8 @@ import Image from "next/image";
 import {
   Save, Building2, Mail, Globe, Upload, Facebook, Youtube, Instagram,
   User, Lock, Eye, EyeOff, Loader2, Camera, Layout, Search, TrendingUp,
-  Palette, ToggleLeft,
+  Palette, ToggleLeft, FileText, BookOpen, Dumbbell, School, Sun,
+  Quote, Star,
 } from "lucide-react";
 import { TikTokIcon } from "@/components/shared/tiktok-icon";
 import { toast } from "sonner";
@@ -20,8 +21,9 @@ import { getSupabase } from "@/lib/supabase";
 import { apiUpload } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { AppSettings } from "@/lib/app-context";
+import { generateShadeCssVars } from "@/lib/theme-utils";
 
-type Tab = "profile" | "site" | "landing" | "sections" | "features";
+type Tab = "profile" | "site" | "landing" | "sections" | "features" | "content" | "theme";
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useAppContext();
@@ -56,6 +58,19 @@ export default function SettingsPage() {
   }));
   const [seoForm, setSeoForm] = useState({ ...settings.seo });
   const [sectionsForm, setSectionsForm] = useState<Record<string, boolean>>({});
+  const [contentForm, setContentForm] = useState(() => ({
+    whyChoose: [] as { icon: string; title: string; description: string }[],
+    cadetOverview: { title: "", description: "", heading: "", steps: [] as string[], images: [] as string[] },
+    facilities: [] as { icon: string; title: string; description: string }[],
+    activities: [] as { icon: string; title: string; time: string; description: string }[],
+    enrollmentCta: { badge: "", heading: "", description: "", offerTitle: "", offerText: "", discount: "", buttonText: "", buttonLink: "" },
+    heroCards: [] as { icon: string; value: string; label: string }[],
+    trustIndicators: { studentsCount: "", rating: "" },
+    sectionLabels: {} as Record<string, { label: string; title: string; description: string }>,
+    buttonLabels: {} as Record<string, string>,
+    loaderQuotes: [] as string[],
+  }));
+  const [themeForm, setThemeForm] = useState({ primaryColor: "#07220B", fontFamily: "Inter" });
 
   useEffect(() => {
     setForm({ ...settings });
@@ -86,6 +101,22 @@ export default function SettingsPage() {
     });
     setSeoForm({ ...settings.seo });
     setSectionsForm({ ...(settings.config?.sections || {}) });
+    setContentForm({
+      whyChoose: settings.config?.whyChoose?.length ? settings.config.whyChoose : [],
+      cadetOverview: settings.config?.cadetOverview || { title: "", description: "", heading: "", steps: [], images: [] },
+      facilities: settings.config?.facilities?.length ? settings.config.facilities : [],
+      activities: settings.config?.activities?.length ? settings.config.activities : [],
+      enrollmentCta: settings.config?.enrollmentCta || { badge: "", heading: "", description: "", offerTitle: "", offerText: "", discount: "", buttonText: "", buttonLink: "" },
+      heroCards: settings.config?.heroCards?.length ? settings.config.heroCards : [],
+      trustIndicators: settings.config?.trustIndicators || { studentsCount: "", rating: "" },
+      sectionLabels: settings.config?.sectionLabels || {},
+      buttonLabels: settings.config?.buttonLabels || {},
+      loaderQuotes: settings.config?.loaderQuotes?.length ? settings.config.loaderQuotes : [],
+    });
+    setThemeForm({
+      primaryColor: settings.config?.theme?.primaryColor || "#07220B",
+      fontFamily: settings.config?.theme?.fontFamily || "Inter",
+    });
   }, [settings]);
 
   async function handleSave() {
@@ -112,6 +143,21 @@ export default function SettingsPage() {
       }
       if (activeTab === "features") {
         mergedConfig.seo = seoForm;
+      }
+      if (activeTab === "theme") {
+        mergedConfig.theme = themeForm;
+      }
+      if (activeTab === "content") {
+        mergedConfig.whyChoose = contentForm.whyChoose;
+        mergedConfig.cadetOverview = contentForm.cadetOverview;
+        mergedConfig.facilities = contentForm.facilities;
+        mergedConfig.activities = contentForm.activities;
+        mergedConfig.enrollmentCta = contentForm.enrollmentCta;
+        mergedConfig.heroCards = contentForm.heroCards;
+        mergedConfig.trustIndicators = contentForm.trustIndicators;
+        mergedConfig.sectionLabels = contentForm.sectionLabels;
+        mergedConfig.buttonLabels = contentForm.buttonLabels as typeof mergedConfig.buttonLabels;
+        mergedConfig.loaderQuotes = contentForm.loaderQuotes;
       }
       payload.config = mergedConfig;
       updateSettings(payload as Partial<AppSettings>);
@@ -205,6 +251,8 @@ export default function SettingsPage() {
     { key: "landing", label: "Landing Content", icon: <Layout className="w-4 h-4" /> },
     { key: "sections", label: "Sections", icon: <ToggleLeft className="w-4 h-4" /> },
     { key: "features", label: "SEO & Features", icon: <TrendingUp className="w-4 h-4" /> },
+    { key: "content", label: "Content", icon: <FileText className="w-4 h-4" /> },
+    { key: "theme", label: "Theme", icon: <Palette className="w-4 h-4" /> },
   ];
 
   return (
@@ -217,6 +265,8 @@ export default function SettingsPage() {
           {activeTab === "landing" && "Edit landing page hero, about, stats, CTA, and footer content."}
           {activeTab === "sections" && "Show or hide each section on the landing page."}
           {activeTab === "features" && "SEO, analytics, and feature toggles."}
+          {activeTab === "content" && "Edit section labels, button text, Why Choose Us, Facilities, Daily Schedule, and more."}
+          {activeTab === "theme" && "Customize your site colors, fonts, and preview changes live."}
         </p>
       </div>
 
@@ -574,6 +624,323 @@ export default function SettingsPage() {
             <Button size="lg" onClick={handleSave} disabled={savingSettings}>
               {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {savingSettings ? "Saving..." : "Save SEO & Features"}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === "content" && (
+        <motion.div key="content" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          {/* Why Choose Us */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="w-4 h-4 text-secondary" /> Why Choose Us</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {contentForm.whyChoose.map((item, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-primary/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted font-medium">Reason {i + 1}</span>
+                      <Button variant="ghost" size="sm" className="text-red-500 h-6 text-xs" onClick={() => setContentForm((p) => ({ ...p, whyChoose: p.whyChoose.filter((_, idx) => idx !== i) }))}>Remove</Button>
+                    </div>
+                    <Input value={item.icon} onChange={(e) => setContentForm((p) => ({ ...p, whyChoose: p.whyChoose.map((v, idx) => idx === i ? { ...v, icon: e.target.value } : v) }))} placeholder="Icon name (Users, BookOpen, etc.)" className="text-xs" />
+                    <Input value={item.title} onChange={(e) => setContentForm((p) => ({ ...p, whyChoose: p.whyChoose.map((v, idx) => idx === i ? { ...v, title: e.target.value } : v) }))} placeholder="Title" />
+                    <Textarea rows={2} value={item.description} onChange={(e) => setContentForm((p) => ({ ...p, whyChoose: p.whyChoose.map((v, idx) => idx === i ? { ...v, description: e.target.value } : v) }))} placeholder="Description" />
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="h-20 border-dashed" onClick={() => setContentForm((p) => ({ ...p, whyChoose: [...p.whyChoose, { icon: "Users", title: "", description: "" }] }))}>+ Add Reason</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cadet Overview */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><BookOpen className="w-4 h-4 text-secondary" /> Cadet Overview / Preparation</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div><label className="text-sm font-medium text-primary mb-1.5 block">Title</label><Input value={contentForm.cadetOverview.title} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, title: e.target.value } }))} /></div>
+              <div><label className="text-sm font-medium text-primary mb-1.5 block">Description</label><Textarea rows={2} value={contentForm.cadetOverview.description} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, description: e.target.value } }))} /></div>
+              <div><label className="text-sm font-medium text-primary mb-1.5 block">Heading</label><Input value={contentForm.cadetOverview.heading} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, heading: e.target.value } }))} /></div>
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Preparation Steps</label>
+                <div className="space-y-2">
+                  {contentForm.cadetOverview.steps.map((step, i) => (
+                    <div key={i} className="flex gap-2">
+                      <Input value={step} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, steps: p.cadetOverview.steps.map((s, idx) => idx === i ? e.target.value : s) } }))} placeholder={`Step ${i + 1}`} />
+                      <Button variant="ghost" size="sm" className="text-red-500 h-9 text-xs shrink-0" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, steps: p.cadetOverview.steps.filter((_, idx) => idx !== i) } }))}>X</Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, steps: [...p.cadetOverview.steps, ""] } }))}>+ Add Step</Button>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Images (URLs)</label>
+                <div className="space-y-2">
+                  {contentForm.cadetOverview.images.map((img, i) => (
+                    <div key={i} className="flex gap-2">
+                      <Input value={img} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: p.cadetOverview.images.map((s, idx) => idx === i ? e.target.value : s) } }))} placeholder={`Image ${i + 1} URL`} />
+                      <Button variant="ghost" size="sm" className="text-red-500 h-9 text-xs shrink-0" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: p.cadetOverview.images.filter((_, idx) => idx !== i) } }))}>X</Button>
+                    </div>
+                  ))}
+                  <Button variant="outline" size="sm" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: [...p.cadetOverview.images, ""] } }))}>+ Add Image</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Facilities */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><School className="w-4 h-4 text-secondary" /> Facilities / Infrastructure</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {contentForm.facilities.map((item, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-primary/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted font-medium">Facility {i + 1}</span>
+                      <Button variant="ghost" size="sm" className="text-red-500 h-6 text-xs" onClick={() => setContentForm((p) => ({ ...p, facilities: p.facilities.filter((_, idx) => idx !== i) }))}>Remove</Button>
+                    </div>
+                    <Input value={item.icon} onChange={(e) => setContentForm((p) => ({ ...p, facilities: p.facilities.map((v, idx) => idx === i ? { ...v, icon: e.target.value } : v) }))} placeholder="Icon (School, BookOpen, etc.)" className="text-xs" />
+                    <Input value={item.title} onChange={(e) => setContentForm((p) => ({ ...p, facilities: p.facilities.map((v, idx) => idx === i ? { ...v, title: e.target.value } : v) }))} placeholder="Title" />
+                    <Textarea rows={2} value={item.description} onChange={(e) => setContentForm((p) => ({ ...p, facilities: p.facilities.map((v, idx) => idx === i ? { ...v, description: e.target.value } : v) }))} placeholder="Description" />
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="h-20 border-dashed" onClick={() => setContentForm((p) => ({ ...p, facilities: [...p.facilities, { icon: "School", title: "", description: "" }] }))}>+ Add Facility</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Daily Schedule */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Sun className="w-4 h-4 text-secondary" /> Daily Schedule / Activities</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {contentForm.activities.map((item, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-primary/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted font-medium">Activity {i + 1}</span>
+                      <Button variant="ghost" size="sm" className="text-red-500 h-6 text-xs" onClick={() => setContentForm((p) => ({ ...p, activities: p.activities.filter((_, idx) => idx !== i) }))}>Remove</Button>
+                    </div>
+                    <Input value={item.icon} onChange={(e) => setContentForm((p) => ({ ...p, activities: p.activities.map((v, idx) => idx === i ? { ...v, icon: e.target.value } : v) }))} placeholder="Icon (Sunrise, BookOpen, etc.)" className="text-xs" />
+                    <Input value={item.title} onChange={(e) => setContentForm((p) => ({ ...p, activities: p.activities.map((v, idx) => idx === i ? { ...v, title: e.target.value } : v) }))} placeholder="Title" />
+                    <Input value={item.time} onChange={(e) => setContentForm((p) => ({ ...p, activities: p.activities.map((v, idx) => idx === i ? { ...v, time: e.target.value } : v) }))} placeholder="Time (e.g. 7:30 AM - 8:00 AM)" />
+                    <Textarea rows={2} value={item.description} onChange={(e) => setContentForm((p) => ({ ...p, activities: p.activities.map((v, idx) => idx === i ? { ...v, description: e.target.value } : v) }))} placeholder="Description" />
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="h-20 border-dashed" onClick={() => setContentForm((p) => ({ ...p, activities: [...p.activities, { icon: "Sunrise", title: "", time: "", description: "" }] }))}>+ Add Activity</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Enrollment CTA */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Enrollment Call-to-Action</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div><label className="text-sm font-medium text-primary mb-1.5 block">Badge Text</label><Input value={contentForm.enrollmentCta.badge} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, badge: e.target.value } }))} /></div>
+                <div><label className="text-sm font-medium text-primary mb-1.5 block">Discount</label><Input value={contentForm.enrollmentCta.discount} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, discount: e.target.value } }))} /></div>
+                <div className="sm:col-span-2"><label className="text-sm font-medium text-primary mb-1.5 block">Heading</label><Textarea rows={2} value={contentForm.enrollmentCta.heading} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, heading: e.target.value } }))} /></div>
+                <div className="sm:col-span-2"><label className="text-sm font-medium text-primary mb-1.5 block">Description</label><Textarea rows={3} value={contentForm.enrollmentCta.description} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, description: e.target.value } }))} /></div>
+                <div><label className="text-sm font-medium text-primary mb-1.5 block">Offer Title</label><Input value={contentForm.enrollmentCta.offerTitle} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, offerTitle: e.target.value } }))} /></div>
+                <div><label className="text-sm font-medium text-primary mb-1.5 block">Offer Text</label><Input value={contentForm.enrollmentCta.offerText} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, offerText: e.target.value } }))} /></div>
+                <div><label className="text-sm font-medium text-primary mb-1.5 block">Button Text</label><Input value={contentForm.enrollmentCta.buttonText} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, buttonText: e.target.value } }))} /></div>
+                <div><label className="text-sm font-medium text-primary mb-1.5 block">Button Link</label><Input value={contentForm.enrollmentCta.buttonLink} onChange={(e) => setContentForm((p) => ({ ...p, enrollmentCta: { ...p.enrollmentCta, buttonLink: e.target.value } }))} /></div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Hero Cards */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="w-4 h-4 text-secondary" /> Hero Floating Cards</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {contentForm.heroCards.map((card, i) => (
+                  <div key={i} className="p-4 rounded-lg border border-primary/5 space-y-2">
+                    <Button variant="ghost" size="sm" className="text-red-500 h-6 text-xs float-right" onClick={() => setContentForm((p) => ({ ...p, heroCards: p.heroCards.filter((_, idx) => idx !== i) }))}>Remove</Button>
+                    <Input value={card.icon} onChange={(e) => setContentForm((p) => ({ ...p, heroCards: p.heroCards.map((v, idx) => idx === i ? { ...v, icon: e.target.value } : v) }))} placeholder="Icon (Trophy, Users, etc.)" className="text-xs" />
+                    <Input value={card.value} onChange={(e) => setContentForm((p) => ({ ...p, heroCards: p.heroCards.map((v, idx) => idx === i ? { ...v, value: e.target.value } : v) }))} placeholder="Value (94%, 35+, etc.)" />
+                    <Input value={card.label} onChange={(e) => setContentForm((p) => ({ ...p, heroCards: p.heroCards.map((v, idx) => idx === i ? { ...v, label: e.target.value } : v) }))} placeholder="Label (Success Rate)" />
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" className="h-20 border-dashed" onClick={() => setContentForm((p) => ({ ...p, heroCards: [...p.heroCards, { icon: "Trophy", value: "", label: "" }] }))}>+ Add Card</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Trust Indicators */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Quote className="w-4 h-4 text-secondary" /> Trust Indicators</CardTitle></CardHeader>
+            <CardContent className="grid sm:grid-cols-2 gap-4">
+              <div><label className="text-sm font-medium text-primary mb-1.5 block">Students Count Text</label><Input value={contentForm.trustIndicators.studentsCount} onChange={(e) => setContentForm((p) => ({ ...p, trustIndicators: { ...p.trustIndicators, studentsCount: e.target.value } }))} placeholder="2,500+" /></div>
+              <div><label className="text-sm font-medium text-primary mb-1.5 block">Rating Text</label><Input value={contentForm.trustIndicators.rating} onChange={(e) => setContentForm((p) => ({ ...p, trustIndicators: { ...p.trustIndicators, rating: e.target.value } }))} placeholder="4.9" /></div>
+            </CardContent>
+          </Card>
+
+          {/* Section Labels */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Section Labels & Headers</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(contentForm.sectionLabels).map(([key, val], i) => (
+                  <div key={key} className="p-4 rounded-lg border border-primary/5 space-y-2">
+                    <p className="text-xs font-semibold text-primary uppercase mb-1">{key}</p>
+                    <Input value={val.label} onChange={(e) => setContentForm((p) => ({ ...p, sectionLabels: { ...p.sectionLabels, [key]: { ...p.sectionLabels[key], label: e.target.value } } }))} placeholder="Label" />
+                    <Input value={val.title} onChange={(e) => setContentForm((p) => ({ ...p, sectionLabels: { ...p.sectionLabels, [key]: { ...p.sectionLabels[key], title: e.target.value } } }))} placeholder="Title" />
+                    <Textarea rows={2} value={val.description} onChange={(e) => setContentForm((p) => ({ ...p, sectionLabels: { ...p.sectionLabels, [key]: { ...p.sectionLabels[key], description: e.target.value } } }))} placeholder="Description" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Button Labels */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><BookOpen className="w-4 h-4 text-secondary" /> Button Labels</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(contentForm.buttonLabels).map(([key, val]) => (
+                  <div key={key}>
+                    <label className="text-xs font-medium text-primary mb-1 block capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</label>
+                    <Input value={val} onChange={(e) => setContentForm((p) => ({ ...p, buttonLabels: { ...p.buttonLabels, [key]: e.target.value } }))} />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Loader Quotes */}
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Quote className="w-4 h-4 text-secondary" /> Loading Screen Quotes</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {contentForm.loaderQuotes.map((quote, i) => (
+                  <div key={i} className="flex gap-2">
+                    <Textarea rows={1} value={quote} onChange={(e) => setContentForm((p) => ({ ...p, loaderQuotes: p.loaderQuotes.map((q, idx) => idx === i ? e.target.value : q) }))} placeholder={`Quote ${i + 1}`} className="min-h-[40px]" />
+                    <Button variant="ghost" size="sm" className="text-red-500 h-9 text-xs shrink-0" onClick={() => setContentForm((p) => ({ ...p, loaderQuotes: p.loaderQuotes.filter((_, idx) => idx !== i) }))}>X</Button>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => setContentForm((p) => ({ ...p, loaderQuotes: [...p.loaderQuotes, ""] }))}>+ Add Quote</Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button size="lg" onClick={handleSave} disabled={savingSettings}>
+              {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {savingSettings ? "Saving..." : "Save Content"}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {activeTab === "theme" && (
+        <motion.div key="theme" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="grid lg:grid-cols-5 gap-6">
+            {/* Theme Controls */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><Palette className="w-4 h-4 text-secondary" /> Colors & Fonts</CardTitle></CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <label className="text-sm font-medium text-primary mb-1.5 block">Primary Color</label>
+                    <div className="flex gap-3 items-center">
+                      <input type="color" value={themeForm.primaryColor} onChange={(e) => setThemeForm((p) => ({ ...p, primaryColor: e.target.value }))} className="w-10 h-10 rounded-md border border-primary/20 cursor-pointer bg-transparent p-0.5" />
+                      <Input value={themeForm.primaryColor} onChange={(e) => setThemeForm((p) => ({ ...p, primaryColor: e.target.value }))} placeholder="#07220B" className="font-mono flex-1" />
+                    </div>
+                    <p className="text-xs text-muted mt-1">Pick a color or enter a hex code.</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-primary mb-1.5 block">Font Family</label>
+                    <select value={themeForm.fontFamily} onChange={(e) => setThemeForm((p) => ({ ...p, fontFamily: e.target.value }))} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      {["Inter", "Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Plus Jakarta Sans"].map((f) => (
+                        <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
+                      ))}
+                    </select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><Eye className="w-4 h-4 text-secondary" /> Preview</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="space-y-4 rounded-xl border border-primary/10 p-5" style={{ fontFamily: themeForm.fontFamily }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg" style={{ backgroundColor: themeForm.primaryColor }} />
+                      <div>
+                        <p className="text-sm font-semibold text-primary">Primary Color Sample</p>
+                        <p className="text-xs text-muted">{themeForm.primaryColor}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button className="px-4 py-2 rounded-md text-sm font-medium text-white shadow-soft transition-all hover:opacity-90" style={{ backgroundColor: themeForm.primaryColor }}>Primary Button</button>
+                      <button className="px-4 py-2 rounded-md text-sm font-medium border transition-all hover:bg-primary/5" style={{ borderColor: `${themeForm.primaryColor}33`, color: themeForm.primaryColor }}>Outline Button</button>
+                    </div>
+                    <div className="h-2 rounded-full" style={{ backgroundColor: `${themeForm.primaryColor}15` }}>
+                      <div className="h-2 rounded-full w-3/5" style={{ backgroundColor: themeForm.primaryColor }} />
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium text-white" style={{ backgroundColor: themeForm.primaryColor }}>Badge</span>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ backgroundColor: `${themeForm.primaryColor}15`, color: themeForm.primaryColor }}>Light Badge</span>
+                    </div>
+                    <div className="p-3 rounded-lg border" style={{ borderColor: `${themeForm.primaryColor}15` }}>
+                      <p className="text-sm font-medium" style={{ color: themeForm.primaryColor }}>Sample Card Title</p>
+                      <p className="text-xs text-muted mt-1">This is how a card body text appears with the current font selection.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Live Preview of landing components */}
+            <div className="lg:col-span-3">
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><Layout className="w-4 h-4 text-secondary" /> Page Preview</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="rounded-xl border border-primary/10 overflow-hidden" style={{ fontFamily: themeForm.fontFamily }}>
+                    {/* Hero mockup */}
+                    <div className="p-6 text-white" style={{ background: `linear-gradient(135deg, ${themeForm.primaryColor}, ${themeForm.primaryColor}dd` }}>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/20">Admission Open</span>
+                      <h2 className="text-xl font-bold mt-3" style={{ fontFamily: themeForm.fontFamily }}>Preparing Future Leaders</h2>
+                      <p className="text-sm mt-1 text-white/80">Through discipline & excellence</p>
+                      <div className="flex gap-2 mt-4">
+                        <span className="px-4 py-2 rounded-md text-sm font-medium bg-white" style={{ color: themeForm.primaryColor }}>Get Started</span>
+                        <span className="px-4 py-2 rounded-md text-sm font-medium border border-white/30 text-white">Learn More</span>
+                      </div>
+                    </div>
+                    {/* Stats mockup */}
+                    <div className="grid grid-cols-3 gap-4 p-5 bg-accent">
+                      {["2500+", "94%", "35+"].map((stat, i) => (
+                        <div key={i} className="text-center">
+                          <p className="text-lg font-bold" style={{ color: themeForm.primaryColor }}>{stat}</p>
+                          <p className="text-xs text-muted">Stat {i + 1}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Course card mockup */}
+                    <div className="p-5">
+                      <div className="rounded-lg border p-4" style={{ borderColor: `${themeForm.primaryColor}15` }}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: themeForm.primaryColor }}>C</div>
+                          <div>
+                            <p className="text-sm font-semibold" style={{ color: themeForm.primaryColor }}>Cadet Preparation</p>
+                            <p className="text-xs text-muted">Comprehensive course</p>
+                          </div>
+                        </div>
+                        <div className="h-1.5 rounded-full w-full bg-primary/5">
+                          <div className="h-1.5 rounded-full w-3/4" style={{ backgroundColor: themeForm.primaryColor }} />
+                        </div>
+                      </div>
+                    </div>
+                    {/* Footer mockup */}
+                    <div className="p-4 text-center text-xs text-white" style={{ backgroundColor: themeForm.primaryColor }}>
+                      &copy; 2026 Special Academy. All rights reserved.
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+          <div className="flex justify-end mt-6">
+            <Button size="lg" onClick={handleSave} disabled={savingSettings}>
+              {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {savingSettings ? "Saving..." : "Save Theme"}
             </Button>
           </div>
         </motion.div>

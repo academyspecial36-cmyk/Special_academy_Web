@@ -10,8 +10,10 @@ import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 
 export function NoticesSection() {
-  const { notices, noticeCategories } = useAppContext();
+  const { notices, noticeCategories, settings } = useAppContext();
   const featuredNotices = notices.slice(0, 4);
+  const labels = settings.config.sectionLabels?.notices;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
   const getCategoryStyle = (category: string) => {
     const cat = noticeCategories.find((c) => c.value === category);
@@ -22,9 +24,9 @@ export function NoticesSection() {
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Updates"
-          title="Latest Notices & Announcements"
-          description="Stay informed with the latest updates, admission notices, exam schedules, and important announcements from Special academy."
+          label={labels?.label || "Updates"}
+          title={labels?.title || "Latest Notices & Announcements"}
+          description={labels?.description || ""}
         />
 
         <div className="grid md:grid-cols-2 gap-5">
@@ -78,7 +80,7 @@ export function NoticesSection() {
         >
           <Button variant="outline" asChild>
             <Link href="/notices">
-              View All Notices
+              {btns.viewAllNotices || "View All Notices"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>

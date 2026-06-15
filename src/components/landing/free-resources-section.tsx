@@ -11,9 +11,10 @@ import { PreviewModal } from "@/components/ui/preview-modal";
 import { useAppContext } from "@/lib/app-context";
 
 export function FreeResourcesSection() {
-  const { subcategories, courses } = useAppContext();
+  const { subcategories, courses, settings } = useAppContext();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);
+  const labels = settings.config.sectionLabels?.freeResources;
 
   const freeSubs = subcategories.filter((s) => s.status === "free" && !s.hidden);
 
@@ -23,9 +24,9 @@ export function FreeResourcesSection() {
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Free Resources"
-          title="Try Free Sample Classes"
-          description="Explore our free learning materials. No registration required."
+          label={labels?.label || "Free Resources"}
+          title={labels?.title || "Try Free Sample Classes"}
+          description={labels?.description || ""}
         />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

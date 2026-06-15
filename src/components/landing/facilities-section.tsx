@@ -8,73 +8,44 @@ import {
   Trophy,
   FlaskConical,
   UtensilsCrossed,
+  Users,
+  Dumbbell,
+  ClipboardCheck,
+  TrendingUp,
+  HeadphonesIcon,
+  Sunrise,
+  Lightbulb,
 } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
+import { useAppContext } from "@/lib/app-context";
 
 const iconMap: Record<string, React.ElementType> = {
-  School,
-  BookOpen,
-  Monitor,
-  Trophy,
-  FlaskConical,
-  UtensilsCrossed,
+  School, BookOpen, Monitor, Trophy, FlaskConical, UtensilsCrossed,
+  Users, Dumbbell, ClipboardCheck, TrendingUp, HeadphonesIcon, Sunrise, Lightbulb,
 };
 
-const facilities = [
-  {
-    id: "1",
-    title: "Modern Classrooms",
-    description: "Spacious, air-conditioned classrooms equipped with smart boards and multimedia facilities for interactive learning.",
-    icon: "School",
-  },
-  {
-    id: "2",
-    title: "Digital Library",
-    description: "Extensive collection of books, journals, and digital resources with 24/7 online access for all students.",
-    icon: "BookOpen",
-  },
-  {
-    id: "3",
-    title: "Computer Lab",
-    description: "State-of-the-art computer laboratory with high-speed internet for research, practice tests, and skill development.",
-    icon: "Monitor",
-  },
-  {
-    id: "4",
-    title: "Sports Ground",
-    description: "Well-maintained sports ground for physical training, athletics, and outdoor activities essential for cadet preparation.",
-    icon: "Trophy",
-  },
-  {
-    id: "5",
-    title: "Science Laboratory",
-    description: "Fully equipped science lab for practical demonstrations and hands-on learning experiences.",
-    icon: "FlaskConical",
-  },
-  {
-    id: "6",
-    title: "Cafeteria",
-    description: "Hygienic cafeteria serving nutritious meals to ensure students maintain good health during intensive preparation.",
-    icon: "UtensilsCrossed",
-  },
-];
-
 export function FacilitiesSection() {
+  const { settings } = useAppContext();
+  const facilities = settings.config.facilities || [];
+  const labels = settings.config.sectionLabels?.facilities;
+
+  if (facilities.length === 0) return null;
+
   return (
     <section className="py-20 md:py-28 bg-accent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Infrastructure"
-          title="World-Class Facilities"
-          description="Our campus is equipped with modern facilities designed to provide the best learning environment for aspiring cadets."
+          label={labels?.label || "Infrastructure"}
+          title={labels?.title || "World-Class Facilities"}
+          description={labels?.description || ""}
         />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {facilities.map((facility, index) => {
-            const Icon = iconMap[facility.icon];
+            const Icon = iconMap[facility.icon] || School;
             return (
               <motion.div
-                key={facility.id}
+                key={facility.title + index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}

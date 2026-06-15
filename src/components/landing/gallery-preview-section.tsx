@@ -9,16 +9,18 @@ import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 
 export function GalleryPreviewSection() {
-  const { galleryImages } = useAppContext();
+  const { galleryImages, settings } = useAppContext();
   const previewImages = galleryImages.slice(0, 6);
+  const labels = settings.config.sectionLabels?.gallery;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
   return (
     <section className="py-20 md:py-28 bg-accent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Gallery"
-          title="Life at Special academy"
-          description="Glimpses of our classrooms, training sessions, events, and the vibrant community that makes Special academy special."
+          label={labels?.label || "Gallery"}
+          title={labels?.title || "Life at Special academy"}
+          description={labels?.description || ""}
         />
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -60,7 +62,7 @@ export function GalleryPreviewSection() {
           <Button variant="outline" asChild>
             <Link href="/gallery">
               <Images className="w-4 h-4 mr-2" />
-              View Full Gallery
+              {btns.viewFullGallery || "View Full Gallery"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>

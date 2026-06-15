@@ -8,6 +8,11 @@ import { useAppContext } from "@/lib/app-context";
 
 export function EnrollmentCtaSection() {
   const { settings } = useAppContext();
+  const cta = settings.config.enrollmentCta;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
+
+  if (!cta) return null;
+
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -28,13 +33,13 @@ export function EnrollmentCtaSection() {
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm text-white">
                 <GraduationCap className="w-4 h-4" />
-                <span>Admissions Open for 2026-27</span>
+                <span>{cta.badge || "Admissions Open"}</span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
-                Begin Your Journey to Cadet College Today
+                {cta.heading || "Begin Your Journey Today"}
               </h2>
               <p className="text-white/70 text-lg leading-relaxed max-w-lg">
-                Limited seats available for the upcoming session. Secure your child&apos;s future with our proven cadet preparation programs. Early applicants receive a 10% discount.
+                {cta.description || ""}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Button
@@ -42,8 +47,8 @@ export function EnrollmentCtaSection() {
                   className="bg-white text-primary hover:bg-white/90 shadow-lg"
                   asChild
                 >
-                  <Link href="/enrollment">
-                    Apply for Admission
+                  <Link href={cta.buttonLink || "/enrollment"}>
+                    {cta.buttonText || btns.applyNow || "Apply for Admission"}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Link>
                 </Button>
@@ -53,7 +58,7 @@ export function EnrollmentCtaSection() {
                   className="border-white/30 text-white hover:bg-white/10"
                   asChild
                 >
-                  <Link href="/contact">Contact Us</Link>
+                  <Link href="/contact">{btns.contactUs || "Contact Us"}</Link>
                 </Button>
               </div>
             </div>
@@ -64,9 +69,9 @@ export function EnrollmentCtaSection() {
                   <Clock className="w-5 h-5 text-secondary" />
                 </div>
                 <div>
-                  <h4 className="text-white font-semibold mb-1">Limited Time Offer</h4>
+                  <h4 className="text-white font-semibold mb-1">{cta.offerTitle || "Limited Time Offer"}</h4>
                   <p className="text-sm text-white/60">
-                    Apply before January 15, 2026 to receive a 10% early bird discount on your first semester fee.
+                    {cta.offerText || ""}
                   </p>
                 </div>
               </div>

@@ -131,6 +131,21 @@ export function Footer() {
                 </span>
               </li>
             </ul>
+
+            {/* Mini Map */}
+            <div className="mt-5 rounded-lg overflow-hidden border border-white/10">
+              <iframe
+                src={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`}
+                width="100%"
+                height="140"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Academy Location"
+                className="block"
+              />
+            </div>
           </div>
         </div>
 

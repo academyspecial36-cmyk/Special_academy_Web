@@ -7,8 +7,9 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { useAppContext } from "@/lib/app-context";
 
 export function FaqSection() {
-  const { faqs } = useAppContext();
+  const { faqs, settings } = useAppContext();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const labels = settings.config.sectionLabels?.faq;
 
   const sortedFaqs = [...faqs].sort(
   (a, b) => a.sortOrder - b.sortOrder
@@ -18,9 +19,9 @@ export function FaqSection() {
     <section className="py-20 md:py-28 bg-accent">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="FAQ"
-          title="Frequently Asked Questions"
-          description="Find answers to common questions about our admission process, courses, and preparation programs."
+          label={labels?.label || "FAQ"}
+          title={labels?.title || "Frequently Asked Questions"}
+          description={labels?.description || ""}
         />
 
         <div className="space-y-3">

@@ -9,14 +9,16 @@ import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 
 export function FacultySection() {
-  const { facultyMembers } = useAppContext();
+  const { facultyMembers, settings } = useAppContext();
+  const labels = settings.config.sectionLabels?.faculty;
+  const btns = settings.config.buttonLabels || {} as Record<string, string>;
   return (
     <section className="py-20 md:py-28 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
-          label="Our Team"
-          title="Meet Our Expert Faculty"
-          description="Learn from the best. Our faculty comprises retired military officers, subject experts, and experienced educators dedicated to your success."
+          label={labels?.label || "Our Team"}
+          title={labels?.title || "Meet Our Expert Faculty"}
+          description={labels?.description || ""}
         />
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -76,7 +78,7 @@ export function FacultySection() {
         >
           <Button size="lg" asChild>
             <Link href="/team">
-              View All Team
+              {btns.viewAllTeam || "View All Team"}
               <ArrowRight className="w-4 h-4 ml-2" />
             </Link>
           </Button>
