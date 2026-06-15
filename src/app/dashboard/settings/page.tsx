@@ -301,6 +301,7 @@ export default function SettingsPage() {
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-4 lg:mb-6">
         <h1 className="text-2xl font-bold text-primary">Settings</h1>
         <p className="text-sm text-muted">
@@ -312,31 +313,48 @@ export default function SettingsPage() {
           {activeTab === "content" && "Edit section labels, button text, Why Choose Us, Facilities, Daily Schedule, and more."}
           {activeTab === "theme" && "Customize your site colors, fonts, and preview changes live."}
           {activeTab === "legal" && "Edit Privacy Policy and Terms of Service pages."}
-          {activeTab === "backup" && "Export, import, and configure automatic backups to Google Drive."}
+          {activeTab === "backup" && "Export, import, and configure automatic backups."}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-1 mb-6 bg-primary/5 rounded-lg p-1 w-fit">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={cn(
-              "px-4 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5",
-              activeTab === tab.key
-                ? "bg-white text-primary shadow-sm"
-                : "text-muted hover:text-primary"
-            )}
+      {/* Sticky Tab Bar */}
+      <div className="sticky top-16 z-20 bg-white/90 backdrop-blur-lg border-b border-primary/5 -mx-4 lg:-mx-8 px-4 lg:px-8 mb-6">
+        {/* Mobile select */}
+        <div className="sm:hidden py-3">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value as Tab)}
+            className="w-full h-10 rounded-lg border border-primary/10 bg-white px-3 text-sm font-medium text-primary focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
+            {tabs.map((t) => (
+              <option key={t.key} value={t.key}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Desktop horizontal tabs */}
+        <div className="hidden sm:flex gap-0.5 overflow-x-auto flex-nowrap py-2 scrollbar-hide">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium whitespace-nowrap rounded-lg transition-all shrink-0",
+                activeTab === tab.key
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-muted hover:text-primary hover:bg-primary/5"
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {activeTab === "profile" && (
-        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl space-y-6">
-          <Card>
+        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid md:grid-cols-2 gap-6">
+          <Card className="h-fit">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><User className="w-4 h-4 text-secondary" /> Admin Profile</CardTitle></CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4 pb-4 border-b border-primary/5">
@@ -374,7 +392,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="h-fit">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Lock className="w-4 h-4 text-secondary" /> Change Password</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {(["current", "new", "confirm"] as const).map((field) => {
@@ -696,8 +714,25 @@ export default function SettingsPage() {
 
       {activeTab === "content" && (
         <motion.div key="content" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+          {/* Quick nav index */}
+          <div className="flex flex-wrap gap-1.5">
+            {[
+              "why-choose", "cadet-overview", "facilities", "activities",
+              "enrollment-cta", "hero-cards", "trust-indicators",
+              "section-labels", "button-labels", "loader-quotes",
+            ].map((id) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                className="px-2.5 py-1 text-xs font-medium rounded-full bg-primary/5 text-muted hover:bg-primary hover:text-white transition-all"
+              >
+                {id.replace(/-/g, " ")}
+              </a>
+            ))}
+          </div>
+
           {/* Why Choose Us */}
-          <Card>
+          <Card id="why-choose" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="w-4 h-4 text-secondary" /> Why Choose Us</CardTitle></CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -718,7 +753,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Cadet Overview */}
-          <Card>
+          <Card id="cadet-overview" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><BookOpen className="w-4 h-4 text-secondary" /> Cadet Overview / Preparation</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div><label className="text-sm font-medium text-primary mb-1.5 block">Title</label><Input value={contentForm.cadetOverview.title} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, title: e.target.value } }))} /></div>
@@ -752,7 +787,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Facilities */}
-          <Card>
+          <Card id="facilities" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><School className="w-4 h-4 text-secondary" /> Facilities / Infrastructure</CardTitle></CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -773,7 +808,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Daily Schedule */}
-          <Card>
+          <Card id="activities" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Sun className="w-4 h-4 text-secondary" /> Daily Schedule / Activities</CardTitle></CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -795,7 +830,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Enrollment CTA */}
-          <Card>
+          <Card id="enrollment-cta" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Enrollment Call-to-Action</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
@@ -812,7 +847,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Hero Cards */}
-          <Card>
+          <Card id="hero-cards" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="w-4 h-4 text-secondary" /> Hero Floating Cards</CardTitle></CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-3 gap-4">
@@ -830,7 +865,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Trust Indicators */}
-          <Card>
+          <Card id="trust-indicators" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Quote className="w-4 h-4 text-secondary" /> Trust Indicators</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <div><label className="text-sm font-medium text-primary mb-1.5 block">Students Count Text</label><Input value={contentForm.trustIndicators.studentsCount} onChange={(e) => setContentForm((p) => ({ ...p, trustIndicators: { ...p.trustIndicators, studentsCount: e.target.value } }))} placeholder="2,500+" /></div>
@@ -839,7 +874,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Section Labels */}
-          <Card>
+          <Card id="section-labels" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Section Labels & Headers</CardTitle></CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -856,7 +891,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Button Labels */}
-          <Card>
+          <Card id="button-labels" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><BookOpen className="w-4 h-4 text-secondary" /> Button Labels</CardTitle></CardHeader>
             <CardContent>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -871,7 +906,7 @@ export default function SettingsPage() {
           </Card>
 
           {/* Loader Quotes */}
-          <Card>
+          <Card id="loader-quotes" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Quote className="w-4 h-4 text-secondary" /> Loading Screen Quotes</CardTitle></CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -1013,7 +1048,7 @@ export default function SettingsPage() {
 
       {activeTab === "legal" && (
         <motion.div key="legal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <Card>
+          <Card id="privacy-policy" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Privacy Policy</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -1056,7 +1091,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card id="terms-of-service" className="scroll-mt-24">
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><FileText className="w-4 h-4 text-secondary" /> Terms of Service</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div>

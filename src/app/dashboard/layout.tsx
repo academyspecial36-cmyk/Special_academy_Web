@@ -22,11 +22,14 @@ import {
   X,
   Search,
   ChevronDown,
+  ChevronRight,
   LogOut,
+  PanelLeftOpen,
+  PanelLeftClose,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
-import { DASHBOARD_NAV } from "@/constants";
+import { DASHBOARD_SIDEBAR } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
 import { LandingLoader } from "@/components/landing/landing-loader";
@@ -54,7 +57,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoading, logout } = useAuth();
@@ -68,6 +73,23 @@ export default function DashboardLayout({
       logout();
     }
   }, [user, isLoading, router, logout]);
+
+  useEffect(() => {
+    const groupsToOpen = DASHBOARD_SIDEBAR.filter(
+      (item): item is { type: "group"; label: string; icon: string; children: { label: string; href: string; icon: string }[] } =>
+        item.type === "group" && item.children.some((c) => pathname.startsWith(c.href))
+    ).map((g) => g.label);
+    setExpandedGroups((prev) => {
+      const next = new Set([...prev, ...groupsToOpen]);
+      return Array.from(next);
+    });
+  }, [pathname]);
+
+  const toggleGroup = (label: string) => {
+    setExpandedGroups((prev) =>
+      prev.includes(label) ? prev.filter((g) => g !== label) : [...prev, label]
+    );
+  };
 
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -101,62 +123,147 @@ export default function DashboardLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-64 bg-primary text-white flex flex-col transition-transform duration-300 lg:translate-x-0",
+          "fixed lg:sticky top-0 left-0 z-50 h-[100dvh] bg-primary text-white flex flex-col transition-all duration-300 lg:translate-x-0",
+          sidebarCollapsed ? "w-16" : "w-64",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Brand */}
-        <div className="h-16 flex items-center px-6 border-b border-white/10">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 relative">
+        <div className={cn("h-16 flex items-center border-b border-white/10 shrink-0", sidebarCollapsed ? "justify-center px-0" : "px-6")}>
+          <Link href="/dashboard" className={cn("flex items-center", sidebarCollapsed ? "justify-center" : "gap-2.5")}>
+            <div className="w-8 h-8 relative shrink-0">
               <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={32} height={32} className="object-contain" unoptimized />
             </div>
-            <div>
-              <span className="font-bold text-sm">Special academy</span>
-              <span className="block text-[10px] text-white/50">Admin Dashboard</span>
-            </div>
+            {!sidebarCollapsed && (
+              <div className="truncate">
+                <span className="font-bold text-sm">Special academy</span>
+                <span className="block text-[10px] text-white/50">Admin Dashboard</span>
+              </div>
+            )}
           </Link>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden ml-auto p-1.5 rounded-md hover:bg-white/10"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          {!sidebarCollapsed && (
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden ml-auto p-1.5 rounded-md hover:bg-white/10"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {DASHBOARD_NAV.map((item) => {
-            const Icon = iconMap[item.icon || ""];
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  isActive
-                    ? "bg-white/10 text-white"
-                    : "text-white/60 hover:bg-white/5 hover:text-white"
-                )}
-              >
-                {Icon && <Icon className="w-4 h-4" />}
-                {item.label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto py-4 space-y-1">
+          <div className={cn("space-y-1", sidebarCollapsed ? "px-2" : "px-3")}>
+            {DASHBOARD_SIDEBAR.map((item) => {
+              if (item.type === "link") {
+                const Icon = iconMap[item.icon || ""];
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      sidebarCollapsed ? "justify-center px-0" : "",
+                      isActive
+                        ? "bg-white/10 text-white"
+                        : "text-white/60 hover:bg-white/5 hover:text-white"
+                    )}
+                    title={sidebarCollapsed ? item.label : undefined}
+                  >
+                    {Icon && <Icon className="w-4 h-4 shrink-0" />}
+                    {!sidebarCollapsed && item.label}
+                  </Link>
+                );
+              }
+
+              const isExpanded = expandedGroups.includes(item.label);
+              const GroupIcon = iconMap[item.icon || ""];
+              const hasActiveChild = item.children.some((c) => pathname.startsWith(c.href));
+
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => toggleGroup(item.label)}
+                    className={cn(
+                      "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      sidebarCollapsed ? "justify-center px-0" : "",
+                      hasActiveChild || isExpanded
+                        ? "text-white"
+                        : "text-white/60 hover:bg-white/5 hover:text-white"
+                    )}
+                    title={sidebarCollapsed ? item.label : undefined}
+                  >
+                    {GroupIcon && <GroupIcon className="w-4 h-4 shrink-0" />}
+                    {!sidebarCollapsed && (
+                      <>
+                        <span className="flex-1 text-left truncate">{item.label}</span>
+                        <ChevronRight
+                          className={cn(
+                            "w-3.5 h-3.5 transition-transform text-white/40",
+                            isExpanded && "rotate-90"
+                          )}
+                        />
+                      </>
+                    )}
+                  </button>
+                  {isExpanded && !sidebarCollapsed && (
+                    <div className="ml-2 mt-0.5 space-y-0.5 border-l border-white/10 pl-2">
+                      {item.children.map((child) => {
+                        const ChildIcon = iconMap[child.icon || ""];
+                        const isChildActive = pathname === child.href;
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setSidebarOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all",
+                              isChildActive
+                                ? "bg-white/10 text-white"
+                                : "text-white/50 hover:bg-white/5 hover:text-white"
+                            )}
+                          >
+                            {ChildIcon && <ChildIcon className="w-3.5 h-3.5 shrink-0" />}
+                            {child.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </nav>
 
         {/* Bottom */}
-        <div className="p-3 border-t border-white/10">
+        <div className="p-3 border-t border-white/10 flex flex-col gap-1">
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="hidden lg:flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all w-full"
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="w-4 h-4 mx-auto shrink-0" />
+            ) : (
+              <>
+                <PanelLeftClose className="w-4 h-4 shrink-0" />
+                <span>Collapse</span>
+              </>
+            )}
+          </button>
           <Link
             href="/"
             onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all",
+              sidebarCollapsed ? "justify-center px-0" : ""
+            )}
+            title={sidebarCollapsed ? "Back to Website" : undefined}
           >
-            <LogOut className="w-4 h-4" />
-            Back to Website
+            <LogOut className="w-4 h-4 shrink-0" />
+            {!sidebarCollapsed && <span>Back to Website</span>}
           </Link>
         </div>
       </aside>
