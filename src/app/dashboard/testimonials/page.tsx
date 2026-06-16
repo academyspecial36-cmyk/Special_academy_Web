@@ -12,6 +12,7 @@ import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext } from "@/lib/app-context";
 import type { Testimonial } from "@/types";
+import { QUALIFICATIONS } from "@/constants";
 
 const fields: FieldConfig[] = [
   { name: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. John Doe" },
@@ -23,7 +24,7 @@ const fields: FieldConfig[] = [
   { name: "content", label: "Testimonial Content", type: "textarea", required: true, placeholder: "Write the testimonial..." },
   { name: "rating", label: "Rating (1-5)", type: "number", required: true, placeholder: "5" },
   { name: "achievement", label: "Achievement (optional)", type: "text", placeholder: "e.g. Secured top rank in XYZ" },
-  { name: "class", label: "Class (optional)", type: "text", placeholder: "e.g. Class 10" },
+  { name: "qualification", label: "Qualification (optional)", type: "select", options: QUALIFICATIONS.map(q => ({ label: q, value: q })) },
   { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
 ];
 
@@ -46,7 +47,7 @@ export default function DashboardTestimonialsPage() {
       content: data.content,
       rating: Math.min(5, Math.max(1, parseInt(data.rating) || 5)),
       achievement: data.achievement || undefined,
-      class: data.class || undefined,
+      qualification: data.qualification || undefined,
       image: data.image || undefined,
     });
     setAddOpen(false);
@@ -61,7 +62,7 @@ export default function DashboardTestimonialsPage() {
       content: data.content,
       rating: Math.min(5, Math.max(1, parseInt(data.rating) || 5)),
       achievement: data.achievement || undefined,
-      class: data.class || undefined,
+      qualification: data.qualification || undefined,
       image: data.image || undefined,
     });
     setEditOpen(false);
@@ -125,7 +126,7 @@ export default function DashboardTestimonialsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-primary">{t.name}</p>
-                    <p className="text-xs text-muted capitalize">{t.role} {t.class && `· ${t.class}`}</p>
+                    <p className="text-xs text-muted capitalize">{t.role} {t.qualification && `· ${t.qualification}`}</p>
                   </div>
                   <Badge variant="outline" className="text-[10px] capitalize">{t.role}</Badge>
                 </div>
@@ -141,6 +142,11 @@ export default function DashboardTestimonialsPage() {
           </motion.div>
         ))}
       </div>
+      {filtered.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted text-sm">No testimonials found.</p>
+        </div>
+      )}
 
       <FormModal
         open={addOpen}
@@ -162,7 +168,7 @@ export default function DashboardTestimonialsPage() {
           content: selected.content,
           rating: String(selected.rating),
           achievement: selected.achievement || "",
-          class: selected.class || "",
+          qualification: selected.qualification || "",
           image: selected.image || "",
         } : undefined}
         onSubmit={handleEdit}

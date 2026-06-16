@@ -13,32 +13,35 @@ const ALLOWED_TABLES: Entity[] = [
   "students",
   "blog_posts",
   "contact_submissions",
+  "ai_conversations",
+  "qualifications",
 ];
 
 const RESTRICTED_TABLES: Entity[] = [
-  "enrollments", "students", "exam_attempts", "exam_answers", "progress", "profiles", "contact_submissions",
+  "enrollments", "students", "exam_answers", "progress", "profiles", "contact_submissions",
 ];
 
 const COLUMN_MAP: Record<string, Record<string, string>> = {
-  courses: { classLevel: "class_level", isPopular: "is_popular" },
+  courses: { qualification: "class_level", isPopular: "is_popular" },
   subcategories: { courseId: "course_id", shortDescription: "short_description", createdAt: "created_at" },
   items: { subcategoryId: "subcategory_id", createdAt: "created_at" },
   faculty_members: {},
   faqs: { sortOrder: "sort_order" },
-  notices: { isPinned: "is_pinned", classLevel: "class_level" },
+  notices: { isPinned: "is_pinned", qualification: "class_level" },
   testimonials: {},
   gallery_images: {},
-  students: { enrolledCourses: "enrolled_courses", joinDate: "join_date" },
+  students: { enrolledCourses: "enrolled_courses", joinDate: "join_date", qualificationId: "qualification_id", qualification: "class" },
   exam_categories: { createdAt: "created_at" },
   questions: { categoryId: "category_id", createdAt: "created_at" },
-  exam_attempts: { studentName: "student_name", categoryId: "category_id", completedAt: "completed_at" },
+  exam_attempts: { studentName: "student_name", categoryId: "category_id", completedAt: "completed_at", answers: "answers", studentId: "student_id" },
   course_categories: {},
-  enrollments: { fullName: "full_name", interestedCourse: "interested_course", currentClass: "current_class", guardianName: "guardian_name", guardianContact: "guardian_contact", previousSchool: "previous_school", createdAt: "created_at", rejectionMessage: "rejection_message", authUserId: "auth_user_id" },
+  enrollments: { fullName: "full_name", interestedCourse: "interested_course", qualificationId: "qualification_id", guardianName: "guardian_name", guardianContact: "guardian_contact", createdAt: "created_at", rejectionMessage: "rejection_message", authUserId: "auth_user_id" },
   notice_categories: {},
   settings: { academyName: "academy_name", admissionEmail: "admission_email", secondaryPhone: "secondary_phone", officeHours: "office_hours", appIcon: "app_icon", socialLinks: "social_links", enableBlog: "enable_blog", maintenanceMode: "maintenance_mode" },
   progress: { studentId: "student_id", itemId: "item_id", completedAt: "completed_at" },
   blog_posts: { createdAt: "created_at", updatedAt: "updated_at", publishedAt: "published_at" },
   contact_submissions: { isRead: "is_read" },
+  qualifications: { sortOrder: "sort_order" },
 };
 
 function toDbColumn(table: string, key: string): string {
@@ -105,11 +108,13 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
 
   const supabase = await createServerSupabase();
 
-  const authError = await requireAdmin(supabase);
-  if (authError) return authError;
+  if (RESTRICTED_TABLES.includes(table)) {
+    const authError = await requireAdmin(supabase);
+    if (authError) return authError;
+  }
 
   const dbBody = transformKeys(body, table, true);
-  const svc = createServiceRoleSupabase();
+  const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
 
   const { data, error } = await svc.from(table).insert(dbBody).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -146,11 +151,13 @@ export async function handlePut(table: string, id: string, body: Record<string, 
 
   const supabase = await createServerSupabase();
 
-  const authError = await requireAdmin(supabase);
-  if (authError) return authError;
+  if (RESTRICTED_TABLES.includes(table)) {
+    const authError = await requireAdmin(supabase);
+    if (authError) return authError;
+  }
 
   const dbBody = transformKeys(body, table, true);
-  const svc = createServiceRoleSupabase();
+  const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
 
   const { data, error } = await svc.from(table).update(dbBody).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -165,10 +172,12 @@ export async function handleDelete(table: string, id: string) {
 
   const supabase = await createServerSupabase();
 
-  const authError = await requireAdmin(supabase);
-  if (authError) return authError;
+  if (RESTRICTED_TABLES.includes(table)) {
+    const authError = await requireAdmin(supabase);
+    if (authError) return authError;
+  }
 
-  const svc = createServiceRoleSupabase();
+  const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
 
   const { error } = await svc.from(table).delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

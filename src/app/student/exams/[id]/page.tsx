@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -9,16 +9,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
-
+import { useAuth } from "@/lib/auth-context";
 export default function StudentTakeExamPage() {
   const params = useParams();
   const router = useRouter();
   const categoryId = params.id as string;
-  const { examCategories, questions, addAttempt } = useAppContext();
+  const { user } = useAuth();
+  const { examCategories, questions, attempts, addAttempt } = useAppContext();
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const category = examCategories.find((c) => c.id === categoryId);
   const categoryQuestions = questions.filter((q) => q.categoryId === categoryId);
+  const alreadyAttempted = attempts.some((a) => a.categoryId === categoryId);
+
+  useEffect(() => {
+    if (alreadyAttempted) {
+      router.replace(`/student/exams/${categoryId}/result`);
+    }
+  }, [alreadyAttempted, categoryId, router]);
 
   if (!category) {
     return (
@@ -31,7 +39,17 @@ export default function StudentTakeExamPage() {
     );
   }
 
+  if (alreadyAttempted) {
+    return (
+      <div className="text-center py-20">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+        <p className="text-muted text-sm">Redirecting to your results...</p>
+      </div>
+    );
+  }
+
   function handleSubmit() {
+    const total = categoryQuestions.length;
     let score = 0;
     const answerDetails = categoryQuestions.map((q) => {
       const userAnswer = answers[q.id] || "";
@@ -43,13 +61,17 @@ export default function StudentTakeExamPage() {
       return { questionId: q.id, answer: userAnswer, correct };
     });
 
-    addAttempt({
+    const attempt = {
       categoryId,
-      studentName: "Student",
+      studentId: user?.id,
+      studentName: user?.name || user?.email?.split("@")[0] || "Student",
       answers: answerDetails,
       score,
-      total: categoryQuestions.length,
-    });
+      total,
+    };
+
+    addAttempt(attempt);
+
     router.push(`/student/exams/${categoryId}/result`);
   }
 

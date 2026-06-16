@@ -298,7 +298,7 @@ export default function CourseDetailPage() {
           <div>
             <h1 className="text-2xl font-bold text-primary">{course.title}</h1>
             <p className="text-sm text-muted">
-              {course.category} · {course.duration} · {course.classLevel}
+              {course.category} · {course.duration} · {course.qualification}
             </p>
           </div>
         </div>

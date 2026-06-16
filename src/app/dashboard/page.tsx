@@ -43,7 +43,7 @@ interface AnalyticsData {
   latestNotices: { id: string; title: string; category: string; date: string; isPinned: boolean }[];
 }
 
-const CHART_COLORS = ["#07220B", "#2563eb", "#d97706", "#059669", "#7c3aed", "#dc2626", "#0891b2", "#db2777"];
+const CHART_COLORS = ["hsl(var(--primary))", "#2563eb", "#d97706", "#059669", "#7c3aed", "#dc2626", "#0891b2", "#db2777"];
 
 function ChartTooltip({
   active,
@@ -344,15 +344,15 @@ export default function DashboardPage() {
                       <AreaChart data={data.studentGrowth} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                         <defs>
                           <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#07220B" stopOpacity={0.15} />
-                            <stop offset="95%" stopColor="#07220B" stopOpacity={0} />
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.15} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.06)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                        <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
                         <Tooltip content={<ChartTooltip valueLabel="Students" />} />
-                        <Area type="monotone" dataKey="count" stroke="#07220B" strokeWidth={2} fill="url(#sg)" />
+                        <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#sg)" />
                       </AreaChart>
                     </ResponsiveContainer>
                   </div>
@@ -414,8 +414,8 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.enrollmentTrends} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.06)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                        <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
                         <Tooltip content={<ChartTooltip valueLabel="Enrollments" />} />
                         <Bar dataKey="count" fill="#2563eb" radius={[4, 4, 0, 0]} />
                       </BarChart>
@@ -446,8 +446,8 @@ export default function DashboardPage() {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.06)" />
-                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                        <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickFormatter={(v) => `$${v}`} tickLine={false} axisLine={false} />
                         <Tooltip content={<ChartTooltip valueLabel="Revenue" formatValue={(v) => `$${v.toLocaleString()}`} />} />
                         <Area type="monotone" dataKey="amount" stroke="#059669" strokeWidth={2} fill="url(#rev)" />
                       </AreaChart>
@@ -475,8 +475,8 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.coursePopularity} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.06)" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "#07220B" }} tickLine={false} axisLine={false} width={140} />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--primary))" }} tickLine={false} axisLine={false} width={140} />
                         <Tooltip content={<ChartTooltip valueLabel="Enrollments" />} />
                         <Bar dataKey="count" fill="#d97706" radius={[0, 4, 4, 0]} />
                       </BarChart>
@@ -501,8 +501,8 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={data.studentsByClass} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--primary) / 0.06)" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                        <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: "hsl(var(--primary) / 0.4)" }} tickLine={false} axisLine={false} />
                         <Tooltip content={<ChartTooltip valueLabel="Students" />} />
                         <Bar dataKey="count" fill="#7c3aed" radius={[4, 4, 0, 0]} />
                       </BarChart>

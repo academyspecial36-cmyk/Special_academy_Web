@@ -72,7 +72,7 @@ export function CoursesSection() {
                   </span>
                   <span className="flex items-center gap-1">
                     <Users className="w-3.5 h-3.5" />
-                    {course.classLevel}
+                    {course.qualification}
                   </span>
                 </div>
 

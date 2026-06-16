@@ -315,7 +315,7 @@ export default function CommunicationsPage() {
                 <div className="flex flex-wrap gap-2 mb-3">
                   {[
                     { value: "all", label: "All Students & Parents" },
-                    { value: "class", label: "By Class" },
+                    { value: "class", label: "By Qualification" },
                     { value: "specific", label: "Specific Students" },
                   ].map((opt) => (
                     <button

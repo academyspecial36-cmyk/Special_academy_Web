@@ -6,10 +6,8 @@ import Image from "next/image";
 import { X, Pin, Calendar, User } from "lucide-react";
 import { useAppContext } from "@/lib/app-context";
 
-const SESSION_KEY = "pinned-notice-dismissed";
-
 export function PinnedNoticePopup() {
-  const { notices, settings } = useAppContext();
+  const { notices, settings, loading } = useAppContext();
   const [open, setOpen] = useState(false);
 
   const enabled = settings.config?.enablePinnedPopup !== false;
@@ -17,15 +15,12 @@ export function PinnedNoticePopup() {
   const latest = pinned.length > 0 ? pinned.reduce((a, b) => (a.date > b.date ? a : b)) : null;
 
   useEffect(() => {
-    if (!enabled || !latest) return;
-    const dismissed = sessionStorage.getItem(SESSION_KEY);
-    if (dismissed === latest.id) return;
+    if (loading || !enabled || !latest) return;
     const timer = setTimeout(() => setOpen(true), 800);
     return () => clearTimeout(timer);
-  }, [enabled, latest]);
+  }, [loading, enabled, latest]);
 
   function handleClose() {
-    if (latest) sessionStorage.setItem(SESSION_KEY, latest.id);
     setOpen(false);
   }
 

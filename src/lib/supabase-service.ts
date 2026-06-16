@@ -60,7 +60,7 @@ function mapCourse(c: Record<string, unknown>): Course {
     slug: String(c.slug),
     description: String(c.description ?? ""),
     duration: String(c.duration ?? ""),
-    classLevel: String(c.class_level ?? ""),
+    qualification: String(c.class_level ?? ""),
     features: (c.features as string[]) ?? [],
     image: String(c.image ?? ""),
     category: String(c.category ?? ""),
@@ -232,7 +232,7 @@ export async function fetchTestimonials(): Promise<Testimonial[]> {
     rating: Number(t.rating),
     image: t.image ? String(t.image) : undefined,
     achievement: t.achievement ? String(t.achievement) : undefined,
-    class: t.class ? String(t.class) : undefined,
+    qualification: t.class ? String(t.class) : undefined,
   }));
 }
 
@@ -253,12 +253,11 @@ export async function addEnrollment(data: EnrollmentFormData) {
     full_name: data.fullName,
     email: data.email,
     phone: data.phone,
-    current_class: data.currentClass,
+    qualification_id: data.qualificationId,
     interested_course: data.interestedCourse,
     guardian_name: data.guardianName,
     guardian_contact: data.guardianContact,
     address: data.address,
-    previous_school: data.previousSchool,
     message: data.message,
   });
 }

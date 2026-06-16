@@ -202,7 +202,8 @@ export default function SettingsPage() {
         mergedConfig.backupHistory = backupHistory;
       }
       payload.config = mergedConfig;
-      updateSettings(payload as Partial<AppSettings>);
+      await updateSettings(payload as Partial<AppSettings>);
+      localStorage.setItem("app-theme", JSON.stringify(mergedConfig.theme));
       toast.success("Settings saved");
     } catch {
       toast.error("Failed to save settings");

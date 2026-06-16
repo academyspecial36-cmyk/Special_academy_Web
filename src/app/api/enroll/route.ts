@@ -10,7 +10,7 @@ function generateCode(): string {
 export async function POST(request: Request) {
   try {
     const {
-      fullName, email, phone, password,
+      fullName, email, phone, qualificationId, password,
       interestedCourse, guardianName, guardianContact,
       address, message,
     } = await request.json();
@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       full_name: fullName,
       email,
       phone,
+      qualification_id: qualificationId || null,
       interested_course: interestedCourse || null,
       guardian_name: guardianName || null,
       guardian_contact: guardianContact || null,

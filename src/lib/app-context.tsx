@@ -18,6 +18,12 @@ interface NoticeCategory {
   color: string;
 }
 
+export interface Qualification {
+  id: string;
+  name: string;
+  sortOrder: number;
+}
+
 export interface SocialLinks {
   facebook: string;
   instagram: string;
@@ -106,7 +112,7 @@ interface Enrollment {
   fullName: string;
   email: string;
   interestedCourse: string;
-  currentClass: string;
+  qualificationId: string;
   createdAt: string;
   status: "unverified" | "pending" | "approved" | "rejected";
   rejectionMessage?: string;
@@ -128,6 +134,11 @@ interface AppContextValue {
   settings: AppSettings;
   subcategories: Subcategory[];
   completedItems: string[];
+  qualifications: Qualification[];
+  setQualifications: (q: Qualification[]) => void;
+  addQualification: (q: Omit<Qualification, "id">) => void;
+  updateQualification: (id: string, data: Partial<Qualification>) => void;
+  deleteQualification: (id: string) => void;
   toggleItemComplete: (itemId: string) => void;
   setFaqs: (faqs: FAQ[]) => void;
   addFaq: (faq: Omit<FAQ, "id" | "sortOrder">) => void;
@@ -387,11 +398,11 @@ const defaultSettings: AppSettings = {
 };
 
 const initialEnrollments: Enrollment[] = [
-  { id: "1", fullName: "Arafat Hossain", email: "arafat@example.com", interestedCourse: "Cadet Entrance Preparation", currentClass: "Class 8", createdAt: "2025-12-01", status: "pending" },
-  { id: "2", fullName: "Tasnim Rahman", email: "tasnim@example.com", interestedCourse: "Scholarship Preparation", currentClass: "Class 6", createdAt: "2025-12-02", status: "approved" },
-  { id: "3", fullName: "Sadia Islam", email: "sadia@example.com", interestedCourse: "Leadership Development", currentClass: "Class 7", createdAt: "2025-12-03", status: "pending" },
-  { id: "4", fullName: "Rafiq Ahmed", email: "rafiq@example.com", interestedCourse: "Foundation Classes", currentClass: "Class 9", createdAt: "2025-12-04", status: "rejected" },
-  { id: "5", fullName: "Nusrat Jahan", email: "nusrat@example.com", interestedCourse: "Spoken English", currentClass: "Class 10", createdAt: "2025-12-05", status: "approved" },
+  { id: "1", fullName: "Arafat Hossain", email: "arafat@example.com", interestedCourse: "Cadet Entrance Preparation", qualificationId: "qual-1", createdAt: "2025-12-01", status: "pending" },
+  { id: "2", fullName: "Tasnim Rahman", email: "tasnim@example.com", interestedCourse: "Scholarship Preparation", qualificationId: "qual-2", createdAt: "2025-12-02", status: "approved" },
+  { id: "3", fullName: "Sadia Islam", email: "sadia@example.com", interestedCourse: "Leadership Development", qualificationId: "qual-3", createdAt: "2025-12-03", status: "pending" },
+  { id: "4", fullName: "Rafiq Ahmed", email: "rafiq@example.com", interestedCourse: "Foundation Classes", qualificationId: "qual-4", createdAt: "2025-12-04", status: "rejected" },
+  { id: "5", fullName: "Nusrat Jahan", email: "nusrat@example.com", interestedCourse: "Spoken English", qualificationId: "qual-5", createdAt: "2025-12-05", status: "approved" },
 ];
 
 function createSeedSubcategories(): Subcategory[] {
@@ -583,6 +594,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [subcategories, setSubcategories] = useState<Subcategory[]>(createSeedSubcategories);
   const [completedItems, setCompletedItems] = useState<string[]>([]);
+  const [qualifications, setQualifications] = useState<Qualification[]>([]);
   const [examCategories, setExamCategories] = useState<ExamCategory[]>(createSeedExamCategories);
   const [questions, setQuestions] = useState<Question[]>(createSeedQuestions);
   const [attempts, setAttempts] = useState<ExamAttempt[]>(createSeedAttempts);
@@ -596,7 +608,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     async function loadAll() {
       try {
-        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData] = await Promise.all([
+        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData, qualificationData] = await Promise.all([
           apiList("faqs"),
           apiList("faculty_members"),
           apiList("courses"),
@@ -609,12 +621,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
           apiList("items"),
           apiList("exam_categories"),
           apiList("questions"),
+          apiList("qualifications"),
         ]);
 
         if (Array.isArray(faqData) && faqData.length) setFaqs(faqData);
         if (Array.isArray(facultyData) && facultyData.length) setFacultyMembers(facultyData);
         if (Array.isArray(courseData) && courseData.length) setCourses(courseData);
-        if (Array.isArray(noticeData) && noticeData.length) setNotices(noticeData);
+        if (Array.isArray(noticeData)) setNotices(noticeData);
         if (Array.isArray(testimonialData) && testimonialData.length) setTestimonials(testimonialData);
         if (Array.isArray(galleryData) && galleryData.length) setGalleryImages(galleryData);
         if (Array.isArray(catData) && catData.length) setCourseCategories(catData.map((c: { name: string }) => c.name));
@@ -628,6 +641,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         if (Array.isArray(examCatData) && examCatData.length) setExamCategories(examCatData);
         if (Array.isArray(qData) && qData.length) setQuestions(qData);
+        if (Array.isArray(qualificationData) && qualificationData.length) {
+          setQualifications((qualificationData as Qualification[]).sort((a, b) => a.sortOrder - b.sortOrder));
+        }
 
         try {
           const settingsRes = await fetch("/api/settings");
@@ -840,8 +856,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateSettings = useCallback(async (s: Partial<AppSettings>) => {
+    const all = await apiList("settings");
+    const sorted = (all as { id: string }[]).sort((a, b) => a.id.localeCompare(b.id));
+    if (sorted.length) await apiUpdate("settings", sorted[0].id, s);
     setSettings((prev) => ({ ...prev, ...s }));
-    try { const all = await apiList("settings"); if (all.length) await apiUpdate("settings", all[0].id, s); } catch { /* silent */ }
   }, []);
 
   // ----- Subcategories -----
@@ -930,6 +948,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try { apiCreate("exam_attempts", attempt); } catch { /* silent */ }
   }, []);
 
+  // ----- Qualifications -----
+  const addQualification = useCallback(async (q: Omit<Qualification, "id">) => {
+    const id = generateId();
+    setQualifications((prev) => [...prev, { ...q, id }].sort((a, b) => a.sortOrder - b.sortOrder));
+    try { await apiCreate("qualifications", { id, ...q }); } catch { /* silent */ }
+  }, []);
+
+  const updateQualification = useCallback(async (id: string, data: Partial<Qualification>) => {
+    setQualifications((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)));
+    try { await apiUpdate("qualifications", id, data); } catch { /* silent */ }
+  }, []);
+
+  const deleteQualification = useCallback(async (id: string) => {
+    setQualifications((prev) => prev.filter((q) => q.id !== id));
+    try { await apiDelete("qualifications", id); } catch { /* silent */ }
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -937,6 +972,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         faqs, facultyMembers,
         courses, notices, testimonials, galleryImages, students, enrollments,
         courseCategories, noticeCategories, settings,
+        qualifications, setQualifications, addQualification, updateQualification, deleteQualification,
         subcategories, completedItems, toggleItemComplete,
         setFaqs, addFaq, updateFaq, deleteFaq,
         addFacultyMember, updateFacultyMember, deleteFacultyMember,

@@ -49,6 +49,7 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
   {
     type: "group", label: "System", icon: "Settings",
     children: [
+      { label: "AI Command Center", href: "/dashboard/ai", icon: "Sparkles" },
       { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
       { label: "Communications", href: "/dashboard/communications", icon: "Megaphone" },
       { label: "Contact", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
@@ -85,7 +86,13 @@ export const COURSE_CATEGORIES = [
   "Physical",
 ];
 
-export const CLASS_LEVELS = [
+export const QUALIFICATIONS = [
+  "Class 8",
+  "Class 9",
+  "Class 10",
+  "Class 11",
   "Class 12",
-  "Becholor"
+  "+2",
+  "Bachelor",
+  "Master",
 ];

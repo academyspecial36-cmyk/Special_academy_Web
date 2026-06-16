@@ -52,7 +52,7 @@ export default function StudentCourseDetailPage() {
         </Button>
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-primary truncate">{course.title}</h1>
-          <p className="text-xs sm:text-sm text-muted truncate">{course.category} · {course.duration} · {course.classLevel}</p>
+          <p className="text-xs sm:text-sm text-muted truncate">{course.category} · {course.duration} · {course.qualification}</p>
         </div>
       </div>
 

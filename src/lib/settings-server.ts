@@ -316,6 +316,9 @@ export function getDefaultSettings(): AppSettings {
 
 export async function seedSettings() {
   const svc = createServiceRoleSupabase();
+  const { count } = await svc.from("settings").select("*", { count: "exact", head: true });
+  if (count && count > 0) return;
+
   const defaults = { ...getDefaultSettings(), ...envDefaults };
   const { error } = await svc.from("settings").insert({
     academy_name: defaults.academyName,
@@ -342,10 +345,10 @@ export async function seedSettings() {
 export async function fetchSettings(): Promise<AppSettings> {
   try {
     const svc = createServiceRoleSupabase();
-    let { data } = await svc.from("settings").select("*").maybeSingle();
+    let { data } = await svc.from("settings").select("*").order("id").limit(1).maybeSingle();
     if (!data) {
       await seedSettings();
-      const { data: newData } = await svc.from("settings").select("*").maybeSingle();
+      const { data: newData } = await svc.from("settings").select("*").order("id").limit(1).maybeSingle();
       data = newData;
       if (!data) return { ...getDefaultSettings(), ...envDefaults };
     }
