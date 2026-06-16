@@ -6,6 +6,8 @@ import {
   Bell, GraduationCap, HelpCircle, MessageSquare, Tags, ImageIcon,
   Settings, Palette, Shield, Cloud, Eye, ArrowRight, Star,
   Globe, Layout, ToggleLeft, Sun, Scale, Search, Wifi,
+  StickyNote,
+  Send,
 } from "lucide-react";
 
 interface StepItem {
@@ -24,7 +26,7 @@ interface GuideSection {
   warns?: string[];
 }
 
-const sections: GuideSection[] = [
+ const sections: GuideSection[] = [
   // ═══════════════════════════════════════════════════════════════
   // LOGIN
   // ═══════════════════════════════════════════════════════════════
@@ -253,6 +255,66 @@ const sections: GuideSection[] = [
     ],
     items: [
       "You will receive an in-app notification (bell icon) whenever a new contact submission arrives.",
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // COMMUNICATIONS
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "communications",
+    title: "Communications — Bulk Email & SMS Broadcasts",
+    icon: Send,
+    steps: [
+      { step: "1", title: "Compose a New Broadcast", desc: 'Go to Communications in the sidebar. In the "Compose" tab, choose your channel: Email (for rich-text newsletters) or SMS (for quick mobile updates). Select your recipients: All Students, by Class, or Specific Students.' },
+      { step: "2", title: "Use Message Variables", desc: "Personalize your messages using variable chips like {{name}}, {{email}}, or {{phone}}. The system automatically replaces these with the student's actual details when sending." },
+      { step: "3", title: "Apply Templates", desc: "Click the 'Templates' button in the compose area to pick from your saved message templates or quick system samples. This saves you from typing the same message repeatedly." },
+      { step: "4", title: "Preview and Send", desc: "Click 'Preview' to see how your message will look. When ready, click 'Send'. Emails are sent via the Resend API, and the delivery progress is tracked in real-time." },
+      { step: "5", title: "Manage Templates", desc: "Switch to the 'Templates' tab to create, edit, or delete reusable message drafts. You can set specific subjects for email templates and use rich-text formatting." },
+      { step: "6", title: "Check Delivery History", desc: "The 'History' tab shows a log of every broadcast you've sent. You can see the total recipients, success/failure counts, and click on any record to see detailed delivery status per student." },
+    ],
+    items: [
+      "Bulk emails support HTML formatting. SMS messages should be kept short for cost-effectiveness.",
+      "The history log records the exact error message if a delivery fails (e.g. 'Invalid email address').",
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // MEDIA MANAGER
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "media",
+    title: "Media Manager — Centralized File Management",
+    icon: ImageIcon,
+    steps: [
+      { step: "1", title: "Access the Library", desc: "Go to Media Manager in the sidebar. This is your central hub for all files used across the site: course videos, notice images, blog covers, and PDFs. It supports Images, Videos, Audio, and PDF files." },
+      { step: "2", title: "Upload and Organize", desc: "Click 'Upload' or simply drag and drop files directly into the browser. Create folders (and sub-folders) to keep your library organized. You can move files between folders by selecting them and clicking 'Move'." },
+      { step: "3", title: "Search and Filter", desc: "Use the search bar at the top to find files by name. Switch between 'Grid' (thumbnail preview) and 'List' (detailed info) views depending on your preference." },
+      { step: "4", title: "Optimize Images", desc: "For large images, click the 'Optimize' (crop) icon on the thumbnail. This will resize, compress, and re-upload the image to ensure your website loads fast without losing much quality." },
+      { step: "5", title: "File Actions", desc: "Double-click any file to preview it (watch videos, view PDFs). Use the pencil icon to rename a file or add Alt Text for SEO. Use the trash icon for bulk deletion." },
+    ],
+    tips: [
+      "Use the 'Copy URL' button in the preview modal to get a direct link to any file for use in custom content.",
+      "Optimizing images before using them in courses or blog posts significantly improves site speed for your users.",
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // NOTES
+  // ═══════════════════════════════════════════════════════════════
+  {
+    id: "notes",
+    title: "Notes — Internal Scratchpad & Reminders",
+    icon: StickyNote,
+    steps: [
+      { step: "1", title: "Create a New Note", desc: "Go to Notes in the sidebar. Click 'New Note' to open the editor. You can give your note a title and write using a rich-text editor that supports lists, checkboxes, and bold/italic text." },
+      { step: "2", title: "Organize with Colors & Tags", desc: "Choose a background color for your note to categorize it visually (e.g. Red for urgent, Green for ideas). Add tags (e.g. #admission, #reminder) to group related notes together." },
+      { step: "3", title: "Pin Important Notes", desc: "Click the pin icon on a note to keep it at the very top of your list. This is perfect for daily to-do lists or important contact numbers you need frequently." },
+      { step: "4", title: "Search and Filter", desc: "Use the search bar to find notes by text, or click on a tag to show only notes with that tag. The system also calculates reading time and word counts for each note." },
+    ],
+    items: [
+      "Notes are private to the admin dashboard and are not visible to students or public visitors.",
+      "Checkboxes in notes are interactive — you can mark tasks as complete directly from the note preview.",
     ],
   },
 
