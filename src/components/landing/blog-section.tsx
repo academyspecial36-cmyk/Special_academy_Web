@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Calendar, Clock, Loader2 } from "lucide-react";
+import { ArrowRight, Calendar, Clock } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
 import { formatShortDate } from "@/lib/utils";
 import type { BlogPost } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function BlogSection() {
   const { settings } = useAppContext();
@@ -47,8 +48,21 @@ export function BlogSection() {
   if (loading && posts.length === 0) {
     return (
       <section className="py-20 md:py-28 bg-accent">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHeader
+            label={labels?.label || "From Our Blog"}
+            title={labels?.title || "Latest Articles & Tips"}
+            description={labels?.description || ""}
+          />
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="bg-white rounded-xl overflow-hidden border border-primary/5 p-5 space-y-4 flex flex-col h-[300px]">
+                <Skeleton className="h-40 w-full rounded-lg" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-full" />
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );

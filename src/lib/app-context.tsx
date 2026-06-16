@@ -120,6 +120,7 @@ interface Enrollment {
 
 interface AppContextValue {
   loading: boolean;
+  dataLoading: boolean;
   loadAdminData: () => Promise<void>;
   faqs: FAQ[];
   facultyMembers: FacultyMember[];
@@ -581,6 +582,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [facultyMembers, setFacultyMembers] = useState<FacultyMember[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -603,63 +605,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const hasApi = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!hasApi) {
       setLoading(false);
+      setDataLoading(false);
       return;
     }
 
-    async function loadAll() {
+    async function loadBootstrap() {
+      // 1. Fetch settings first to unblock initial render
       try {
-        const [faqData, facultyData, courseData, noticeData, testimonialData, galleryData, catData, noticeCatData, subData, itemsData, examCatData, qData, qualificationData] = await Promise.all([
-          apiList("faqs"),
-          apiList("faculty_members"),
-          apiList("courses"),
-          apiList("notices"),
-          apiList("testimonials"),
-          apiList("gallery_images"),
-          apiList("course_categories"),
-          apiList("notice_categories"),
-          apiList("subcategories"),
-          apiList("items"),
-          apiList("exam_categories"),
-          apiList("questions"),
-          apiList("qualifications"),
-        ]);
-
-        if (Array.isArray(faqData) && faqData.length) setFaqs(faqData);
-        if (Array.isArray(facultyData) && facultyData.length) setFacultyMembers(facultyData);
-        if (Array.isArray(courseData) && courseData.length) setCourses(courseData);
-        if (Array.isArray(noticeData)) setNotices(noticeData);
-        if (Array.isArray(testimonialData) && testimonialData.length) setTestimonials(testimonialData);
-        if (Array.isArray(galleryData) && galleryData.length) setGalleryImages(galleryData);
-        if (Array.isArray(catData) && catData.length) setCourseCategories(catData.map((c: { name: string }) => c.name));
-        if (Array.isArray(noticeCatData) && noticeCatData.length) setNoticeCategories(noticeCatData);
-        if (Array.isArray(subData) && subData.length) {
-          const items = Array.isArray(itemsData) ? itemsData : [];
-          setSubcategories(subData.map((s: Subcategory) => ({
-            ...s,
-            items: items.filter((i: Item) => i.subcategoryId === s.id),
-          })));
+        const settingsRes = await fetch("/api/settings");
+        if (settingsRes.ok) {
+          const { settings: merged } = await settingsRes.json();
+          setSettings(merged);
         }
-        if (Array.isArray(examCatData) && examCatData.length) setExamCategories(examCatData);
-        if (Array.isArray(qData) && qData.length) setQuestions(qData);
-        if (Array.isArray(qualificationData) && qualificationData.length) {
-          setQualifications((qualificationData as Qualification[]).sort((a, b) => a.sortOrder - b.sortOrder));
-        }
-
-        try {
-          const settingsRes = await fetch("/api/settings");
-          if (settingsRes.ok) {
-            const { settings: merged } = await settingsRes.json();
-            setSettings(merged);
-          }
-        } catch { /* fallback to defaults */ }
-      } catch (err) {
-        console.log("API load failed:", err);
+      } catch {
+        /* fallback to defaults */
       } finally {
         setLoading(false);
       }
+
+      // 2. Fetch the consolidated bootstrap data in the background
+      try {
+        const bootstrapRes = await fetch("/api/bootstrap");
+        if (bootstrapRes.ok) {
+          const data = await bootstrapRes.json();
+          if (data.settings) setSettings(data.settings);
+          if (Array.isArray(data.faqs) && data.faqs.length) setFaqs(data.faqs);
+          if (Array.isArray(data.facultyMembers) && data.facultyMembers.length) setFacultyMembers(data.facultyMembers);
+          if (Array.isArray(data.courses) && data.courses.length) setCourses(data.courses);
+          if (Array.isArray(data.notices)) setNotices(data.notices);
+          if (Array.isArray(data.testimonials) && data.testimonials.length) setTestimonials(data.testimonials);
+          if (Array.isArray(data.galleryImages) && data.galleryImages.length) setGalleryImages(data.galleryImages);
+          if (Array.isArray(data.courseCategories) && data.courseCategories.length) setCourseCategories(data.courseCategories.map((c: { name: string }) => c.name));
+          if (Array.isArray(data.noticeCategories) && data.noticeCategories.length) setNoticeCategories(data.noticeCategories);
+          if (Array.isArray(data.subcategories) && data.subcategories.length) {
+            const items = Array.isArray(data.items) ? data.items : [];
+            setSubcategories(data.subcategories.map((s: Subcategory) => ({
+              ...s,
+              items: items.filter((i: Item) => i.subcategoryId === s.id),
+            })));
+          }
+          if (Array.isArray(data.examCategories) && data.examCategories.length) setExamCategories(data.examCategories);
+          if (Array.isArray(data.questions) && data.questions.length) setQuestions(data.questions);
+          if (Array.isArray(data.qualifications) && data.qualifications.length) {
+            setQualifications((data.qualifications as Qualification[]).sort((a, b) => a.sortOrder - b.sortOrder));
+          }
+        }
+      } catch (err) {
+        console.log("Bootstrap load failed:", err);
+      } finally {
+        setDataLoading(false);
+      }
     }
 
-    loadAll();
+    loadBootstrap();
   }, []);
 
   const loadAdminData = useCallback(async () => {
@@ -968,7 +966,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        loading, loadAdminData,
+        loading, dataLoading, loadAdminData,
         faqs, facultyMembers,
         courses, notices, testimonials, galleryImages, students, enrollments,
         courseCategories, noticeCategories, settings,

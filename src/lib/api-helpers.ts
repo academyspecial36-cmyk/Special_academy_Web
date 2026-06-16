@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase, createServiceRoleSupabase } from "./supabase-server";
 import { createNotificationForRole } from "./notifications";
+import { clearBootstrapCache } from "./bootstrap-cache";
 
 type Entity = string;
 
@@ -106,6 +107,7 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
     return NextResponse.json({ error: "Invalid table" }, { status: 400 });
   }
 
+  clearBootstrapCache();
   const supabase = await createServerSupabase();
 
   if (RESTRICTED_TABLES.includes(table)) {
@@ -149,6 +151,7 @@ export async function handlePut(table: string, id: string, body: Record<string, 
     return NextResponse.json({ error: "Invalid table" }, { status: 400 });
   }
 
+  clearBootstrapCache();
   const supabase = await createServerSupabase();
 
   if (RESTRICTED_TABLES.includes(table)) {
@@ -170,6 +173,7 @@ export async function handleDelete(table: string, id: string) {
     return NextResponse.json({ error: "Invalid table" }, { status: 400 });
   }
 
+  clearBootstrapCache();
   const supabase = await createServerSupabase();
 
   if (RESTRICTED_TABLES.includes(table)) {

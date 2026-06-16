@@ -1,6 +1,15 @@
 import { createServiceRoleSupabase } from "./supabase-server";
 import type { SocialLinks } from "./app-context";
 
+let cachedSettings: AppSettings | null = null;
+let settingsCacheExpiry = 0;
+const SETTINGS_CACHE_TTL_MS = 30_000; // 30 seconds
+
+export function clearSettingsCache() {
+  cachedSettings = null;
+  settingsCacheExpiry = 0;
+}
+
 export type SectionKey =
   | "hero" | "about" | "whyChoose" | "cadetOverview" | "stats"
   | "courses" | "freeResources" | "notices" | "testimonials" | "faculty"
@@ -343,6 +352,11 @@ export async function seedSettings() {
 }
 
 export async function fetchSettings(): Promise<AppSettings> {
+  const now = Date.now();
+  if (cachedSettings && now < settingsCacheExpiry) {
+    return cachedSettings;
+  }
+
   try {
     const svc = createServiceRoleSupabase();
     let { data } = await svc.from("settings").select("*").order("id").limit(1).maybeSingle();
@@ -380,7 +394,7 @@ export async function fetchSettings(): Promise<AppSettings> {
     };
     const socialLinks = (row.social_links as SocialLinks) || getDefaultSettings().socialLinks;
 
-    return {
+    const result = {
       academyName:
         String(row.academy_name || row.academyName || envDefaults.academyName || getDefaultSettings().academyName),
       tagline: String(row.tagline || getDefaultSettings().tagline),
@@ -403,6 +417,10 @@ export async function fetchSettings(): Promise<AppSettings> {
         gaTrackingId: String(config.seo?.gaTrackingId || ""),
       },
     };
+
+    cachedSettings = result;
+    settingsCacheExpiry = Date.now() + SETTINGS_CACHE_TTL_MS;
+    return result;
   } catch {
     return { ...getDefaultSettings(), ...envDefaults };
   }
