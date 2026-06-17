@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, GraduationCap,
   User as UserIcon, Lock, Mail, Shield, Loader2, Eye, EyeOff,
+  PenLine, BookOpen, KeyRound, BadgeCheck, Sparkles,
+  FileText, Users, Phone, MapPin, MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/shared/page-wrapper";
@@ -27,6 +29,39 @@ const steps = [
   { label: "Create Account", fields: ["password", "confirmPassword"] },
   { label: "Verify", fields: [] },
   { label: "Review", fields: [] },
+];
+
+const guideSteps = [
+  {
+    icon: PenLine,
+    title: "Step 1: Your Details",
+    desc: "Tell us your name, email, phone, and what class you are in right now.",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    icon: BookOpen,
+    title: "Step 2: Choose Course & Guardian",
+    desc: "Pick the course you want to join. Add your parent or guardian's name and phone number.",
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    icon: KeyRound,
+    title: "Step 3: Create Password",
+    desc: "Make a password to protect your account. Type it twice so you don't make a mistake.",
+    color: "bg-amber-50 text-amber-600",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Step 4: Verify Email",
+    desc: "We will send a secret code to your email. Type that code here to prove the email is yours.",
+    color: "bg-emerald-50 text-emerald-600",
+  },
+  {
+    icon: Sparkles,
+    title: "Step 5: Submit & Done!",
+    desc: "Check everything one last time, then click Submit. We will contact you in 2-3 days.",
+    color: "bg-rose-50 text-rose-600",
+  },
 ];
 
 export default function EnrollmentPage() {
@@ -204,21 +239,97 @@ export default function EnrollmentPage() {
 
   return (
     <PageWrapper>
+      {/* Hero */}
       <section className="bg-primary py-16 md:py-24 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">Create Account</h1>
-            <p className="text-lg text-white/70">
-              Create your account and apply for admission. Fill out the form below to get started.
-            </p>
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-4xl md:text-5xl font-bold mb-4"
+            >
+              Join Cadet Academy
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-lg text-white/70"
+            >
+              Follow these 5 easy steps to apply. It only takes a few minutes!
+            </motion.p>
           </div>
         </div>
       </section>
 
-      <section className="py-16 md:py-24 bg-accent">
+      {/* How to Enroll — Visual Guide */}
+      <section className="py-12 md:py-16 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">
+              📋 How to Apply — 5 Simple Steps
+            </h2>
+            <p className="text-muted max-w-xl mx-auto">
+              Do not worry! Just follow each step one by one. We are here to help you.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {guideSteps.map((g, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="relative group"
+              >
+                <div className="h-full rounded-2xl border border-primary/5 bg-accent/30 p-5 text-center hover:shadow-md hover:border-primary/20 transition-all">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${g.color}`}>
+                    <g.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-sm font-bold text-primary mb-1.5">{g.title}</h3>
+                  <p className="text-xs text-muted leading-relaxed">{g.desc}</p>
+                </div>
+                {i < guideSteps.length - 1 && (
+                  <div className="hidden lg:block absolute top-1/2 -right-3 z-10 text-muted/30">
+                    <ArrowRight className="w-5 h-5" />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-8 p-4 bg-amber-50 rounded-xl border border-amber-200 text-center"
+          >
+            <p className="text-sm text-amber-800 font-medium">
+              ⚡ Before you start — keep these ready:
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-2 text-xs text-amber-700">
+              <span>📧 Your email address</span>
+              <span className="hidden sm:inline">·</span>
+              <span>📱 Parent's phone number</span>
+              <span className="hidden sm:inline">·</span>
+              <span>🏠 Your home address</span>
+              <span className="hidden sm:inline">·</span>
+              <span>👨‍👩‍👧 Parent's name</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Enrollment Form */}
+      <section className="py-12 md:py-20 bg-accent">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Stepper */}
-          <div className="mb-10">
+          <div className="mb-8">
             <div className="flex items-center justify-between gap-1 sm:gap-0">
               {steps.map((s, i) => (
                 <div key={i} className="flex items-center flex-1 last:flex-none min-w-0">
@@ -254,17 +365,25 @@ export default function EnrollmentPage() {
           >
             {step === 0 && (
               <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-2">Personal Information</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                    <PenLine className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary">Your Personal Details</h3>
+                    <p className="text-sm text-muted">Tell us about yourself.</p>
+                  </div>
+                </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Full Name *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your full name? *</label>
                   <Input
-                    placeholder="Enter your full name"
+                    placeholder="Type your full name here"
                     value={formData.fullName}
                     onChange={(e) => updateField("fullName", e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Email *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your email address? *</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
@@ -275,9 +394,10 @@ export default function EnrollmentPage() {
                       className="pl-10"
                     />
                   </div>
+                  <p className="text-xs text-muted mt-1">We will send a verification code here.</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Phone Number</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your phone number?</label>
                   <Input
                     placeholder="+977 98XXXXXXXX"
                     value={formData.phone}
@@ -285,12 +405,12 @@ export default function EnrollmentPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Current Qualification *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Which class are you in right now? *</label>
                   <Select
                     value={formData.qualificationId}
                     onChange={(e) => updateField("qualificationId", e.target.value)}
                   >
-                    <option value="">Select your current class</option>
+                    <option value="">Choose your current class</option>
                     {qualificationOptions.map((q) => (
                       <option key={q.id} value={q.id}>{q.name}</option>
                     ))}
@@ -301,69 +421,100 @@ export default function EnrollmentPage() {
 
             {step === 1 && (
               <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-2">Course & Guardian Info</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary">Course & Parent Details</h3>
+                    <p className="text-sm text-muted">Pick a course and add your parent's info.</p>
+                  </div>
+                </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Interested Course *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Which course do you want to join? *</label>
                   <Select
                     value={formData.interestedCourse}
                     onChange={(e) => updateField("interestedCourse", e.target.value)}
                   >
-                    <option value="">Select course</option>
+                    <option value="">Choose a course</option>
                     {courses.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Guardian Name</label>
-                  <Input
-                    placeholder="Guardian's full name"
-                    value={formData.guardianName}
-                    onChange={(e) => updateField("guardianName", e.target.value)}
-                  />
+                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your parent or guardian's name?</label>
+                  <div className="relative">
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                    <Input
+                      placeholder="Parent or guardian's full name"
+                      value={formData.guardianName}
+                      onChange={(e) => updateField("guardianName", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Guardian Contact</label>
-                  <Input
-                    placeholder="Guardian's phone number"
-                    value={formData.guardianContact}
-                    onChange={(e) => updateField("guardianContact", e.target.value)}
-                  />
+                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your parent's phone number?</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                    <Input
+                      placeholder="Parent's phone number"
+                      value={formData.guardianContact}
+                      onChange={(e) => updateField("guardianContact", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Address</label>
-                  <Textarea
-                    placeholder="Full residential address"
-                    rows={3}
-                    value={formData.address}
-                    onChange={(e) => updateField("address", e.target.value)}
-                  />
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Where do you live? (Full address)</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                    <Textarea
+                      placeholder="Type your full address here"
+                      rows={3}
+                      value={formData.address}
+                      onChange={(e) => updateField("address", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Additional Message</label>
-                  <Textarea
-                    placeholder="Any additional information..."
-                    rows={3}
-                    value={formData.message}
-                    onChange={(e) => updateField("message", e.target.value)}
-                  />
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Anything else you want to tell us?</label>
+                  <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted" />
+                    <Textarea
+                      placeholder="Write any extra information here..."
+                      rows={3}
+                      value={formData.message}
+                      onChange={(e) => updateField("message", e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {step === 2 && (
               <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-2">Create Account</h3>
-                <p className="text-sm text-muted mb-2">
-                  After this step, a verification code will be sent to your email.
-                </p>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                    <KeyRound className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary">Create Your Password</h3>
+                    <p className="text-sm text-muted">
+                      Make a password to keep your account safe. Remember it!
+                    </p>
+                  </div>
+                </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Password *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Create a password *</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder="Type your password"
                       value={formData.password}
                       onChange={(e) => updateField("password", e.target.value)}
                       className="pl-10 pr-10"
@@ -378,12 +529,12 @@ export default function EnrollmentPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Confirm Password *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Type the password again *</label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
+                      placeholder="Type your password one more time"
                       value={formData.confirmPassword}
                       onChange={(e) => updateField("confirmPassword", e.target.value)}
                       className="pl-10 pr-10"
@@ -397,7 +548,7 @@ export default function EnrollmentPage() {
                     </button>
                   </div>
                   {formData.confirmPassword && !passwordsMatch && (
-                    <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+                    <p className="text-xs text-red-500 mt-1">Oops! The two passwords do not match. Please type them again.</p>
                   )}
                 </div>
               </div>
@@ -405,18 +556,26 @@ export default function EnrollmentPage() {
 
             {step === 3 && (
               <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-2">Verify Your Email</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <BadgeCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary">Verify Your Email</h3>
+                    <p className="text-sm text-muted">Check your email for the secret code.</p>
+                  </div>
+                </div>
                 {codeSent && (
-                  <p className="text-sm text-muted">
-                    We sent a 6-digit code to <strong>{formData.email}</strong>. Enter it below to verify your email address.
+                  <p className="text-sm text-muted bg-blue-50 p-3 rounded-lg">
+                    📩 We sent a <strong>6-digit code</strong> to{" "}
+                    <strong>{formData.email}</strong>. Open your email, copy the code, and paste it below.
                   </p>
                 )}
                 {!codeSent && (
-                  <p className="text-sm text-muted">
-                    Preparing to send verification code...
-                  </p>
+                  <p className="text-sm text-muted">⏳ Preparing to send verification code...</p>
                 )}
-                <div className="max-w-xs mx-auto pt-2">
+                <div className="max-w-xs mx-auto pt-4">
+                  <label className="text-xs text-muted mb-2 block text-center">Enter the 6-digit code from your email</label>
                   <Input
                     placeholder="000000"
                     value={verificationCode}
@@ -428,7 +587,7 @@ export default function EnrollmentPage() {
                 {verified && (
                   <div className="flex items-center justify-center gap-2 text-emerald-600">
                     <CheckCircle2 className="w-5 h-5" />
-                    <span className="text-sm font-medium">Verified</span>
+                    <span className="text-sm font-medium">✅ Verified! Your email is confirmed.</span>
                   </div>
                 )}
               </div>
@@ -436,25 +595,41 @@ export default function EnrollmentPage() {
 
             {step === 4 && (
               <div className="space-y-5">
-                <h3 className="text-lg font-semibold text-primary mb-4">Review Your Application</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-primary">Review Before You Submit</h3>
+                    <p className="text-sm text-muted">Check everything carefully. Then click Submit!</p>
+                  </div>
+                </div>
                 {!verified && (
                   <div className="p-3 bg-amber-50 rounded-lg text-sm text-amber-700 mb-4">
-                    Please verify your email before submitting.
+                    ⚠️ Please verify your email before submitting.
                   </div>
                 )}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {Object.entries(formData).map(([key, value]) => {
                     if (!value || key === "confirmPassword" || key === "password") return null;
-                    const label = key === "qualificationId"
-                      ? "Qualification"
-                      : key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+                    const labels: Record<string, string> = {
+                      fullName: "Full Name",
+                      email: "Email",
+                      phone: "Phone",
+                      qualificationId: "Current Class",
+                      interestedCourse: "Course",
+                      guardianName: "Parent/Guardian Name",
+                      guardianContact: "Parent/Guardian Phone",
+                      address: "Address",
+                      message: "Additional Message",
+                    };
                     const displayValue = key === "qualificationId"
                       ? qualificationOptions.find((q) => q.id === value)?.name ?? value
                       : value;
                     return (
                       <div key={key} className="flex justify-between py-2 border-b border-primary/5">
-                        <span className="text-sm text-muted">{label}</span>
-                        <span className="text-sm font-medium text-primary">{displayValue}</span>
+                        <span className="text-sm text-muted">{labels[key] || key}</span>
+                        <span className="text-sm font-medium text-primary text-right max-w-[60%]">{displayValue}</span>
                       </div>
                     );
                   })}
@@ -462,7 +637,7 @@ export default function EnrollmentPage() {
                 {verified && (
                   <div className="flex items-center gap-2 text-emerald-600 pt-2">
                     <CheckCircle2 className="w-5 h-5" />
-                    <span className="text-sm font-medium">Email verified</span>
+                    <span className="text-sm font-medium">✅ Email verified</span>
                   </div>
                 )}
               </div>
@@ -517,7 +692,7 @@ export default function EnrollmentPage() {
 
               {step === 3 && !verified && (
                 <Button onClick={handleVerify} disabled={verifying || verificationCode.length < 6}>
-                  {verifying ? "Verifying..." : "Verify"}
+                  {verifying ? "Verifying..." : "Verify Email"}
                 </Button>
               )}
 

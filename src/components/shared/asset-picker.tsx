@@ -101,7 +101,7 @@ export function AssetPicker({ open, onClose, onSelect, filterMime, multiple }: A
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={onClose}>
       <div className="max-w-3xl w-full bg-white rounded-2xl shadow-elevated overflow-hidden flex flex-col max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-primary/5">

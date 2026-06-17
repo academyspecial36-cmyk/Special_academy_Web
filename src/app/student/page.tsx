@@ -21,14 +21,20 @@ import { formatShortDate } from "@/lib/utils";
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
-  const { subcategories, completedItems, notices } = useAppContext();
+  const { subcategories, completedItems, notices: contextNotices } = useAppContext();
   const [enrolledCourses, setEnrolledCourses] = useState<{ id: string; title: string; duration: string; qualification: string; category: string }[]>([]);
+  const [realNotices, setRealNotices] = useState<typeof contextNotices | null>(null);
+
+  const notices = realNotices ?? contextNotices;
 
   useEffect(() => {
-    fetch("/api/student-courses")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data.courses)) setEnrolledCourses(data.courses);
+    Promise.all([
+      fetch("/api/student-courses").then((r) => r.json()),
+      fetch("/api/student/notices").then((r) => r.json()),
+    ])
+      .then(([coursesData, noticesData]) => {
+        if (Array.isArray(coursesData.courses)) setEnrolledCourses(coursesData.courses);
+        if (Array.isArray(noticesData)) setRealNotices(noticesData);
       })
       .catch(() => {});
   }, []);
