@@ -4,10 +4,27 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  CheckCircle2, ArrowRight, ArrowLeft, GraduationCap,
-  User as UserIcon, Lock, Mail, Shield, Loader2, Eye, EyeOff,
-  PenLine, BookOpen, KeyRound, BadgeCheck, Sparkles,
-  FileText, Users, Phone, MapPin, MessageSquare,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  GraduationCap,
+  User as UserIcon,
+  Lock,
+  Mail,
+  Shield,
+  Loader2,
+  Eye,
+  EyeOff,
+  PenLine,
+  BookOpen,
+  KeyRound,
+  BadgeCheck,
+  Sparkles,
+  FileText,
+  Users,
+  Phone,
+  MapPin,
+  MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/shared/page-wrapper";
@@ -17,6 +34,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { apiList } from "@/lib/api-client";
 import { QUALIFICATIONS } from "@/constants";
+import { HowToEnrollButton } from "@/components/landing/how-to-enroll-guide";
 
 interface QualificationOption {
   id: string;
@@ -24,44 +42,17 @@ interface QualificationOption {
 }
 
 const steps = [
-  { label: "Personal Info", fields: ["fullName", "email", "phone", "qualificationId"] },
-  { label: "Course & Guardian", fields: ["interestedCourse", "guardianName", "guardianContact", "address"] },
+  {
+    label: "Personal Info",
+    fields: ["fullName", "email", "phone", "qualificationId"],
+  },
+  {
+    label: "Course & Guardian",
+    fields: ["interestedCourse", "guardianName", "guardianContact", "address"],
+  },
   { label: "Create Account", fields: ["password", "confirmPassword"] },
   { label: "Verify", fields: [] },
   { label: "Review", fields: [] },
-];
-
-const guideSteps = [
-  {
-    icon: PenLine,
-    title: "Step 1: Your Details",
-    desc: "Tell us your name, email, phone, and what class you are in right now.",
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    icon: BookOpen,
-    title: "Step 2: Choose Course & Guardian",
-    desc: "Pick the course you want to join. Add your parent or guardian's name and phone number.",
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    icon: KeyRound,
-    title: "Step 3: Create Password",
-    desc: "Make a password to protect your account. Type it twice so you don't make a mistake.",
-    color: "bg-amber-50 text-amber-600",
-  },
-  {
-    icon: BadgeCheck,
-    title: "Step 4: Verify Email",
-    desc: "We will send a secret code to your email. Type that code here to prove the email is yours.",
-    color: "bg-emerald-50 text-emerald-600",
-  },
-  {
-    icon: Sparkles,
-    title: "Step 5: Submit & Done!",
-    desc: "Check everything one last time, then click Submit. We will contact you in 2-3 days.",
-    color: "bg-rose-50 text-rose-600",
-  },
 ];
 
 export default function EnrollmentPage() {
@@ -76,7 +67,9 @@ export default function EnrollmentPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [courses, setCourses] = useState<string[]>([]);
-  const [qualificationOptions, setQualificationOptions] = useState<QualificationOption[]>([]);
+  const [qualificationOptions, setQualificationOptions] = useState<
+    QualificationOption[]
+  >([]);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -92,18 +85,24 @@ export default function EnrollmentPage() {
   });
 
   useEffect(() => {
-    apiList("courses").then((data) => {
-      if (Array.isArray(data) && data.length) {
-        setCourses(data.map((c: { title: string }) => c.title));
-      }
-    }).catch(() => {});
-    apiList("qualifications").then((data) => {
-      if (Array.isArray(data) && data.length) {
-        setQualificationOptions(data as QualificationOption[]);
-      }
-    }).catch(() => {
-      setQualificationOptions(QUALIFICATIONS.map((name) => ({ id: name, name })));
-    });
+    apiList("courses")
+      .then((data) => {
+        if (Array.isArray(data) && data.length) {
+          setCourses(data.map((c: { title: string }) => c.title));
+        }
+      })
+      .catch(() => {});
+    apiList("qualifications")
+      .then((data) => {
+        if (Array.isArray(data) && data.length) {
+          setQualificationOptions(data as QualificationOption[]);
+        }
+      })
+      .catch(() => {
+        setQualificationOptions(
+          QUALIFICATIONS.map((name) => ({ id: name, name })),
+        );
+      });
   }, []);
 
   const updateField = (field: string, value: string) => {
@@ -139,9 +138,18 @@ export default function EnrollmentPage() {
 
   const handleNext = async () => {
     if (step === 0) {
-      if (!formData.fullName) { toast.error("Please enter your full name"); return; }
-      if (!formData.email) { toast.error("Please enter your email"); return; }
-      if (!formData.qualificationId) { toast.error("Please select your current qualification"); return; }
+      if (!formData.fullName) {
+        toast.error("Please enter your full name");
+        return;
+      }
+      if (!formData.email) {
+        toast.error("Please enter your email");
+        return;
+      }
+      if (!formData.qualificationId) {
+        toast.error("Please select your current qualification");
+        return;
+      }
     }
     if (step === 2) {
       if (accountCreated) {
@@ -208,8 +216,12 @@ export default function EnrollmentPage() {
         <section className="bg-primary py-16 md:py-24 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">Enrollment</h1>
-              <p className="text-lg text-white/70">Apply for admission to Cadet Academy.</p>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                Enrollment
+              </h1>
+              <p className="text-lg text-white/70">
+                Apply for admission to Cadet Academy.
+              </p>
             </div>
           </div>
         </section>
@@ -223,10 +235,12 @@ export default function EnrollmentPage() {
             >
               <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </motion.div>
-            <h2 className="text-2xl font-bold text-primary mb-3">Application Submitted!</h2>
+            <h2 className="text-2xl font-bold text-primary mb-3">
+              Application Submitted!
+            </h2>
             <p className="text-muted mb-8">
-              Your email has been verified. Our admissions team will review your application and
-              contact you within 2-3 business days.
+              Your email has been verified. Our admissions team will review your
+              application and contact you within 2-3 business days.
             </p>
             <Button asChild>
               <Link href="/login">Sign In to Your Account</Link>
@@ -261,97 +275,58 @@ export default function EnrollmentPage() {
           </div>
         </div>
       </section>
-
-      {/* How to Enroll — Visual Guide */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-10"
-          >
-            <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2">
-              📋 How to Apply — 5 Simple Steps
-            </h2>
-            <p className="text-muted max-w-xl mx-auto">
-              Do not worry! Just follow each step one by one. We are here to help you.
-            </p>
-          </motion.div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {guideSteps.map((g, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="relative group"
-              >
-                <div className="h-full rounded-2xl border border-primary/5 bg-accent/30 p-5 text-center hover:shadow-md hover:border-primary/20 transition-all">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 ${g.color}`}>
-                    <g.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-sm font-bold text-primary mb-1.5">{g.title}</h3>
-                  <p className="text-xs text-muted leading-relaxed">{g.desc}</p>
-                </div>
-                {i < guideSteps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-3 z-10 text-muted/30">
-                    <ArrowRight className="w-5 h-5" />
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-8 p-4 bg-amber-50 rounded-xl border border-amber-200 text-center"
-          >
-            <p className="text-sm text-amber-800 font-medium">
-              ⚡ Before you start — keep these ready:
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-2 text-xs text-amber-700">
-              <span>📧 Your email address</span>
-              <span className="hidden sm:inline">·</span>
-              <span>📱 Parent's phone number</span>
-              <span className="hidden sm:inline">·</span>
-              <span>🏠 Your home address</span>
-              <span className="hidden sm:inline">·</span>
-              <span>👨‍👩‍👧 Parent's name</span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Enrollment Form */}
       <section className="py-12 md:py-20 bg-accent">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Stepper */}
+          {/* Stepper + How to Apply Button */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-6 text-white my-2"
+          >
+            <HowToEnrollButton />
+          </motion.div>
           <div className="mb-8">
-            <div className="flex items-center justify-between gap-1 sm:gap-0">
-              {steps.map((s, i) => (
-                <div key={i} className="flex items-center flex-1 last:flex-none min-w-0">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
-                        i <= step
-                          ? "bg-primary text-white"
-                          : "bg-white text-muted border border-primary/10"
-                      }`}
-                    >
-                      {i < step ? <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" /> : i + 1}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between gap-1 sm:gap-0 flex-1">
+                {steps.map((s, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center flex-1 last:flex-none min-w-0"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
+                          i <= step
+                            ? "bg-primary text-white"
+                            : "bg-white text-muted border border-primary/10"
+                        }`}
+                      >
+                        {i < step ? (
+                          <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        ) : (
+                          i + 1
+                        )}
+                      </div>
+                      <span
+                        className={`hidden sm:block text-xs mt-2 font-medium text-center leading-tight ${
+                          i <= step ? "text-primary" : "text-muted"
+                        }`}
+                      >
+                        {s.label}
+                      </span>
                     </div>
-                    <span className={`hidden sm:block text-xs mt-2 font-medium text-center leading-tight ${i <= step ? "text-primary" : "text-muted"}`}>
-                      {s.label}
-                    </span>
+                    {i < steps.length - 1 && (
+                      <div
+                        className={`flex-1 h-px mx-1 sm:mx-4 ${
+                          i < step ? "bg-primary" : "bg-primary/10"
+                        }`}
+                      />
+                    )}
                   </div>
-                  {i < steps.length - 1 && (
-                    <div className={`flex-1 h-px mx-1 sm:mx-4 ${i < step ? "bg-primary" : "bg-primary/10"}`} />
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
@@ -370,12 +345,18 @@ export default function EnrollmentPage() {
                     <PenLine className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-primary">Your Personal Details</h3>
-                    <p className="text-sm text-muted">Tell us about yourself.</p>
+                    <h3 className="text-lg font-semibold text-primary">
+                      Your Personal Details
+                    </h3>
+                    <p className="text-sm text-muted">
+                      Tell us about yourself.
+                    </p>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your full name? *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Full Name *
+                  </label>
                   <Input
                     placeholder="Type your full name here"
                     value={formData.fullName}
@@ -383,7 +364,9 @@ export default function EnrollmentPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your email address? *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Email address *
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
@@ -394,10 +377,14 @@ export default function EnrollmentPage() {
                       className="pl-10"
                     />
                   </div>
-                  <p className="text-xs text-muted mt-1">We will send a verification code here.</p>
+                  <p className="text-xs text-muted mt-1">
+                    We will send a verification code here.
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your phone number?</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Phone Number
+                  </label>
                   <Input
                     placeholder="+977 98XXXXXXXX"
                     value={formData.phone}
@@ -405,14 +392,20 @@ export default function EnrollmentPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Which class are you in right now? *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Qualification *
+                  </label>
                   <Select
                     value={formData.qualificationId}
-                    onChange={(e) => updateField("qualificationId", e.target.value)}
+                    onChange={(e) =>
+                      updateField("qualificationId", e.target.value)
+                    }
                   >
-                    <option value="">Choose your current class</option>
+                    <option value="">Choose your current qualification</option>
                     {qualificationOptions.map((q) => (
-                      <option key={q.id} value={q.id}>{q.name}</option>
+                      <option key={q.id} value={q.id}>
+                        {q.name}
+                      </option>
                     ))}
                   </Select>
                 </div>
@@ -426,48 +419,68 @@ export default function EnrollmentPage() {
                     <BookOpen className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-primary">Course & Parent Details</h3>
-                    <p className="text-sm text-muted">Pick a course and add your parent's info.</p>
+                    <h3 className="text-lg font-semibold text-primary">
+                      Course & Parent Details
+                    </h3>
+                    <p className="text-sm text-muted">
+                      Pick a course and add your parent&apos;s info.
+                    </p>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Which course do you want to join? *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Which course do you want to join? *
+                  </label>
                   <Select
                     value={formData.interestedCourse}
-                    onChange={(e) => updateField("interestedCourse", e.target.value)}
+                    onChange={(e) =>
+                      updateField("interestedCourse", e.target.value)
+                    }
                   >
                     <option value="">Choose a course</option>
                     {courses.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
                     ))}
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your parent or guardian's name?</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Parent or guardian&apos;s name
+                  </label>
                   <div className="relative">
                     <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
                       placeholder="Parent or guardian's full name"
                       value={formData.guardianName}
-                      onChange={(e) => updateField("guardianName", e.target.value)}
+                      onChange={(e) =>
+                        updateField("guardianName", e.target.value)
+                      }
                       className="pl-10"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">What is your parent's phone number?</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                   Parent&apos;s phone number
+                  </label>
                   <div className="relative">
                     <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
                       placeholder="Parent's phone number"
                       value={formData.guardianContact}
-                      onChange={(e) => updateField("guardianContact", e.target.value)}
+                      onChange={(e) =>
+                        updateField("guardianContact", e.target.value)
+                      }
                       className="pl-10"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Where do you live? (Full address)</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Where do you live? (Full address)
+                  </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted" />
                     <Textarea
@@ -480,7 +493,9 @@ export default function EnrollmentPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Anything else you want to tell us?</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Anything else you want to tell us?
+                  </label>
                   <div className="relative">
                     <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-muted" />
                     <Textarea
@@ -502,14 +517,18 @@ export default function EnrollmentPage() {
                     <KeyRound className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-primary">Create Your Password</h3>
+                    <h3 className="text-lg font-semibold text-primary">
+                      Create Your Password
+                    </h3>
                     <p className="text-sm text-muted">
                       Make a password to keep your account safe. Remember it!
                     </p>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Create a password *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Create a password *
+                  </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
@@ -524,31 +543,48 @@ export default function EnrollmentPage() {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Type the password again *</label>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">
+                    Type the password again *
+                  </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Type your password one more time"
                       value={formData.confirmPassword}
-                      onChange={(e) => updateField("confirmPassword", e.target.value)}
+                      onChange={(e) =>
+                        updateField("confirmPassword", e.target.value)
+                      }
                       className="pl-10 pr-10"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {formData.confirmPassword && !passwordsMatch && (
-                    <p className="text-xs text-red-500 mt-1">Oops! The two passwords do not match. Please type them again.</p>
+                    <p className="text-xs text-red-500 mt-1">
+                      Oops! The two passwords do not match. Please type them
+                      again.
+                    </p>
                   )}
                 </div>
               </div>
@@ -561,25 +597,38 @@ export default function EnrollmentPage() {
                     <BadgeCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-primary">Verify Your Email</h3>
-                    <p className="text-sm text-muted">Check your email for the secret code.</p>
+                    <h3 className="text-lg font-semibold text-primary">
+                      Verify Your Email
+                    </h3>
+                    <p className="text-sm text-muted">
+                      Check your email for the secret code.
+                    </p>
                   </div>
                 </div>
                 {codeSent && (
                   <p className="text-sm text-muted bg-blue-50 p-3 rounded-lg">
                     📩 We sent a <strong>6-digit code</strong> to{" "}
-                    <strong>{formData.email}</strong>. Open your email, copy the code, and paste it below.
+                    <strong>{formData.email}</strong>. Open your email, copy the
+                    code, and paste it below.
                   </p>
                 )}
                 {!codeSent && (
-                  <p className="text-sm text-muted">⏳ Preparing to send verification code...</p>
+                  <p className="text-sm text-muted">
+                    ⏳ Preparing to send verification code...
+                  </p>
                 )}
                 <div className="max-w-xs mx-auto pt-4">
-                  <label className="text-xs text-muted mb-2 block text-center">Enter the 6-digit code from your email</label>
+                  <label className="text-xs text-muted mb-2 block text-center">
+                    Enter the 6-digit code from your email
+                  </label>
                   <Input
                     placeholder="000000"
                     value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    onChange={(e) =>
+                      setVerificationCode(
+                        e.target.value.replace(/\D/g, "").slice(0, 6),
+                      )
+                    }
                     className="text-center text-2xl tracking-[8px] font-mono h-14"
                     maxLength={6}
                   />
@@ -587,7 +636,9 @@ export default function EnrollmentPage() {
                 {verified && (
                   <div className="flex items-center justify-center gap-2 text-emerald-600">
                     <CheckCircle2 className="w-5 h-5" />
-                    <span className="text-sm font-medium">✅ Verified! Your email is confirmed.</span>
+                    <span className="text-sm font-medium">
+                      ✅ Verified! Your email is confirmed.
+                    </span>
                   </div>
                 )}
               </div>
@@ -600,8 +651,12 @@ export default function EnrollmentPage() {
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-primary">Review Before You Submit</h3>
-                    <p className="text-sm text-muted">Check everything carefully. Then click Submit!</p>
+                    <h3 className="text-lg font-semibold text-primary">
+                      Review Before You Submit
+                    </h3>
+                    <p className="text-sm text-muted">
+                      Check everything carefully. Then click Submit!
+                    </p>
                   </div>
                 </div>
                 {!verified && (
@@ -611,7 +666,12 @@ export default function EnrollmentPage() {
                 )}
                 <div className="space-y-3">
                   {Object.entries(formData).map(([key, value]) => {
-                    if (!value || key === "confirmPassword" || key === "password") return null;
+                    if (
+                      !value ||
+                      key === "confirmPassword" ||
+                      key === "password"
+                    )
+                      return null;
                     const labels: Record<string, string> = {
                       fullName: "Full Name",
                       email: "Email",
@@ -623,13 +683,22 @@ export default function EnrollmentPage() {
                       address: "Address",
                       message: "Additional Message",
                     };
-                    const displayValue = key === "qualificationId"
-                      ? qualificationOptions.find((q) => q.id === value)?.name ?? value
-                      : value;
+                    const displayValue =
+                      key === "qualificationId"
+                        ? (qualificationOptions.find((q) => q.id === value)
+                            ?.name ?? value)
+                        : value;
                     return (
-                      <div key={key} className="flex justify-between py-2 border-b border-primary/5">
-                        <span className="text-sm text-muted">{labels[key] || key}</span>
-                        <span className="text-sm font-medium text-primary text-right max-w-[60%]">{displayValue}</span>
+                      <div
+                        key={key}
+                        className="flex justify-between py-2 border-b border-primary/5"
+                      >
+                        <span className="text-sm text-muted">
+                          {labels[key] || key}
+                        </span>
+                        <span className="text-sm font-medium text-primary text-right max-w-[60%]">
+                          {displayValue}
+                        </span>
                       </div>
                     );
                   })}
@@ -637,7 +706,9 @@ export default function EnrollmentPage() {
                 {verified && (
                   <div className="flex items-center gap-2 text-emerald-600 pt-2">
                     <CheckCircle2 className="w-5 h-5" />
-                    <span className="text-sm font-medium">✅ Email verified</span>
+                    <span className="text-sm font-medium">
+                      ✅ Email verified
+                    </span>
                   </div>
                 )}
               </div>
@@ -675,7 +746,10 @@ export default function EnrollmentPage() {
               )}
 
               {step === 2 && (
-                <Button onClick={handleNext} disabled={creating || !passwordsMatch || !formData.password}>
+                <Button
+                  onClick={handleNext}
+                  disabled={creating || !passwordsMatch || !formData.password}
+                >
                   {creating ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -691,7 +765,10 @@ export default function EnrollmentPage() {
               )}
 
               {step === 3 && !verified && (
-                <Button onClick={handleVerify} disabled={verifying || verificationCode.length < 6}>
+                <Button
+                  onClick={handleVerify}
+                  disabled={verifying || verificationCode.length < 6}
+                >
                   {verifying ? "Verifying..." : "Verify Email"}
                 </Button>
               )}
