@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const supabase = createServiceRoleSupabase();

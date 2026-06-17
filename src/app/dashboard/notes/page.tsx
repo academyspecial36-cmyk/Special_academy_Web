@@ -10,7 +10,15 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn, formatShortDate } from "@/lib/utils";
-import { RichEditor } from "@/components/shared/rich-editor";
+import dynamic from "next/dynamic";
+
+const RichEditor = dynamic(
+  () => import("@/components/shared/rich-editor").then((m) => m.RichEditor),
+  {
+    ssr: false,
+    loading: () => <div className="h-[200px] border border-primary/10 rounded-md animate-pulse bg-primary/5" />,
+  }
+);
 
 interface Note {
   id: string;

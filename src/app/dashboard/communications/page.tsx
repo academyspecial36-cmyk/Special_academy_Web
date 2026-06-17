@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   Send, Mail, MessageSquare, Plus, Pencil, Trash2, Copy, Clock,
   CheckCircle, XCircle, AlertCircle, Loader2, Eye, EyeOff, Archive,
-  Download, Users, BookOpen,
+  Download, Users, BookOpen, ChevronDown, Info,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -86,6 +86,7 @@ export default function CommunicationsPage() {
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [templateForm, setTemplateForm] = useState({ name: "", type: "email" as "email" | "sms", subject: "", body: "" });
@@ -217,6 +218,23 @@ export default function CommunicationsPage() {
     }
   }
 
+  const sampleData: Record<string, string> = {
+    name: "John Doe",
+    email: "john@example.com",
+    phone: "+1 234 567 890",
+    academyName: "Cadet Academy",
+    message: "Your attention is required.",
+  };
+
+  function renderPreviewBody() {
+    let rendered = body;
+    for (const [key, val] of Object.entries(sampleData)) {
+      rendered = rendered.replace(new RegExp(`\\\{\\\{${key}\\\}\\\}`, "g"), val);
+    }
+    if (type === "email") return rendered;
+    return rendered.replace(/\n/g, "<br/>");
+  }
+
   function renderVariableChips() {
     return (
       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -287,6 +305,46 @@ export default function CommunicationsPage() {
           <Card>
             <CardHeader><CardTitle className="text-base flex items-center gap-2"><Send className="w-4 h-4 text-secondary" /> New Broadcast</CardTitle></CardHeader>
             <CardContent className="space-y-5">
+              {/* How-to-Use Guide */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowGuide(!showGuide)}
+                  className="flex items-center gap-2 text-sm font-medium text-muted hover:text-primary transition-colors w-full"
+                >
+                  <Info className="w-4 h-4" />
+                  How to use templates
+                  <ChevronDown className={cn("w-3.5 h-3.5 ml-auto transition-transform", showGuide && "rotate-180")} />
+                </button>
+                {showGuide && (
+                  <div className="mt-3 p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-sm space-y-3">
+                    <div>
+                      <p className="font-medium text-primary mb-1">Using Variables</p>
+                      <p className="text-muted text-xs leading-relaxed">
+                        Click any variable chip (e.g. <code className="text-secondary bg-blue-100 px-1 rounded text-[11px]">{'{{name}}'}</code>) to insert it into your message. Variables are replaced with real student data when sent.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-primary mb-1">Templates</p>
+                      <p className="text-muted text-xs leading-relaxed">
+                        Save reusable messages in the <strong>Templates</strong> tab. Use the <strong>Templates</strong> button above to load a saved template, or pick a quick template to jump-start your message.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-primary mb-1">Preview</p>
+                      <p className="text-muted text-xs leading-relaxed">
+                        Toggle <strong>Preview</strong> to see how your message will look. For emails, HTML is rendered. Variable placeholders are shown as-is in preview.
+                      </p>
+                    </div>
+                    <div>
+                      <p className="font-medium text-primary mb-1">Recipients</p>
+                      <p className="text-muted text-xs leading-relaxed">
+                        Send to <strong>All Students &amp; Parents</strong>, filter by <strong>Qualification</strong>, or target <strong>Specific Students</strong>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
               {/* Type Selector */}
               <div>
                 <label className="text-sm font-medium text-primary mb-2 block">Channel</label>
@@ -404,8 +462,14 @@ export default function CommunicationsPage() {
                 {renderVariableChips()}
 
                 {showPreview ? (
-                  <div className="min-h-[200px] rounded-lg border border-primary/10 p-4 bg-white prose prose-sm max-w-none">
-                    <div dangerouslySetInnerHTML={{ __html: type === "email" ? body : body.replace(/\n/g, "<br/>") }} />
+                  <div>
+                    <div className="min-h-[200px] rounded-lg border border-primary/10 p-4 bg-white prose prose-sm max-w-none">
+                      <div dangerouslySetInnerHTML={{ __html: renderPreviewBody() }} />
+                    </div>
+                    <p className="text-[11px] text-muted mt-1.5 flex items-center gap-1">
+                      <Info className="w-3 h-3" />
+                      Preview uses sample data. Variables are replaced with mock values for illustration.
+                    </p>
                   </div>
                 ) : (
                   <Textarea

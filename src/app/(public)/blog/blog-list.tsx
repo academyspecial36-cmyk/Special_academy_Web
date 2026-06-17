@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Tag, ArrowRight, Search, Loader2 } from "lucide-react";
+import { Calendar, Clock, Tag, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -46,8 +46,25 @@ export function BlogListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="py-20 md:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="h-6 w-24 bg-primary/10 rounded-md animate-pulse mx-auto mb-4" />
+          <div className="h-10 w-96 bg-primary/10 rounded-md animate-pulse mx-auto mb-3" />
+          <div className="h-5 w-64 bg-primary/10 rounded-md animate-pulse mx-auto mb-12" />
+          <div className="max-w-md mx-auto mb-12">
+            <div className="h-12 w-full bg-primary/10 rounded-lg animate-pulse" />
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="h-48 bg-primary/10 rounded-xl animate-pulse" />
+                <div className="h-5 w-3/4 bg-primary/10 rounded animate-pulse" />
+                <div className="h-4 w-full bg-primary/10 rounded animate-pulse" />
+                <div className="h-4 w-1/2 bg-primary/10 rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

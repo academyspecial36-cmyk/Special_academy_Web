@@ -14,9 +14,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RichEditor } from "@/components/ui/rich-editor";
+import dynamic from "next/dynamic";
 import { apiGet, apiCreate, apiUpdate, apiUpload } from "@/lib/api-client";
 import type { BlogPost } from "@/types";
+
+const RichEditor = dynamic(
+  () => import("@/components/ui/rich-editor").then((m) => m.RichEditor),
+  {
+    ssr: false,
+    loading: () => <div className="h-[300px] border border-primary/10 rounded-md animate-pulse bg-primary/5" />,
+  }
+);
 
 function slugify(text: string): string {
   return text
@@ -137,8 +145,16 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="space-y-6 max-w-3xl">
+        <div className="h-8 w-32 bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-10 w-full bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-10 w-full bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-[300px] w-full bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-20 w-full bg-primary/10 rounded-md animate-pulse" />
+        <div className="flex gap-3">
+          <div className="h-10 w-28 bg-primary/10 rounded-md animate-pulse" />
+          <div className="h-10 w-28 bg-primary/10 rounded-md animate-pulse" />
+        </div>
       </div>
     );
   }

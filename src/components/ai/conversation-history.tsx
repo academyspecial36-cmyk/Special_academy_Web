@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { LayoutGroup, motion } from "framer-motion";
-import { MessageSquare, Plus, Search, X, Clock } from "lucide-react";
+import { MessageSquare, Plus, Search, X, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ interface ConversationHistoryProps {
   activeId: string | null;
   onSelect: (id: string) => void;
   onNew: () => void;
+  onDelete?: (id: string) => void;
   onClose?: () => void;
   isMobile?: boolean;
 }
@@ -56,6 +57,7 @@ export function ConversationHistory({
   activeId,
   onSelect,
   onNew,
+  onDelete,
   onClose,
   isMobile,
 }: ConversationHistoryProps) {
@@ -120,27 +122,40 @@ export function ConversationHistory({
                 </p>
                 <LayoutGroup>
                   {group.items.map((conv) => (
-                    <motion.button
+                    <div
                       key={conv.id}
-                      layout
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
-                      onClick={() => onSelect(conv.id)}
-                      className={cn(
-                        "w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all mb-0.5",
-                        activeId === conv.id
-                          ? "bg-primary/10 text-primary font-medium"
-                          : "hover:bg-accent text-foreground"
-                      )}
+                      className="group relative"
                     >
-                      <span className="block truncate">{conv.title}</span>
-                      <span className="flex items-center gap-1 mt-0.5 text-xs text-muted">
-                        <Clock className="w-3 h-3" />
-                        {formatRelativeDate(conv.createdAt)}
-                      </span>
-                    </motion.button>
+                      <motion.button
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => onSelect(conv.id)}
+                        className={cn(
+                          "w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all mb-0.5",
+                          activeId === conv.id
+                            ? "bg-primary/10 text-primary font-medium"
+                            : "hover:bg-accent text-foreground"
+                        )}
+                      >
+                        <span className="block truncate pr-6">{conv.title}</span>
+                        <span className="flex items-center gap-1 mt-0.5 text-xs text-muted">
+                          <Clock className="w-3 h-3" />
+                          {formatRelativeDate(conv.createdAt)}
+                        </span>
+                      </motion.button>
+                      {onDelete && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDelete(conv.id); }}
+                          className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity text-muted hover:text-red-500 hover:bg-red-50"
+                          title="Delete conversation"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </LayoutGroup>
               </div>

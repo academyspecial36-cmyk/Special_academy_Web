@@ -41,9 +41,11 @@ export default function StudentTakeExamPage() {
 
   if (alreadyAttempted) {
     return (
-      <div className="text-center py-20">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-muted text-sm">Redirecting to your results...</p>
+      <div className="max-w-2xl mx-auto space-y-4">
+        <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-4 w-64 bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-64 bg-primary/10 rounded-xl animate-pulse" />
+        <p className="text-center text-sm text-muted">Loading your results...</p>
       </div>
     );
   }

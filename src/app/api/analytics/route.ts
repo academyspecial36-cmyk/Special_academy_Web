@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 
+export const dynamic = "force-dynamic";
+
 function getMonthLabel(d: string) {
   const date = new Date(d);
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

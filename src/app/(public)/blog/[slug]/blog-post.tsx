@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Calendar, Clock, Tag, ArrowLeft, Loader2, User } from "lucide-react";
+import { Calendar, Clock, Tag, ArrowLeft, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
@@ -35,8 +35,19 @@ export function BlogPostPage({ slugPromise }: { slugPromise: Promise<{ slug: str
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="py-16 md:py-24 bg-white max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="h-5 w-32 bg-primary/10 rounded animate-pulse" />
+        <div className="h-10 w-3/4 bg-primary/10 rounded-md animate-pulse" />
+        <div className="flex gap-3">
+          <div className="h-5 w-20 bg-primary/10 rounded animate-pulse" />
+          <div className="h-5 w-24 bg-primary/10 rounded animate-pulse" />
+        </div>
+        <div className="h-72 w-full bg-primary/10 rounded-xl animate-pulse" />
+        <div className="space-y-3">
+          <div className="h-4 w-full bg-primary/10 rounded animate-pulse" />
+          <div className="h-4 w-full bg-primary/10 rounded animate-pulse" />
+          <div className="h-4 w-3/4 bg-primary/10 rounded animate-pulse" />
+        </div>
       </div>
     );
   }

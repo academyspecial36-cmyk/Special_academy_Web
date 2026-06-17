@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
-import { Send, Sparkles, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { ChatMessage } from "./chat-message";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { ResponseRenderer } from "./response-renderers/renderer";
+import { ChatHeader } from "./chat-header";
+import { ChatEmptyState } from "./chat-empty-state";
+import { ChatInput } from "./chat-input";
 import type { AIStreamChunk, AIResponseBlock } from "@/types/ai";
 import { toast } from "sonner";
 
@@ -80,18 +79,6 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingMessage, status]);
-
-  const autoResize = useCallback(() => {
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = "auto";
-      el.style.height = Math.min(el.scrollHeight, 160) + "px";
-    }
-  }, []);
-
-  useEffect(() => {
-    autoResize();
-  }, [input, autoResize]);
 
   const sendMessage = useCallback(async (text: string) => {
     if (!text || isStreaming) return;
@@ -266,18 +253,11 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
       sendMessage(pendingCommand);
       onCommandConsumed?.();
     }
-  }, [pendingCommand, sendMessage, onCommandConsumed]);
+  }, [pendingCommand, sendMessage, onCommandConsumed, isStreaming]);
 
   const handleSend = useCallback(() => {
     sendMessage(input.trim());
   }, [input, sendMessage]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
 
   const handleConfirmTool = useCallback((result: { success: boolean; message: string; result?: unknown }) => {
     setMessages((prev) => [
@@ -298,36 +278,11 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="px-6 py-4 border-b border-primary/5 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <div>
-            <h1 className="text-lg font-semibold text-primary">AI Command Center</h1>
-            <p className="text-xs text-muted">Ask me anything about managing your academy</p>
-          </div>
-        </div>
-      </div>
+      <ChatHeader />
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {showEmptyState ? (
-          <div className="flex flex-col items-center justify-center h-full text-center max-w-md mx-auto">
-            <Sparkles className="w-10 h-10 text-muted mb-4" />
-            <h2 className="text-lg font-semibold text-primary mb-1">How can I help you today?</h2>
-            <p className="text-sm text-muted mb-6">
-              Try a suggestion below, or type your own command. All quick actions are on the right panel.
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {["Create a holiday notice", "Show active students", "Generate MCQs", "Approve pending enrollments"].map((starter) => (
-                <button
-                  key={starter}
-                  onClick={() => sendMessage(starter)}
-                  className="px-3 py-1.5 text-sm rounded-full border border-primary/10 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
-                >
-                  {starter}
-                </button>
-              ))}
-            </div>
-          </div>
+          <ChatEmptyState sendMessage={sendMessage} />
         ) : (
           <div className="space-y-4 max-w-3xl mx-auto">
             {messages.map((msg) => (
@@ -359,49 +314,15 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
         )}
       </div>
 
-      <div className="border-t border-primary/5 p-4 shrink-0">
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-2 px-4 py-2 mb-3 rounded-lg bg-red-50 text-red-700 text-sm"
-          >
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600 text-xs font-medium">
-              Dismiss
-            </button>
-          </motion.div>
-        )}
-        <div className="flex items-end gap-2 max-w-3xl mx-auto">
-          <div className="relative flex-1">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type your command..."
-              rows={1}
-              disabled={isStreaming}
-              className={cn(
-                "w-full resize-none rounded-xl border border-input bg-background px-4 py-2.5 pr-12 text-sm ring-offset-background placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:opacity-50 transition-all min-h-[44px] max-h-[160px]"
-              )}
-            />
-          </div>
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || isStreaming}
-            size="icon"
-            className="shrink-0 h-[44px] w-[44px] rounded-xl"
-          >
-            {isStreaming ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
-      </div>
+      <ChatInput
+        input={input}
+        setInput={setInput}
+        isStreaming={isStreaming}
+        error={error}
+        onSend={handleSend}
+        onDismissError={() => setError(null)}
+        textareaRef={textareaRef}
+      />
     </div>
   );
 }

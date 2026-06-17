@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Search, Plus, Pencil, Trash2, Calendar, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Calendar, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -78,8 +78,10 @@ export default function DashboardBlogPage() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-16 bg-primary/10 rounded-lg animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">

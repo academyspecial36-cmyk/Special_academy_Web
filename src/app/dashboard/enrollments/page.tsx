@@ -252,7 +252,7 @@ export default function EnrollmentsPage() {
                           <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
                             {enrollment.fullName
                               .split(" ")
-                              .map((n) => n[0])
+                              .map((n: string) => n[0])
                               .join("")}
                           </div>
                           <div>

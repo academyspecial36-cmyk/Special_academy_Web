@@ -6,7 +6,7 @@ import { ChatInterface } from "@/components/ai/chat-interface";
 import { ConversationHistory } from "@/components/ai/conversation-history";
 import { ContextPanel } from "@/components/ai/context-panel";
 import { CommandPalette } from "@/components/ai/command-palette";
-import { apiList } from "@/lib/api-client";
+import { apiList, apiDelete } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { AIConversation, PageContext } from "@/types/ai";
 
@@ -63,6 +63,16 @@ export default function AICommandCenterPage() {
     }).catch((err) => console.error("Failed to refresh conversations:", err));
   }, []);
 
+  const handleDelete = useCallback((id: string) => {
+    if (!confirm("Delete this conversation and all its messages?")) return;
+    apiDelete("ai_conversations", id).then(() => {
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      if (activeId === id) setActiveId(null);
+    }).catch((err) => {
+      console.error("Failed to delete conversation:", err);
+    });
+  }, [activeId]);
+
   const handleCommand = useCallback((command: string) => {
     setCmdOpen(false);
     setPendingCommand(command);
@@ -91,6 +101,7 @@ export default function AICommandCenterPage() {
             activeId={activeId}
             onSelect={handleSelect}
             onNew={handleNew}
+            onDelete={handleDelete}
             onClose={() => setShowHistory(false)}
           />
         </div>

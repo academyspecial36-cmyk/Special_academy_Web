@@ -1,20 +1,30 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { AIResponseBlock } from "@/types/ai";
-import { KnowledgeAnswerRenderer } from "./knowledge-answer";
-import { NoticeDraftRenderer } from "./notice-draft";
-import { BlogDraftRenderer } from "./blog-draft";
-import { FAQDraftRenderer } from "./faq-draft";
-import { CourseDraftRenderer } from "./course-draft";
-import { ExamDraftRenderer } from "./exam-draft";
-import { StudentTableRenderer } from "./student-table";
-import { NoticeTableRenderer } from "./notice-table";
-import { EnrollmentTableRenderer } from "./enrollment-table";
-import { FAQsTableRenderer } from "./faq-table";
-import { ConfirmationCardRenderer } from "./confirmation-card";
-import { ActionResultRenderer } from "./action-result";
-import { ErrorCardRenderer } from "./error-card";
-import { AnalyticsCardRenderer } from "./analytics-card";
+
+const Loading = () => (
+  <div className="p-8 bg-white border border-primary/5 rounded-xl space-y-3">
+    <div className="h-4 w-3/4 bg-primary/10 rounded animate-pulse" />
+    <div className="h-4 w-1/2 bg-primary/10 rounded animate-pulse" />
+    <div className="h-4 w-2/3 bg-primary/10 rounded animate-pulse" />
+  </div>
+);
+
+const KnowledgeAnswerRenderer = dynamic(() => import("./knowledge-answer").then(m => m.KnowledgeAnswerRenderer), { loading: Loading });
+const NoticeDraftRenderer = dynamic(() => import("./notice-draft").then(m => m.NoticeDraftRenderer), { loading: Loading });
+const BlogDraftRenderer = dynamic(() => import("./blog-draft").then(m => m.BlogDraftRenderer), { loading: Loading });
+const FAQDraftRenderer = dynamic(() => import("./faq-draft").then(m => m.FAQDraftRenderer), { loading: Loading });
+const CourseDraftRenderer = dynamic(() => import("./course-draft").then(m => m.CourseDraftRenderer), { loading: Loading });
+const ExamDraftRenderer = dynamic(() => import("./exam-draft").then(m => m.ExamDraftRenderer), { loading: Loading });
+const StudentTableRenderer = dynamic(() => import("./student-table").then(m => m.StudentTableRenderer), { loading: Loading });
+const NoticeTableRenderer = dynamic(() => import("./notice-table").then(m => m.NoticeTableRenderer), { loading: Loading });
+const EnrollmentTableRenderer = dynamic(() => import("./enrollment-table").then(m => m.EnrollmentTableRenderer), { loading: Loading });
+const FAQsTableRenderer = dynamic(() => import("./faq-table").then(m => m.FAQsTableRenderer), { loading: Loading });
+const ConfirmationCardRenderer = dynamic(() => import("./confirmation-card").then(m => m.ConfirmationCardRenderer), { loading: Loading });
+const ActionResultRenderer = dynamic(() => import("./action-result").then(m => m.ActionResultRenderer), { loading: Loading });
+const ErrorCardRenderer = dynamic(() => import("./error-card").then(m => m.ErrorCardRenderer), { loading: Loading });
+const AnalyticsCardRenderer = dynamic(() => import("./analytics-card").then(m => m.AnalyticsCardRenderer), { loading: Loading });
 
 interface RendererProps {
   block: AIResponseBlock;

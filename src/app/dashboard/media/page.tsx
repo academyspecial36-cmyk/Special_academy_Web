@@ -115,27 +115,7 @@ export default function MediaManagerPage() {
     buildPath();
   }, [currentFolderId, folders]);
 
-  // drag-drop
-  useEffect(() => {
-    const el = dropRef.current;
-    if (!el) return;
-    const prevent = (e: DragEvent) => { e.preventDefault(); e.stopPropagation(); };
-    const drop = async (e: DragEvent) => {
-      prevent(e);
-      const files = Array.from(e.dataTransfer?.files ?? []);
-      if (files.length) await handleUpload(files);
-    };
-    el.addEventListener("dragover", prevent);
-    el.addEventListener("dragenter", prevent);
-    el.addEventListener("drop", drop);
-    return () => {
-      el.removeEventListener("dragover", prevent);
-      el.removeEventListener("dragenter", prevent);
-      el.removeEventListener("drop", drop);
-    };
-  }, [currentFolderId]);
-
-  async function handleUpload(files: File[]) {
+  const handleUpload = useCallback(async (files: File[]) => {
     setUploading(true);
     let count = 0;
     for (const file of files) {
@@ -158,7 +138,27 @@ export default function MediaManagerPage() {
       fetchData();
     }
     setUploading(false);
-  }
+  }, [currentFolderId, fetchData]);
+
+  // drag-drop
+  useEffect(() => {
+    const el = dropRef.current;
+    if (!el) return;
+    const prevent = (e: DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+    const drop = async (e: DragEvent) => {
+      prevent(e);
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      if (files.length) await handleUpload(files);
+    };
+    el.addEventListener("dragover", prevent);
+    el.addEventListener("dragenter", prevent);
+    el.addEventListener("drop", drop);
+    return () => {
+      el.removeEventListener("dragover", prevent);
+      el.removeEventListener("dragenter", prevent);
+      el.removeEventListener("drop", drop);
+    };
+  }, [handleUpload]);
 
   async function createFolder() {
     if (!newFolderName.trim()) return;
@@ -592,8 +592,12 @@ export default function MediaManagerPage() {
       {/* Uploading overlay */}
       {uploading && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-8 shadow-elevated flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="bg-white rounded-2xl p-8 shadow-elevated flex flex-col items-center gap-4">
+            <div className="space-y-2 w-48">
+              <div className="h-4 bg-primary/10 rounded animate-pulse" />
+              <div className="h-4 w-3/4 bg-primary/10 rounded animate-pulse mx-auto" />
+              <div className="h-4 w-1/2 bg-primary/10 rounded animate-pulse mx-auto" />
+            </div>
             <p className="text-sm font-medium text-primary">Uploading files...</p>
           </div>
         </div>

@@ -52,7 +52,7 @@ export function NotificationBell() {
             initial={{ opacity: 0, y: 5, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
-            className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-elevated border border-primary/5 z-50 max-h-[400px] flex flex-col"
+            className="absolute right-0 max-sm:-right-2 top-full mt-2 w-80 max-sm:w-[calc(100vw-2rem)] bg-white rounded-xl shadow-elevated border border-primary/5 z-50 max-h-[400px] flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-primary/5 shrink-0">
               <h3 className="text-sm font-bold text-primary">Notifications</h3>
@@ -69,8 +69,16 @@ export function NotificationBell() {
 
             <div className="flex-1 overflow-y-auto">
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <div className="py-4 space-y-3 px-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-8 h-8 bg-primary/10 rounded-full shrink-0 animate-pulse" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-3/4 bg-primary/10 rounded animate-pulse" />
+                        <div className="h-3 w-1/2 bg-primary/10 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="text-center py-8 text-sm text-muted">No notifications</div>

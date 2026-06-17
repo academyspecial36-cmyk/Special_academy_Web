@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Phone, MessageSquare, CheckCircle2, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { Mail, Phone, MessageSquare, CheckCircle2, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteModal } from "@/components/ui/delete-modal";
@@ -68,8 +68,10 @@ export default function ContactSubmissionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-20 bg-primary/10 rounded-lg animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+        ))}
       </div>
     );
   }
