@@ -51,8 +51,33 @@ export default function StudentLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-accent flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-accent flex">
+        <aside className="hidden lg:flex w-64 flex-col border-r border-primary/5 bg-white p-4 gap-4">
+          <div className="h-8 w-32 bg-primary/10 rounded-md animate-pulse" />
+          <div className="space-y-2 mt-8">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="h-10 bg-primary/10 rounded-lg animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+            ))}
+          </div>
+        </aside>
+        <div className="flex-1 flex flex-col">
+          <header className="h-16 border-b border-primary/5 bg-white flex items-center gap-4 px-6">
+            <div className="w-8 h-8 bg-primary/10 rounded-lg animate-pulse" />
+            <div className="flex-1" />
+            <div className="w-8 h-8 bg-primary/10 rounded-full animate-pulse" />
+          </header>
+          <main className="flex-1 p-6">
+            <div className="space-y-4">
+              <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
+              <div className="h-4 w-72 bg-primary/10 rounded-md animate-pulse" />
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mt-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-48 bg-primary/10 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.1}s` }} />
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }

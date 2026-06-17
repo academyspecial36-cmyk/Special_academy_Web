@@ -5,15 +5,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { SectionHeader } from "@/components/ui/section-header";
 import { useAppContext } from "@/lib/app-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function FaqSection() {
-  const { faqs, settings } = useAppContext();
+  const { faqs, settings, dataLoading } = useAppContext();
   const [openIndex, setOpenIndex] = useState<number | null>(0);
   const labels = settings.config.sectionLabels?.faq;
 
-  const sortedFaqs = [...faqs].sort(
-  (a, b) => a.sortOrder - b.sortOrder
-);
+  const sortedFaqs = dataLoading ? [] : [...faqs].sort(
+    (a, b) => a.sortOrder - b.sortOrder
+  );
 
   return (
     <section className="py-20 md:py-28 bg-accent">
@@ -25,8 +26,18 @@ export function FaqSection() {
         />
 
         <div className="space-y-3">
-          {sortedFaqs.map((faq, index) => (
-            <motion.div
+          {dataLoading
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-xl border border-primary/5 p-5 flex items-center justify-between">
+                  <div className="flex items-center gap-3 w-full">
+                    <Skeleton className="w-5 h-5 rounded-full shrink-0" />
+                    <Skeleton className="h-5 w-3/4" />
+                  </div>
+                  <Skeleton className="w-5 h-5 rounded" />
+                </div>
+              ))
+            : sortedFaqs.map((faq, index) => (
+                <motion.div
               key={faq.id}
               initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}

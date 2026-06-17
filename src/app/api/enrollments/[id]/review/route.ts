@@ -76,11 +76,21 @@ export async function POST(
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
+      let qualificationName: string | null = enrollment.current_class ?? null;
+      if (enrollment.qualification_id) {
+        const { data: qual } = await svc
+          .from("qualifications")
+          .select("name")
+          .eq("id", enrollment.qualification_id)
+          .maybeSingle();
+        qualificationName = qual?.name ?? null;
+      }
+
       await svc.from("students").insert({
         name: enrollment.full_name,
         email: enrollment.email,
         phone: enrollment.phone,
-        class: enrollment.current_class,
+        class: qualificationName,
         enrolled_courses: enrollment.interested_course
           ? [enrollment.interested_course]
           : [],

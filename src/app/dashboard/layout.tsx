@@ -28,6 +28,7 @@ import {
   LogOut,
   PanelLeftOpen,
   PanelLeftClose,
+  Sparkles,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -35,8 +36,11 @@ import { DASHBOARD_SIDEBAR } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
 import { LandingLoader } from "@/components/landing/landing-loader";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { CommandPalette } from "@/components/ai/command-palette";
+import { FloatingActionButton } from "@/components/ai/floating-action-button";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -53,6 +57,7 @@ const iconMap: Record<string, React.ElementType> = {
   ClipboardCheck,
   Megaphone,
   StickyNote,
+  Sparkles,
 };
 
 export default function DashboardLayout({
@@ -64,6 +69,7 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const [cmdOpen, setCmdOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoading, logout } = useAuth();
@@ -88,6 +94,17 @@ export default function DashboardLayout({
       return Array.from(next);
     });
   }, [pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const toggleGroup = (label: string) => {
     setExpandedGroups((prev) =>
@@ -343,7 +360,7 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         <main className="p-4 lg:p-8">
-          {loading ? <LandingLoader /> : children}
+          {loading ? <LandingLoader /> : <ErrorBoundary>{children}</ErrorBoundary>}
         </main>
         </NotificationsProvider>
       </div>
@@ -354,10 +371,21 @@ export default function DashboardLayout({
             background: "white",
             border: "1px solid hsl(var(--primary) / 0.05)",
             borderRadius: "12px",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+            boxShadow: "0 4px 24px hsl(var(--primary) / 0.08)",
           },
         }}
       />
+      <CommandPalette
+        open={cmdOpen}
+        onClose={() => setCmdOpen(false)}
+        onCommand={(cmd) => {
+          setCmdOpen(false);
+          router.push("/dashboard/ai");
+        }}
+      />
+      {pathname !== "/dashboard/ai" && (
+        <FloatingActionButton onClick={() => router.push("/dashboard/ai")} />
+      )}
     </div>
   );
 }

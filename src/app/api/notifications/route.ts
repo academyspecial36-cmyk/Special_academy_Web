@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase, createServiceRoleSupabase } from "@/lib/supabase-server";
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -9,16 +9,30 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error } = await supabase
+  const url = new URL(request.url);
+  const cursor = url.searchParams.get("cursor");
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "20", 10), 50);
+
+  let query = supabase
     .from("notifications")
     .select("*")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(20);
+    .limit(limit + 1);
+
+  if (cursor) {
+    query = query.lt("created_at", cursor);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  const hasMore = data.length > limit;
+  const notifications = hasMore ? data.slice(0, limit) : data;
+  const nextCursor = hasMore ? notifications[notifications.length - 1]?.created_at : null;
 
   const { count } = await supabase
     .from("notifications")
@@ -26,7 +40,7 @@ export async function GET() {
     .eq("user_id", user.id)
     .eq("is_read", false);
 
-  return NextResponse.json({ notifications: data, unreadCount: count ?? 0 });
+  return NextResponse.json({ notifications, unreadCount: count ?? 0, nextCursor });
 }
 
 export async function PUT(request: Request) {

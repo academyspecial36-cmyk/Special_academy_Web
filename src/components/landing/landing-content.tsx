@@ -1,24 +1,52 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useAppContext } from "@/lib/app-context";
 import { LandingLoader } from "./landing-loader";
 import { HeroSection } from "./hero-section";
 import { AboutSection } from "./about-section";
 import { WhyChooseSection } from "./why-choose-section";
 import { CadetOverviewSection } from "./cadet-overview-section";
-import { StatsSection } from "./stats-section";
-import { CoursesSection } from "./courses-section";
-import { FreeResourcesSection } from "./free-resources-section";
-import { NoticesSection } from "./notices-section";
-import { TestimonialsSection } from "./testimonials-section";
-import { FacultySection } from "./faculty-section";
-import { FacilitiesSection } from "./facilities-section";
-import { ActivitiesSection } from "./activities-section";
-import { GalleryPreviewSection } from "./gallery-preview-section";
-import { EnrollmentCtaSection } from "./enrollment-cta-section";
-import { BlogSection } from "./blog-section";
-import { FaqSection } from "./faq-section";
-import { ContactSection } from "./contact-section";
+
+const StatsSection = dynamic(() => import("./stats-section").then((m) => m.StatsSection), {
+  loading: () => <div className="py-20 bg-primary/5 h-48 animate-pulse" />,
+});
+const CoursesSection = dynamic(() => import("./courses-section").then((m) => m.CoursesSection), {
+  loading: () => <div className="py-20 bg-accent h-[600px] animate-pulse" />,
+});
+const FreeResourcesSection = dynamic(() => import("./free-resources-section").then((m) => m.FreeResourcesSection), {
+  loading: () => <div className="py-20 bg-white h-[400px] animate-pulse" />,
+});
+const NoticesSection = dynamic(() => import("./notices-section").then((m) => m.NoticesSection), {
+  loading: () => <div className="py-20 bg-accent h-[500px] animate-pulse" />,
+});
+const TestimonialsSection = dynamic(() => import("./testimonials-section").then((m) => m.TestimonialsSection), {
+  loading: () => <div className="py-20 bg-white h-[400px] animate-pulse" />,
+});
+const FacultySection = dynamic(() => import("./faculty-section").then((m) => m.FacultySection), {
+  loading: () => <div className="py-20 bg-accent h-[500px] animate-pulse" />,
+});
+const FacilitiesSection = dynamic(() => import("./facilities-section").then((m) => m.FacilitiesSection), {
+  loading: () => <div className="py-20 bg-white h-[600px] animate-pulse" />,
+});
+const ActivitiesSection = dynamic(() => import("./activities-section").then((m) => m.ActivitiesSection), {
+  loading: () => <div className="py-20 bg-accent h-[500px] animate-pulse" />,
+});
+const BlogSection = dynamic(() => import("./blog-section").then((m) => m.BlogSection), {
+  loading: () => <div className="py-20 bg-white h-[500px] animate-pulse" />,
+});
+const GalleryPreviewSection = dynamic(() => import("./gallery-preview-section").then((m) => m.GalleryPreviewSection), {
+  loading: () => <div className="py-20 bg-accent h-[500px] animate-pulse" />,
+});
+const EnrollmentCtaSection = dynamic(() => import("./enrollment-cta-section").then((m) => m.EnrollmentCtaSection), {
+  loading: () => <div className="py-20 bg-primary h-[300px] animate-pulse" />,
+});
+const FaqSection = dynamic(() => import("./faq-section").then((m) => m.FaqSection), {
+  loading: () => <div className="py-20 bg-white h-[500px] animate-pulse" />,
+});
+const ContactSection = dynamic(() => import("./contact-section").then((m) => m.ContactSection), {
+  loading: () => <div className="py-20 bg-accent h-[600px] animate-pulse" />,
+});
 
 export function LandingContent() {
   const { loading, settings } = useAppContext();

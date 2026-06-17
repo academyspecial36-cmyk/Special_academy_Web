@@ -7,7 +7,7 @@ export const courses: Course[] = [
     slug: "cadet-entrance-preparation",
     description: "Comprehensive preparation for cadet college entrance examinations. Covers Mathematics, English, General Knowledge, and Intelligence tests with rigorous practice sessions.",
     duration: "12 Months",
-    classLevel: "Class 6-8",
+    qualification: "Class 6-8",
     features: ["Mock Tests Weekly", "Physical Training Guide", "Interview Preparation", "Study Material Included", "Doubt Clearing Sessions"],
     image: "https://images.unsplash.com/photo-1763656447224-dd5e8c89c767?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     category: "Cadet Preparation",
@@ -20,7 +20,7 @@ export const courses: Course[] = [
     slug: "scholarship-preparation",
     description: "Specialized coaching for national and international scholarship examinations. Focus on advanced problem-solving, creative writing, and analytical thinking.",
     duration: "8 Months",
-    classLevel: "Class 5-8",
+    qualification: "Class 5-8",
     features: ["Previous Year Papers", "Time Management Training", "Scholarship Test Series", "One-on-One Mentoring", "Result Tracking"],
     image: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80",
     category: "Scholarship",
@@ -33,7 +33,7 @@ export const courses: Course[] = [
     slug: "foundation-classes",
     description: "Strong foundational courses in Science, Mathematics, and English for students building their academic base for competitive examinations.",
     duration: "10 Months",
-    classLevel: "Class 5-7",
+    qualification: "Class 5-7",
     features: ["Concept Building", "Regular Assessments", "Parent Meetings", "Progress Reports", "Small Batch Size"],
     image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80",
     category: "Foundation",
@@ -45,7 +45,7 @@ export const courses: Course[] = [
     slug: "leadership-development",
     description: "Develop essential leadership qualities, communication skills, teamwork abilities, and decision-making skills required for cadet life and beyond.",
     duration: "6 Months",
-    classLevel: "Class 6-10",
+    qualification: "Class 6-10",
     features: ["Public Speaking", "Team Building", "Conflict Resolution", "Strategic Thinking", "Personality Development"],
     image: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=800&q=80",
     category: "Leadership",
@@ -57,7 +57,7 @@ export const courses: Course[] = [
     slug: "spoken-english",
     description: "Master spoken English with confidence. Focus on pronunciation, fluency, vocabulary building, and effective communication for interviews and daily life.",
     duration: "4 Months",
-    classLevel: "Class 5-12",
+    qualification: "Class 5-12",
     features: ["Interactive Sessions", "Group Discussions", "Interview Practice", "Vocabulary Building", "Grammar Mastery"],
     image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80",
     category: "Language",
@@ -69,7 +69,7 @@ export const courses: Course[] = [
     slug: "physical-preparation",
     description: "Structured physical training program designed to meet cadet college physical fitness standards. Includes running, strength training, and endurance building.",
     duration: "6 Months",
-    classLevel: "Class 6-10",
+    qualification: "Class 6-10",
     features: ["Fitness Assessment", "Custom Training Plan", "Nutrition Guidance", "Endurance Building", "Sports Activities"],
     image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
     category: "Physical",
@@ -151,7 +151,7 @@ export const testimonials: Testimonial[] = [
     content: "Special academy transformed my life. The disciplined approach to studies and the physical training prepared me perfectly for Faujdarhat Cadet College. I secured 3rd position in the entrance exam. The teachers here genuinely care about every student's success.",
     rating: 5,
     achievement: "Secured admission to Faujdarhat Cadet College",
-    class: "Class 7",
+    qualification: "Class 7",
   },
   {
     id: "2",
@@ -159,7 +159,7 @@ export const testimonials: Testimonial[] = [
     role: "parent",
     content: "As a parent, I was looking for an academy that not only focuses on academics but also builds character. Special academy exceeded my expectations. My son has become more disciplined, confident, and responsible. The regular progress reports keep us well-informed.",
     rating: 5,
-    class: "Class 8",
+    qualification: "Class 8",
   },
   {
     id: "3",
@@ -168,7 +168,7 @@ export const testimonials: Testimonial[] = [
     content: "The scholarship preparation course here is exceptional. The mock tests and time management techniques helped me secure a full scholarship at a prestigious school. The faculty members are incredibly supportive and always available for doubt clearing.",
     rating: 5,
     achievement: "Full Scholarship Recipient",
-    class: "Class 6",
+    qualification: "Class 6",
   },
   {
     id: "4",
@@ -176,7 +176,7 @@ export const testimonials: Testimonial[] = [
     role: "parent",
     content: "We enrolled our daughter in the leadership development program, and the transformation has been remarkable. She now speaks confidently in public and has developed strong organizational skills. The academy's holistic approach to education is truly commendable.",
     rating: 5,
-    class: "Class 9",
+    qualification: "Class 9",
   },
   {
     id: "5",
@@ -185,7 +185,7 @@ export const testimonials: Testimonial[] = [
     content: "I joined Special academy when I was in Class 6 with a dream of becoming a cadet. Today, I am proud to say I am a student of Mirzapur Cadet College. The interview preparation and physical training were game-changers. Thank you for believing in me.",
     rating: 5,
     achievement: "Admitted to Mirzapur Cadet College",
-    class: "Class 7",
+    qualification: "Class 7",
   },
   {
     id: "6",
@@ -193,7 +193,7 @@ export const testimonials: Testimonial[] = [
     role: "parent",
     content: "The foundation classes at Special academy built a strong academic base for my child. The small batch sizes ensure individual attention. The teachers identify weak areas and provide targeted support. My child's grades have improved significantly.",
     rating: 4,
-    class: "Class 5",
+    qualification: "Class 5",
   },
 ];
 
@@ -336,11 +336,11 @@ export const stats = [
 ];
 
 export const students: Student[] = [
-  { id: "1", name: "Arafat Hossain", email: "arafat@example.com", phone: "01711111111", class: "Class 8", enrolledCourses: ["1"], joinDate: "2025-01-15", status: "active" },
-  { id: "2", name: "Tasnim Rahman", email: "tasnim@example.com", phone: "01722222222", class: "Class 6", enrolledCourses: ["2", "5"], joinDate: "2025-03-10", status: "active" },
-  { id: "3", name: "Sadia Islam", email: "sadia@example.com", phone: "01733333333", class: "Class 7", enrolledCourses: ["1", "4"], joinDate: "2025-02-20", status: "active" },
-  { id: "4", name: "Rafiq Ahmed", email: "rafiq@example.com", phone: "01744444444", class: "Class 9", enrolledCourses: ["3"], joinDate: "2024-06-01", status: "active" },
-  { id: "5", name: "Nusrat Jahan", email: "nusrat@example.com", phone: "01755555555", class: "Class 10", enrolledCourses: ["1", "5"], joinDate: "2024-01-10", status: "inactive" },
+  { id: "1", name: "Arafat Hossain", email: "arafat@example.com", phone: "01711111111", qualification: "Class 8", enrolledCourses: ["1"], joinDate: "2025-01-15", status: "active" },
+  { id: "2", name: "Tasnim Rahman", email: "tasnim@example.com", phone: "01722222222", qualification: "Class 6", enrolledCourses: ["2", "5"], joinDate: "2025-03-10", status: "active" },
+  { id: "3", name: "Sadia Islam", email: "sadia@example.com", phone: "01733333333", qualification: "Class 7", enrolledCourses: ["1", "4"], joinDate: "2025-02-20", status: "active" },
+  { id: "4", name: "Rafiq Ahmed", email: "rafiq@example.com", phone: "01744444444", qualification: "Class 9", enrolledCourses: ["3"], joinDate: "2024-06-01", status: "active" },
+  { id: "5", name: "Nusrat Jahan", email: "nusrat@example.com", phone: "01755555555", qualification: "Class 10", enrolledCourses: ["1", "5"], joinDate: "2024-01-10", status: "inactive" },
 ];
 
 export const faqs = [

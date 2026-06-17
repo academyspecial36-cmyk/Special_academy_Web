@@ -9,8 +9,17 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DeleteModal } from "@/components/ui/delete-modal";
 import { cn, formatShortDate } from "@/lib/utils";
-import { RichEditor } from "@/components/shared/rich-editor";
+import dynamic from "next/dynamic";
+
+const RichEditor = dynamic(
+  () => import("@/components/shared/rich-editor").then((m) => m.RichEditor),
+  {
+    ssr: false,
+    loading: () => <div className="h-[200px] border border-primary/10 rounded-md animate-pulse bg-primary/5" />,
+  }
+);
 
 interface Note {
   id: string;
@@ -59,6 +68,7 @@ export default function NotesPage() {
   const [formColor, setFormColor] = useState("#FFFFFF");
   const [saving, setSaving] = useState(false);
   const [pinningId, setPinningId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const fetchNotes = useCallback(async () => {
     try {
@@ -181,15 +191,17 @@ export default function NotesPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this note?")) return;
+  async function confirmDelete() {
+    if (!deleting) return;
     try {
-      const res = await fetch(`/api/notes/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/notes/${deleting}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete");
       toast.success("Note deleted");
+      setDeleting(null);
       fetchNotes();
     } catch (e) {
       toast.error((e as Error).message);
+      setDeleting(null);
     }
   }
 
@@ -294,7 +306,7 @@ export default function NotesPage() {
               </div>
               <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
                 {pinnedNotes.map((note) => (
-                  <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={handleDelete} pinningId={pinningId} />
+                  <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={(id: string) => setDeleting(id)} pinningId={pinningId} />
                 ))}
               </div>
             </section>
@@ -308,7 +320,7 @@ export default function NotesPage() {
               )}
               <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 space-y-4">
                 {unpinnedNotes.map((note) => (
-                  <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={handleDelete} pinningId={pinningId} />
+                  <NoteCard key={note.id} note={note} onEdit={openEdit} onPin={handlePin} onDelete={(id: string) => setDeleting(id)} pinningId={pinningId} />
                 ))}
               </div>
             </section>
@@ -433,6 +445,14 @@ export default function NotesPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <DeleteModal
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        title="Delete Note"
+        message="Delete this note?"
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

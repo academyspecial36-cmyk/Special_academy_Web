@@ -14,13 +14,14 @@ import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext } from "@/lib/app-context";
 import type { Course } from "@/types";
+import { QUALIFICATIONS } from "@/constants";
 
 const fields: FieldConfig[] = [
   { name: "title", label: "Course Title", type: "text", required: true, placeholder: "e.g. Cadet Entrance Preparation" },
   { name: "slug", label: "Slug", type: "text", required: true, placeholder: "e.g. cadet-entrance-preparation" },
   { name: "description", label: "Description", type: "textarea", required: true, placeholder: "Course description..." },
   { name: "duration", label: "Duration", type: "text", required: true, placeholder: "e.g. 6 Months" },
-  { name: "classLevel", label: "Class Level", type: "text", required: true, placeholder: "e.g. Class 8-10" },
+  { name: "qualification", label: "Qualification", type: "select", required: true, options: QUALIFICATIONS.map(q => ({ label: q, value: q })) },
   { name: "category", label: "Category", type: "select", required: true, options: [
     { label: "Entrance Preparation", value: "Entrance Preparation" },
     { label: "Scholarship Preparation", value: "Scholarship Preparation" },
@@ -50,7 +51,7 @@ export default function DashboardCoursesPage() {
       slug: data.slug,
       description: data.description,
       duration: data.duration,
-      classLevel: data.classLevel,
+      qualification: data.qualification,
       category: data.category,
       price: data.price || undefined,
       image: data.image || "/placeholder.svg",
@@ -68,7 +69,7 @@ export default function DashboardCoursesPage() {
       slug: data.slug,
       description: data.description,
       duration: data.duration,
-      classLevel: data.classLevel,
+      qualification: data.qualification,
       category: data.category,
       price: data.price || undefined,
       image: data.image || selected.image,
@@ -161,7 +162,7 @@ export default function DashboardCoursesPage() {
                 <p className="text-xs text-muted line-clamp-2 mb-3">{course.description}</p>
                 <div className="flex items-center justify-between">
                   <div className="text-xs text-muted">
-                    <span className="font-medium text-primary">{course.duration}</span> · {course.classLevel}
+                    <span className="font-medium text-primary">{course.duration}</span> · {course.qualification}
                   </div>
                   <div className="flex gap-1">
                     <button
@@ -183,6 +184,11 @@ export default function DashboardCoursesPage() {
           </motion.div>
         ))}
       </div>
+      {filtered.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted text-sm">No courses found.</p>
+        </div>
+      )}
 
       <FormModal
         open={addOpen}
@@ -203,7 +209,7 @@ export default function DashboardCoursesPage() {
           slug: selected.slug,
           description: selected.description,
           duration: selected.duration,
-          classLevel: selected.classLevel,
+          qualification: selected.qualification,
           category: selected.category,
           price: selected.price || "",
           image: selected.image,

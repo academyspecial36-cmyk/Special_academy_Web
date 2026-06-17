@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DeleteModal } from "@/components/ui/delete-modal";
 import { cn } from "@/lib/utils";
 import { WindowsFolderIcon } from "@/components/shared/windows-folder-icon";
 import type { MediaFile, MediaFolder } from "@/types/media";
@@ -59,6 +60,8 @@ export default function MediaManagerPage() {
   const [moveTargetId, setMoveTargetId] = useState<string | null>(null);
   const [cropFile, setCropFile] = useState<MediaFile | null>(null);
   const [optimizing, setOptimizing] = useState(false);
+  const [deletingFolder, setDeletingFolder] = useState<MediaFolder | null>(null);
+  const [deletingFiles, setDeletingFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
@@ -115,27 +118,7 @@ export default function MediaManagerPage() {
     buildPath();
   }, [currentFolderId, folders]);
 
-  // drag-drop
-  useEffect(() => {
-    const el = dropRef.current;
-    if (!el) return;
-    const prevent = (e: DragEvent) => { e.preventDefault(); e.stopPropagation(); };
-    const drop = async (e: DragEvent) => {
-      prevent(e);
-      const files = Array.from(e.dataTransfer?.files ?? []);
-      if (files.length) await handleUpload(files);
-    };
-    el.addEventListener("dragover", prevent);
-    el.addEventListener("dragenter", prevent);
-    el.addEventListener("drop", drop);
-    return () => {
-      el.removeEventListener("dragover", prevent);
-      el.removeEventListener("dragenter", prevent);
-      el.removeEventListener("drop", drop);
-    };
-  }, [currentFolderId]);
-
-  async function handleUpload(files: File[]) {
+  const handleUpload = useCallback(async (files: File[]) => {
     setUploading(true);
     let count = 0;
     for (const file of files) {
@@ -158,7 +141,27 @@ export default function MediaManagerPage() {
       fetchData();
     }
     setUploading(false);
-  }
+  }, [currentFolderId, fetchData]);
+
+  // drag-drop
+  useEffect(() => {
+    const el = dropRef.current;
+    if (!el) return;
+    const prevent = (e: DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+    const drop = async (e: DragEvent) => {
+      prevent(e);
+      const files = Array.from(e.dataTransfer?.files ?? []);
+      if (files.length) await handleUpload(files);
+    };
+    el.addEventListener("dragover", prevent);
+    el.addEventListener("dragenter", prevent);
+    el.addEventListener("drop", drop);
+    return () => {
+      el.removeEventListener("dragover", prevent);
+      el.removeEventListener("dragenter", prevent);
+      el.removeEventListener("drop", drop);
+    };
+  }, [handleUpload]);
 
   async function createFolder() {
     if (!newFolderName.trim()) return;
@@ -196,31 +199,35 @@ export default function MediaManagerPage() {
     }
   }
 
-  async function deleteFolder(folder: MediaFolder) {
-    if (!confirm(`Delete folder "${folder.name}" and all its contents?`)) return;
+  async function confirmDeleteFolder() {
+    if (!deletingFolder) return;
     try {
-      const res = await fetch(`/api/media/folders/${folder.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/media/folders/${deletingFolder.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete folder");
       toast.success("Folder deleted");
-      if (currentFolderId === folder.id) setCurrentFolderId(null);
+      if (currentFolderId === deletingFolder.id) setCurrentFolderId(null);
+      setDeletingFolder(null);
       fetchData();
     } catch (e) {
       toast.error((e as Error).message);
+      setDeletingFolder(null);
     }
   }
 
-  async function deleteFiles() {
+  async function confirmDeleteFiles() {
     if (!selected.size) return;
-    if (!confirm(`Delete ${selected.size} file${selected.size > 1 ? "s" : ""}?`)) return;
+    setDeletingFiles(true);
     try {
       for (const id of selected) {
         await fetch(`/api/media/${id}`, { method: "DELETE" });
       }
       setSelected(new Set());
+      setDeletingFiles(false);
       toast.success("Deleted");
       fetchData();
     } catch (e) {
       toast.error((e as Error).message);
+      setDeletingFiles(false);
     }
   }
 
@@ -385,7 +392,7 @@ export default function MediaManagerPage() {
               <Button size="sm" variant="outline" onClick={() => setShowMoveModal(true)}>
               <WindowsFolderIcon className="w-3.5 h-3.5 mr-1" /> Move
             </Button>
-            <Button size="sm" variant="outline" className="text-red-600" onClick={deleteFiles}>
+            <Button size="sm" variant="outline" className="text-red-600" onClick={() => setDeletingFiles(true)}>
               <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
             </Button>
             <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>
@@ -436,7 +443,7 @@ export default function MediaManagerPage() {
                           className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
                           <Pencil className="w-3 h-3" />
                         </button>
-                        <button onClick={() => deleteFolder(folder)}
+                        <button onClick={() => setDeletingFolder(folder)}
                           className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-red-600">
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -455,7 +462,7 @@ export default function MediaManagerPage() {
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => { setEditingFolder(folder); setEditName(folder.name); }}
                           className="p-1 rounded text-muted hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => deleteFolder(folder)}
+                        <button onClick={() => setDeletingFolder(folder)}
                           className="p-1 rounded text-muted hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
@@ -592,8 +599,12 @@ export default function MediaManagerPage() {
       {/* Uploading overlay */}
       {uploading && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-8 shadow-elevated flex flex-col items-center gap-3">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <div className="bg-white rounded-2xl p-8 shadow-elevated flex flex-col items-center gap-4">
+            <div className="space-y-2 w-48">
+              <div className="h-4 bg-primary/10 rounded animate-pulse" />
+              <div className="h-4 w-3/4 bg-primary/10 rounded animate-pulse mx-auto" />
+              <div className="h-4 w-1/2 bg-primary/10 rounded animate-pulse mx-auto" />
+            </div>
             <p className="text-sm font-medium text-primary">Uploading files...</p>
           </div>
         </div>
@@ -746,6 +757,22 @@ export default function MediaManagerPage() {
           </div>
         </div>
       )}
+
+      <DeleteModal
+        open={!!deletingFolder}
+        onClose={() => setDeletingFolder(null)}
+        title="Delete Folder"
+        message={deletingFolder ? `Delete folder "${deletingFolder.name}" and all its contents?` : ""}
+        onConfirm={confirmDeleteFolder}
+      />
+      <DeleteModal
+        open={deletingFiles}
+        onClose={() => setDeletingFiles(false)}
+        title="Delete Files"
+        message={`Delete ${selected.size} file${selected.size > 1 ? "s" : ""}?`}
+        onConfirm={confirmDeleteFiles}
+        loading={deletingFiles}
+      />
     </div>
   );
 }

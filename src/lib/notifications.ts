@@ -1,4 +1,5 @@
 import { createServiceRoleSupabase } from "./supabase-server";
+import { logger } from "./logger";
 
 type NotificationType = "enrollment" | "contact" | "notice" | "course_item";
 
@@ -18,7 +19,12 @@ export async function createNotification(
     link: link ?? null,
   });
   if (error) {
-    console.error(`[Notification] Failed to create for user ${userId}:`, error.message);
+    logger.error("Failed to create notification for user", {
+      source: "notifications",
+      action: "createNotification",
+      userId,
+      error,
+    });
   }
 }
 
@@ -47,6 +53,10 @@ export async function createNotificationForRole(
 
   const { error } = await supabase.from("notifications").insert(notifications);
   if (error) {
-    console.error(`[Notification] Failed to create for role ${role}:`, error.message);
+    logger.error("Failed to create notification for role", {
+      source: "notifications",
+      action: "createNotificationForRole",
+      error,
+    });
   }
 }

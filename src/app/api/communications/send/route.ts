@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { Resend } from "resend";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 function replaceVariables(body: string, variables: Record<string, string>): string {
   return body.replace(/{{(\w+)}}/g, (_, key) => variables[key] ?? `{{${key}}}`);
@@ -8,7 +10,14 @@ function replaceVariables(body: string, variables: Record<string, string>): stri
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
+    const rateCheck = checkRateLimit(`comm:${ip}`, { maxRequests: 10, windowMs: 60000 });
+    if (!rateCheck.allowed) {
+      return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+
     const { type, templateId, subject, body, recipientType, classFilter, recipientIds } = await request.json();
+    const safeBody = type === "email" ? sanitizeHtml(body) : body;
     const supabase = createServiceRoleSupabase();
 
     let recipients: { type: string; name: string; email?: string; phone?: string }[] = [];
@@ -61,9 +70,7 @@ export async function POST(request: NextRequest) {
       ? recipients.filter((r) => r.email)
       : recipients.filter((r) => r.phone);
 
-    const finalBody = templateId && body
-      ? body
-      : body;
+    const finalBody = safeBody;
 
     const { data: comm, error: commError } = await supabase
       .from("communications")

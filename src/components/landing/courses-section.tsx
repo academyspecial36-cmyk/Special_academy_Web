@@ -8,9 +8,10 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CoursesSection() {
-  const { courses, settings } = useAppContext();
+  const { courses, settings, dataLoading } = useAppContext();
   const featuredCourses = courses.slice(0, 3);
   const labels = settings.config.sectionLabels?.courses;
   const btns = settings.config.buttonLabels || {} as Record<string, string>;
@@ -25,78 +26,91 @@ export function CoursesSection() {
         />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {featuredCourses.map((course, index) => (
-            <motion.div
-              key={course.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="group bg-white rounded-xl overflow-hidden border border-primary/5 hover:border-primary/10 hover:shadow-elevated transition-all duration-300 flex flex-col"
-            >
-              {/* Image */}
-              <div className="relative h-52 overflow-hidden">
-                <Image
-                  src={course.image || "/placeholder.svg"}
-                  alt={course.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                {course.isPopular && (
-                  <Badge className="absolute top-4 left-4 bg-secondary text-white border-0">
-                    <Star className="w-3 h-3 mr-1 fill-white" />
-                    Popular
-                  </Badge>
-                )}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <Badge variant="outline" className="bg-white/90 text-primary border-0 backdrop-blur-sm">
-                    {course.category}
-                  </Badge>
+          {dataLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="bg-white rounded-xl overflow-hidden border border-primary/5 p-6 space-y-4 flex flex-col h-[450px]">
+                  <Skeleton className="h-48 w-full rounded-lg" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-5/6" />
+                  <div className="mt-auto pt-4 border-t border-primary/5 flex justify-between items-center">
+                    <Skeleton className="h-6 w-16" />
+                    <Skeleton className="h-8 w-24 rounded-lg" />
+                  </div>
                 </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-lg font-bold text-primary mb-2 group-hover:text-secondary transition-colors">
-                  {course.title}
-                </h3>
-                <p className="text-sm text-muted mb-4 line-clamp-2">
-                  {course.description}
-                </p>
-
-                <div className="flex items-center gap-4 text-xs text-muted mb-4">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    {course.duration}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    {course.classLevel}
-                  </span>
-                </div>
-
-                <div className="space-y-2 mb-6">
-                  {course.features.slice(0, 3).map((feature) => (
-                    <div key={feature} className="flex items-center gap-2 text-sm text-muted">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span>{feature}</span>
+              ))
+            : featuredCourses.map((course, index) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="group bg-white rounded-xl overflow-hidden border border-primary/5 hover:border-primary/10 hover:shadow-elevated transition-all duration-300 flex flex-col"
+                >
+                  {/* Image */}
+                  <div className="relative h-52 overflow-hidden">
+                    <Image
+                      src={course.image || "/placeholder.svg"}
+                      alt={course.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    {course.isPopular && (
+                      <Badge className="absolute top-4 left-4 bg-secondary text-white border-0">
+                        <Star className="w-3 h-3 mr-1 fill-white" />
+                        Popular
+                      </Badge>
+                    )}
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <Badge variant="outline" className="bg-white/90 text-primary border-0 backdrop-blur-sm">
+                        {course.category}
+                      </Badge>
                     </div>
-                  ))}
-                </div>
+                  </div>
 
-                <div className="mt-auto flex items-center justify-between pt-4 border-t border-primary/5">
-                  <span className="text-lg font-bold text-primary">{course.price}</span>
-                  <Button variant="ghost" size="sm" className="text-secondary hover:text-secondary hover:bg-secondary/5" asChild>
-                    <Link href={`/courses`}>
-                      {btns.learnMore || "Learn More"}
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                  {/* Content */}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold text-primary mb-2 group-hover:text-secondary transition-colors">
+                      {course.title}
+                    </h3>
+                    <p className="text-sm text-muted mb-4 line-clamp-2">
+                      {course.description}
+                    </p>
+
+                    <div className="flex items-center gap-4 text-xs text-muted mb-4">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {course.duration}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5" />
+                        {course.qualification}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-6">
+                      {course.features.slice(0, 3).map((feature) => (
+                        <div key={feature} className="flex items-center gap-2 text-sm text-muted">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-auto flex items-center justify-between pt-4 border-t border-primary/5">
+                      <span className="text-lg font-bold text-primary">{course.price}</span>
+                      <Button variant="ghost" size="sm" className="text-secondary hover:text-secondary hover:bg-secondary/5" asChild>
+                        <Link href={`/courses`}>
+                          {btns.learnMore || "Learn More"}
+                          <ArrowRight className="w-4 h-4 ml-1" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
         </div>
 
         <motion.div

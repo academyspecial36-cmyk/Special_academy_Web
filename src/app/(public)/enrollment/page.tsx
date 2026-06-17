@@ -14,9 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { apiList } from "@/lib/api-client";
+import { QUALIFICATIONS } from "@/constants";
+
+interface QualificationOption {
+  id: string;
+  name: string;
+}
 
 const steps = [
-  { label: "Personal Info", fields: ["fullName", "email", "phone"] },
+  { label: "Personal Info", fields: ["fullName", "email", "phone", "qualificationId"] },
   { label: "Course & Guardian", fields: ["interestedCourse", "guardianName", "guardianContact", "address"] },
   { label: "Create Account", fields: ["password", "confirmPassword"] },
   { label: "Verify", fields: [] },
@@ -35,10 +41,12 @@ export default function EnrollmentPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [courses, setCourses] = useState<string[]>([]);
+  const [qualificationOptions, setQualificationOptions] = useState<QualificationOption[]>([]);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
+    qualificationId: "",
     password: "",
     confirmPassword: "",
     interestedCourse: "",
@@ -54,6 +62,13 @@ export default function EnrollmentPage() {
         setCourses(data.map((c: { title: string }) => c.title));
       }
     }).catch(() => {});
+    apiList("qualifications").then((data) => {
+      if (Array.isArray(data) && data.length) {
+        setQualificationOptions(data as QualificationOption[]);
+      }
+    }).catch(() => {
+      setQualificationOptions(QUALIFICATIONS.map((name) => ({ id: name, name })));
+    });
   }, []);
 
   const updateField = (field: string, value: string) => {
@@ -88,6 +103,11 @@ export default function EnrollmentPage() {
   }
 
   const handleNext = async () => {
+    if (step === 0) {
+      if (!formData.fullName) { toast.error("Please enter your full name"); return; }
+      if (!formData.email) { toast.error("Please enter your email"); return; }
+      if (!formData.qualificationId) { toast.error("Please select your current qualification"); return; }
+    }
     if (step === 2) {
       if (accountCreated) {
         setStep(3);
@@ -264,6 +284,18 @@ export default function EnrollmentPage() {
                     onChange={(e) => updateField("phone", e.target.value)}
                   />
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Current Qualification *</label>
+                  <Select
+                    value={formData.qualificationId}
+                    onChange={(e) => updateField("qualificationId", e.target.value)}
+                  >
+                    <option value="">Select your current class</option>
+                    {qualificationOptions.map((q) => (
+                      <option key={q.id} value={q.id}>{q.name}</option>
+                    ))}
+                  </Select>
+                </div>
               </div>
             )}
 
@@ -413,11 +445,16 @@ export default function EnrollmentPage() {
                 <div className="space-y-4">
                   {Object.entries(formData).map(([key, value]) => {
                     if (!value || key === "confirmPassword" || key === "password") return null;
-                    const label = key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+                    const label = key === "qualificationId"
+                      ? "Qualification"
+                      : key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+                    const displayValue = key === "qualificationId"
+                      ? qualificationOptions.find((q) => q.id === value)?.name ?? value
+                      : value;
                     return (
                       <div key={key} className="flex justify-between py-2 border-b border-primary/5">
                         <span className="text-sm text-muted">{label}</span>
-                        <span className="text-sm font-medium text-primary">{value}</span>
+                        <span className="text-sm font-medium text-primary">{displayValue}</span>
                       </div>
                     );
                   })}

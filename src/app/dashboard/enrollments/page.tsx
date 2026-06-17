@@ -2,7 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, CheckCircle2, XCircle, Clock, Eye, Trash2, ThumbsUp, ThumbsDown } from "lucide-react";
+import {
+  Search,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Eye,
+  Trash2,
+  ThumbsUp,
+  ThumbsDown,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,18 +28,29 @@ interface Enrollment {
   fullName: string;
   email: string;
   interestedCourse: string;
-  currentClass: string;
+  qualificationId: string;
   createdAt: string;
   status: "unverified" | "pending" | "approved" | "rejected";
   rejectionMessage?: string;
 }
 
 export default function EnrollmentsPage() {
-  const { enrollments, deleteEnrollment, updateEnrollment, setEnrollments, loadAdminData } = useAppContext();
+  const {
+    enrollments,
+    deleteEnrollment,
+    updateEnrollment,
+    setEnrollments,
+    loadAdminData,
+    qualifications,
+  } = useAppContext();
 
-  useEffect(() => { loadAdminData(); }, [loadAdminData]);
+  useEffect(() => {
+    loadAdminData();
+  }, [loadAdminData]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "unverified" | "pending" | "approved" | "rejected">("pending");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "unverified" | "pending" | "approved" | "rejected"
+  >("pending");
   const [viewOpen, setViewOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -40,12 +61,21 @@ export default function EnrollmentsPage() {
   const [selected, setSelected] = useState<Enrollment | null>(null);
 
   const filtered = enrollments.filter((e) => {
-    const matchesSearch = e.fullName.toLowerCase().includes(search.toLowerCase()) || e.interestedCourse.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch =
+      e.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      e.interestedCourse.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || e.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const statusConfig: Record<string, { label: string; variant: "warning" | "success" | "destructive" | "default"; icon: React.ElementType }> = {
+  const statusConfig: Record<
+    string,
+    {
+      label: string;
+      variant: "warning" | "success" | "destructive" | "default";
+      icon: React.ElementType;
+    }
+  > = {
     unverified: { label: "Unverified", variant: "default", icon: Clock },
     pending: { label: "Pending", variant: "warning", icon: Clock },
     approved: { label: "Approved", variant: "success", icon: CheckCircle2 },
@@ -74,7 +104,9 @@ export default function EnrollmentsPage() {
       if (!res.ok) throw new Error(data.error);
 
       setEnrollments((prev) =>
-        prev.map((e) => (e.id === selected.id ? { ...e, status: "approved" as const } : e))
+        prev.map((e) =>
+          e.id === selected.id ? { ...e, status: "approved" as const } : e,
+        ),
       );
       setApproveOpen(false);
       setSelected(null);
@@ -98,7 +130,10 @@ export default function EnrollmentsPage() {
       const res = await fetch(`/api/enrollments/${selected.id}/review`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "rejected", rejectionMessage: rejectMessage.trim() }),
+        body: JSON.stringify({
+          action: "rejected",
+          rejectionMessage: rejectMessage.trim(),
+        }),
       });
 
       const data = await res.json();
@@ -107,9 +142,13 @@ export default function EnrollmentsPage() {
       setEnrollments((prev) =>
         prev.map((e) =>
           e.id === selected.id
-            ? { ...e, status: "rejected" as const, rejectionMessage: rejectMessage.trim() }
-            : e
-        )
+            ? {
+                ...e,
+                status: "rejected" as const,
+                rejectionMessage: rejectMessage.trim(),
+              }
+            : e,
+        ),
       );
       setRejectOpen(false);
       setSelected(null);
@@ -128,7 +167,9 @@ export default function EnrollmentsPage() {
       <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-primary">Enrollments</h1>
-          <p className="text-sm text-muted">Review and manage student enrollment applications.</p>
+          <p className="text-sm text-muted">
+            Review and manage student enrollment applications.
+          </p>
         </div>
       </div>
 
@@ -137,12 +178,29 @@ export default function EnrollmentsPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <Input placeholder="Search enrollments..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+              <Input
+                placeholder="Search enrollments..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               <Filter className="w-4 h-4 text-muted" />
-              {(["all", "unverified", "pending", "approved", "rejected"] as const).map((s) => (
-                <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${statusFilter === s ? "bg-primary text-white" : "bg-accent text-muted hover:bg-primary/5"}`}>
+              {(
+                [
+                  "all",
+                  "unverified",
+                  "pending",
+                  "approved",
+                  "rejected",
+                ] as const
+              ).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${statusFilter === s ? "bg-primary text-white" : "bg-accent text-muted hover:bg-primary/5"}`}
+                >
                   {s.charAt(0).toUpperCase() + s.slice(1)}
                 </button>
               ))}
@@ -157,36 +215,70 @@ export default function EnrollmentsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-primary/5 bg-accent/50">
-                  <th className="text-left text-xs font-medium text-muted py-3 px-6">Student</th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Course</th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Class</th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Date</th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Status</th>
-                  <th className="text-right text-xs font-medium text-muted py-3 px-6">Actions</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-6">
+                    Student
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
+                    Course
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
+                    Qualification
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
+                    Date
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
+                    Status
+                  </th>
+                  <th className="text-right text-xs font-medium text-muted py-3 px-6">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((enrollment) => {
-                  const config = statusConfig[enrollment.status] || statusConfig.pending;
+                  const config =
+                    statusConfig[enrollment.status] || statusConfig.pending;
                   const StatusIcon = config.icon;
                   return (
-                    <motion.tr key={enrollment.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors">
+                    <motion.tr
+                      key={enrollment.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
+                    >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
-                            {enrollment.fullName.split(" ").map((n) => n[0]).join("")}
+                            {enrollment.fullName
+                              .split(" ")
+                              .map((n: string) => n[0])
+                              .join("")}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-primary">{enrollment.fullName}</p>
-                            <p className="text-xs text-muted">{enrollment.email}</p>
+                            <p className="text-sm font-medium text-primary">
+                              {enrollment.fullName}
+                            </p>
+                            <p className="text-xs text-muted">
+                              {enrollment.email}
+                            </p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-sm text-muted">{enrollment.interestedCourse}</td>
-                      <td className="py-4 px-4 text-sm text-muted">{enrollment.currentClass}</td>
-                      <td className="py-4 px-4 text-sm text-muted">{enrollment.createdAt}</td>
+                      <td className="py-4 px-4 text-sm text-muted">
+                        {enrollment.interestedCourse}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-muted">
+                        {qualifications.find((q) => q.id === enrollment.qualificationId)?.name ?? "—"}
+                      </td>
+                      <td className="py-4 px-4 text-sm text-muted">
+                        {enrollment.createdAt}
+                      </td>
                       <td className="py-4 px-4">
-                        <Badge variant={config.variant} className="text-[10px] capitalize">
+                        <Badge
+                          variant={config.variant}
+                          className="text-[10px] capitalize"
+                        >
                           <StatusIcon className="w-3 h-3 mr-1" />
                           {config.label}
                         </Badge>
@@ -194,31 +286,45 @@ export default function EnrollmentsPage() {
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-1">
                           {enrollment.status === "pending" && (
-                            <>
+                            <div className="flex items-center gap-2 text-xs">
                               <button
-                                onClick={() => { setSelected(enrollment); setApproveOpen(true); }}
-                                className="p-1.5 rounded-md hover:bg-emerald-50 text-muted hover:text-emerald-600 transition-colors"
-                                title="Approve"
+                                onClick={() => {
+                                  setSelected(enrollment);
+                                  setApproveOpen(true);
+                                }}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-all duration-200 hover:shadow-sm font-medium"
                               >
-                                <ThumbsUp className="w-3.5 h-3.5" />
+                                <ThumbsUp className="w-4 h-4" />
+                                <span>Approve</span>
                               </button>
+
                               <button
-                                onClick={() => { setSelected(enrollment); setRejectMessage(""); setRejectOpen(true); }}
-                                className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
-                                title="Reject"
+                                onClick={() => {
+                                  setSelected(enrollment);
+                                  setRejectMessage("");
+                                  setRejectOpen(true);
+                                }}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-all duration-200 hover:shadow-sm font-medium"
                               >
-                                <ThumbsDown className="w-3.5 h-3.5" />
+                                <ThumbsDown className="w-4 h-4" />
+                                <span>Reject</span>
                               </button>
-                            </>
+                            </div>
                           )}
                           <button
-                            onClick={() => { setSelected(enrollment); setViewOpen(true); }}
+                            onClick={() => {
+                              setSelected(enrollment);
+                              setViewOpen(true);
+                            }}
                             className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => { setSelected(enrollment); setDeleteOpen(true); }}
+                            onClick={() => {
+                              setSelected(enrollment);
+                              setDeleteOpen(true);
+                            }}
                             className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -231,16 +337,32 @@ export default function EnrollmentsPage() {
               </tbody>
             </table>
           </div>
+          {filtered.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted text-sm">No enrollments found.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      <Modal open={viewOpen} onClose={() => { setViewOpen(false); setSelected(null); }} title="Enrollment Details">
+      <Modal
+        open={viewOpen}
+        onClose={() => {
+          setViewOpen(false);
+          setSelected(null);
+        }}
+        title="Enrollment Details"
+      >
         {selected && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-medium text-muted">Full Name</label>
-                <p className="text-sm text-primary font-medium">{selected.fullName}</p>
+                <label className="text-xs font-medium text-muted">
+                  Full Name
+                </label>
+                <p className="text-sm text-primary font-medium">
+                  {selected.fullName}
+                </p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Email</label>
@@ -248,11 +370,13 @@ export default function EnrollmentsPage() {
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Course</label>
-                <p className="text-sm text-primary">{selected.interestedCourse}</p>
+                <p className="text-sm text-primary">
+                  {selected.interestedCourse}
+                </p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Class</label>
-                <p className="text-sm text-primary">{selected.currentClass}</p>
+                <p className="text-sm text-primary">{qualifications.find((q) => q.id === selected.qualificationId)?.name ?? "—"}</p>
               </div>
               <div>
                 <label className="text-xs font-medium text-muted">Date</label>
@@ -261,7 +385,12 @@ export default function EnrollmentsPage() {
               <div>
                 <label className="text-xs font-medium text-muted">Status</label>
                 <div className="mt-1">
-                  <Badge variant={statusConfig[selected.status]?.variant || "warning"} className="text-[10px] capitalize">
+                  <Badge
+                    variant={
+                      statusConfig[selected.status]?.variant || "warning"
+                    }
+                    className="text-[10px] capitalize"
+                  >
                     {statusConfig[selected.status]?.label || selected.status}
                   </Badge>
                 </div>
@@ -269,47 +398,100 @@ export default function EnrollmentsPage() {
             </div>
             {selected.status === "rejected" && selected.rejectionMessage && (
               <div>
-                <label className="text-xs font-medium text-muted">Rejection Reason</label>
+                <label className="text-xs font-medium text-muted">
+                  Rejection Reason
+                </label>
                 <div className="mt-1 p-3 bg-red-50 rounded-lg text-sm text-red-700">
                   {selected.rejectionMessage}
                 </div>
               </div>
             )}
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" size="sm" onClick={() => { setViewOpen(false); setSelected(null); }}>Close</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setViewOpen(false);
+                  setSelected(null);
+                }}
+              >
+                Close
+              </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      <Modal open={approveOpen} onClose={() => { setApproveOpen(false); setSelected(null); }} title="Approve Enrollment">
+      <Modal
+        open={approveOpen}
+        onClose={() => {
+          setApproveOpen(false);
+          setSelected(null);
+        }}
+        title="Approve Enrollment"
+      >
         {selected && (
           <div className="space-y-4">
             <p className="text-sm text-muted">
-              This will approve <strong>{selected.fullName}</strong>&apos;s enrollment and create a student record. They will receive a confirmation email.
+              This will approve <strong>{selected.fullName}</strong>&apos;s
+              enrollment and create a student record. They will receive a
+              confirmation email.
             </p>
             <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
-              <p className="text-sm"><strong>Name:</strong> {selected.fullName}</p>
-              <p className="text-sm"><strong>Email:</strong> {selected.email}</p>
-              <p className="text-sm"><strong>Course:</strong> {selected.interestedCourse}</p>
+              <p className="text-sm">
+                <strong>Name:</strong> {selected.fullName}
+              </p>
+              <p className="text-sm">
+                <strong>Email:</strong> {selected.email}
+              </p>
+              <p className="text-sm">
+                <strong>Qualification:</strong> {qualifications.find((q) => q.id === selected.qualificationId)?.name ?? "—"}
+              </p>
+              <p className="text-sm">
+                <strong>Course:</strong> {selected.interestedCourse}
+              </p>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => { setApproveOpen(false); setSelected(null); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setApproveOpen(false);
+                  setSelected(null);
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="default" size="sm" onClick={handleApprove} disabled={approveSubmitting}>
-                {approveSubmitting ? "Approving..." : "Approve & Create Student"}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleApprove}
+                disabled={approveSubmitting}
+              >
+                {approveSubmitting
+                  ? "Approving..."
+                  : "Approve & Create Student"}
               </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      <Modal open={rejectOpen} onClose={() => { setRejectOpen(false); setSelected(null); setRejectMessage(""); }} title="Reject Enrollment">
+      <Modal
+        open={rejectOpen}
+        onClose={() => {
+          setRejectOpen(false);
+          setSelected(null);
+          setRejectMessage("");
+        }}
+        title="Reject Enrollment"
+      >
         {selected && (
           <div className="space-y-4">
             <p className="text-sm text-muted">
-              Provide a reason for rejecting <strong>{selected.fullName}</strong>&apos;s enrollment. This message will be sent to their email.
+              Provide a reason for rejecting{" "}
+              <strong>{selected.fullName}</strong>&apos;s enrollment. This
+              message will be sent to their email.
             </p>
             <Textarea
               placeholder="Enter rejection reason..."
@@ -318,10 +500,23 @@ export default function EnrollmentsPage() {
               onChange={(e) => setRejectMessage(e.target.value)}
             />
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => { setRejectOpen(false); setSelected(null); setRejectMessage(""); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setRejectOpen(false);
+                  setSelected(null);
+                  setRejectMessage("");
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="destructive" size="sm" onClick={handleReject} disabled={rejectSubmitting}>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleReject}
+                disabled={rejectSubmitting}
+              >
                 {rejectSubmitting ? "Rejecting..." : "Reject & Send Email"}
               </Button>
             </div>
@@ -331,7 +526,10 @@ export default function EnrollmentsPage() {
 
       <DeleteModal
         open={deleteOpen}
-        onClose={() => { setDeleteOpen(false); setSelected(null); }}
+        onClose={() => {
+          setDeleteOpen(false);
+          setSelected(null);
+        }}
         onConfirm={handleDelete}
         title="Delete Enrollment?"
         message={`Are you sure you want to delete the enrollment for "${selected?.fullName}"? This action cannot be undone.`}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useInsertionEffect } from "react";
 import { useAppContext } from "@/lib/app-context";
 import { generateShadeCssVars } from "@/lib/theme-utils";
 
@@ -17,11 +17,22 @@ const FONT_URLS: Record<string, string> = {
   Merriweather: "https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap",
 };
 
+const STORAGE_KEY = "app-theme";
+
+function loadCachedTheme(): { primaryColor: string; fontFamily: string } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return null;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { settings } = useAppContext();
-  const theme = settings.config?.theme;
+  const cached = !settings.config?.theme?.primaryColor ? loadCachedTheme() : null;
+  const theme = settings.config?.theme || cached || { primaryColor: "#07220B", fontFamily: "Inter" };
 
-  useEffect(() => {
+  useInsertionEffect(() => {
     const root = document.documentElement;
     const color = theme?.primaryColor || "#07220B";
     const font = theme?.fontFamily || "Inter";

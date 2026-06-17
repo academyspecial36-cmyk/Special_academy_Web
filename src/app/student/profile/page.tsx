@@ -6,8 +6,10 @@ import { User, Mail, Phone, MapPin, School, Calendar, Edit3, Save, Loader2, User
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
-import { apiUpload } from "@/lib/api-client";
+import { apiUpload, apiList } from "@/lib/api-client";
+import { QUALIFICATIONS } from "@/constants";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -30,7 +32,6 @@ interface EnrollmentData {
   guardian_name: string;
   guardian_contact: string;
   address: string;
-  previous_school: string;
   created_at: string;
   status: string;
 }
@@ -43,12 +44,14 @@ export default function StudentProfilePage() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
 
+  const [qualificationOptions, setQualificationOptions] = useState<{ id: string; name: string }[]>([]);
   const [form, setForm] = useState({
     name: "",
     phone: "",
     address: "",
     guardianName: "",
     guardianContact: "",
+    qualification: "",
   });
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -65,11 +68,12 @@ export default function StudentProfilePage() {
         setEnrollment(data.enrollment);
         setAvatarUrl(data.profile?.avatar_url ?? null);
         setForm({
-          name: data.student?.name ?? data.enrollment?.full_name ?? "",
-          phone: data.student?.phone ?? "",
+          name: data.student?.name ?? data.profile?.name ?? data.enrollment?.full_name ?? "",
+          phone: data.student?.phone ?? data.enrollment?.phone ?? data.profile?.phone ?? "",
           address: data.enrollment?.address ?? "",
           guardianName: data.enrollment?.guardian_name ?? "",
           guardianContact: data.enrollment?.guardian_contact ?? "",
+          qualification: data.student?.class ?? "",
         });
       } catch {
         toast.error("Failed to load profile");
@@ -78,6 +82,11 @@ export default function StudentProfilePage() {
       }
     }
     fetchProfile();
+    apiList("qualifications").then((data) => {
+      if (Array.isArray(data) && data.length) setQualificationOptions(data as { id: string; name: string }[]);
+    }).catch(() => {
+      setQualificationOptions(QUALIFICATIONS.map((name) => ({ id: name, name })));
+    });
   }, []);
 
   async function handleSave() {
@@ -115,8 +124,36 @@ export default function StudentProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div className="h-8 w-36 bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-4 w-56 bg-primary/10 rounded-md animate-pulse" />
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-1">
+            <div className="bg-white rounded-xl border border-primary/5 p-6 space-y-4">
+              <div className="w-24 h-24 bg-primary/10 rounded-full mx-auto animate-pulse" />
+              <div className="h-5 w-32 bg-primary/10 rounded mx-auto animate-pulse" />
+              <div className="h-4 w-24 bg-primary/10 rounded mx-auto animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 w-full bg-primary/10 rounded animate-pulse" />
+                <div className="h-4 w-full bg-primary/10 rounded animate-pulse" />
+                <div className="h-4 w-2/3 bg-primary/10 rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+          <div className="md:col-span-2 space-y-4">
+            <div className="bg-white rounded-xl border border-primary/5 p-6 space-y-4">
+              <div className="h-6 w-40 bg-primary/10 rounded animate-pulse" />
+              <div className="grid grid-cols-2 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="h-3 w-16 bg-primary/10 rounded animate-pulse" />
+                    <div className="h-9 w-full bg-primary/10 rounded-md animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -156,7 +193,7 @@ export default function StudentProfilePage() {
                 )}
               </div>
               <h3 className="text-lg font-bold text-primary">{form.name || "Student"}</h3>
-              <p className="text-sm text-muted mb-1">{student?.class ?? enrollment?.interested_course ?? ""}</p>
+              <p className="text-sm text-muted mb-1">{student?.class ?? enrollment?.interested_course ?? "No qualification set"}</p>
               {student?.id && (
                 <p className="text-xs text-muted">Student ID: {student.id.slice(0, 8).toUpperCase()}</p>
               )}
@@ -233,8 +270,17 @@ export default function StudentProfilePage() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Class</label>
-                  <Input value={student?.class ?? ""} disabled />
+                  <label className="text-sm font-medium text-primary mb-1.5 block">Qualification</label>
+                  {editing ? (
+                    <Select value={form.qualification} onChange={(e) => setForm((p) => ({ ...p, qualification: e.target.value }))}>
+                      <option value="">Select qualification</option>
+                      {qualificationOptions.map((q) => (
+                        <option key={q.name} value={q.name}>{q.name}</option>
+                      ))}
+                    </Select>
+                  ) : (
+                    <Input value={student?.class ?? ""} disabled />
+                  )}
                 </div>
               </div>
               <div>

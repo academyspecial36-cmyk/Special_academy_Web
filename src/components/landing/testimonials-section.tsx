@@ -8,15 +8,16 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function TestimonialsSection() {
-  const { testimonials, settings } = useAppContext();
+  const { testimonials, settings, dataLoading } = useAppContext();
   const [current, setCurrent] = useState(0);
   const featured = testimonials.slice(0, 3);
   const labels = settings.config.sectionLabels?.testimonials;
   const btns = settings.config.buttonLabels || {} as Record<string, string>;
 
-  if (featured.length === 0) return null;
+  if (featured.length === 0 && !dataLoading) return null;
 
   const next = () => setCurrent((prev) => (prev + 1) % featured.length);
   const prev = () => setCurrent((prev) => (prev - 1 + featured.length) % featured.length);
@@ -38,98 +39,133 @@ export function TestimonialsSection() {
         />
 
         {/* Featured Testimonial Carousel */}
-        <div className="max-w-3xl mx-auto mb-16">
-          <div className="relative">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={current}
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                transition={{ duration: 0.4 }}
-                className="text-center"
-              >
-                <Quote className="w-10 h-10 text-secondary mx-auto mb-6 opacity-50" />
-                <p className="text-lg md:text-xl leading-relaxed text-white/90 mb-8 italic">
-                  &ldquo;{featured[current].content}&rdquo;
-                </p>
-                <div className="flex items-center justify-center gap-1 mb-3">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
+        {dataLoading ? (
+          <div className="max-w-3xl mx-auto mb-16">
+            <div className="text-center space-y-4">
+              <Skeleton className="w-10 h-10 rounded-full mx-auto bg-white/10" />
+              <Skeleton className="h-6 w-3/4 mx-auto bg-white/10" />
+              <Skeleton className="h-4 w-1/2 mx-auto bg-white/10" />
+              <div className="flex justify-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="w-4 h-4 bg-white/10" />
+                ))}
+              </div>
+              <Skeleton className="h-5 w-32 mx-auto bg-white/10" />
+            </div>
+          </div>
+        ) : (
+          <div className="max-w-3xl mx-auto mb-16">
+            <div className="relative">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current}
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.4 }}
+                  className="text-center"
+                >
+                  <Quote className="w-10 h-10 text-secondary mx-auto mb-6 opacity-50" />
+                  <p className="text-lg md:text-xl leading-relaxed text-white/90 mb-8 italic">
+                    &ldquo;{featured[current].content}&rdquo;
+                  </p>
+                  <div className="flex items-center justify-center gap-1 mb-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-4 h-4 ${
+                          i < featured[current].rating
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-white/20"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <h4 className="font-semibold text-white">{featured[current].name}</h4>
+                  <p className="text-sm text-white/50 capitalize">
+                    {featured[current].role} {featured[current].achievement && `— ${featured[current].achievement}`}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="flex items-center justify-center gap-3 mt-8">
+                <button
+                  onClick={prev}
+                  className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex gap-2">
+                  {featured.map((_, i) => (
+                    <button
                       key={i}
-                      className={`w-4 h-4 ${
-                        i < featured[current].rating
-                          ? "text-amber-400 fill-amber-400"
-                          : "text-white/20"
+                      onClick={() => setCurrent(i)}
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                        i === current ? "bg-secondary w-6" : "bg-white/30"
                       }`}
                     />
                   ))}
                 </div>
-                <h4 className="font-semibold text-white">{featured[current].name}</h4>
-                <p className="text-sm text-white/50 capitalize">
-                  {featured[current].role} {featured[current].achievement && `— ${featured[current].achievement}`}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="flex items-center justify-center gap-3 mt-8">
-              <button
-                onClick={prev}
-                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex gap-2">
-                {featured.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrent(i)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                      i === current ? "bg-secondary w-6" : "bg-white/30"
-                    }`}
-                  />
-                ))}
+                <button
+                  onClick={next}
+                  className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-              <button
-                onClick={next}
-                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Quick Cards */}
         <div className="grid sm:grid-cols-3 gap-5">
-          {testimonials.slice(3, 6).map((t, index) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              className="p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
-            >
-              <div className="flex items-center gap-1 mb-3">
-                {[...Array(t.rating)].map((_, i) => (
-                  <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                ))}
-              </div>
-              <p className="text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
-                &ldquo;{t.content}&rdquo;
-              </p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-white">{t.name}</p>
-                  <p className="text-xs text-white/40 capitalize">{t.role}</p>
+          {dataLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm space-y-3"
+                >
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Skeleton key={i} className="w-3.5 h-3.5 bg-white/10" />
+                    ))}
+                  </div>
+                  <Skeleton className="h-4 w-full bg-white/10" />
+                  <Skeleton className="h-4 w-5/6 bg-white/10" />
+                  <div className="flex justify-between items-center pt-2">
+                    <Skeleton className="h-4 w-20 bg-white/10" />
+                    <Skeleton className="h-4 w-12 bg-white/10" />
+                  </div>
                 </div>
-                <Badge className="bg-white/10 text-white/70 border-0 text-[10px]">
-                  {t.role}
-                </Badge>
-              </div>
-            </motion.div>
-          ))}
+              ))
+            : testimonials.slice(3, 6).map((t, index) => (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className="p-6 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm"
+                >
+                  <div className="flex items-center gap-1 mb-3">
+                    {[...Array(t.rating)].map((_, i) => (
+                      <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-sm text-white/70 leading-relaxed mb-4 line-clamp-3">
+                    &ldquo;{t.content}&rdquo;
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-white">{t.name}</p>
+                      <p className="text-xs text-white/40 capitalize">{t.role}</p>
+                    </div>
+                    <Badge className="bg-white/10 text-white/70 border-0 text-[10px]">
+                      {t.role}
+                    </Badge>
+                  </div>
+                </motion.div>
+              ))}
         </div>
 
         <motion.div

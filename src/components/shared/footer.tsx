@@ -135,7 +135,7 @@ export function Footer() {
             {/* Mini Map */}
             <div className="mt-5 rounded-lg overflow-hidden border border-white/10">
               <iframe
-                src={`https://www.google.com/maps?q=${encodeURIComponent(settings.address)}&output=embed`}
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14128.494958996613!2d85.3354403!3d27.6901084!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb191051eb484d%3A0x5bb20af2abcd66f0!2sSPECIAL%20ACADEMY!5e0!3m2!1sen!2snp!4v1"
                 width="100%"
                 height="140"
                 style={{ border: 0 }}

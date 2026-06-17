@@ -4,7 +4,7 @@ export interface Course {
   slug: string;
   description: string;
   duration: string;
-  classLevel: string;
+  qualification: string;
   features: string[];
   image: string;
   category: string;
@@ -31,7 +31,7 @@ export interface Testimonial {
   rating: number;
   image?: string;
   achievement?: string;
-  class?: string;
+  qualification?: string;
 }
 
 export interface GalleryImage {
@@ -45,12 +45,11 @@ export interface EnrollmentFormData {
   fullName: string;
   email: string;
   phone: string;
-  currentClass: string;
+  qualificationId: string;
   interestedCourse: string;
   guardianName: string;
   guardianContact: string;
   address: string;
-  previousSchool: string;
   message: string;
 }
 
@@ -59,7 +58,8 @@ export interface Student {
   name: string;
   email: string;
   phone: string;
-  class: string;
+  qualificationId?: string;
+  qualification?: string;
   enrolledCourses: string[];
   joinDate: string;
   status: "active" | "inactive";

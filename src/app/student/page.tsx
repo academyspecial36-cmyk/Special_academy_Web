@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -20,8 +21,17 @@ import { formatShortDate } from "@/lib/utils";
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
-  const { subcategories, completedItems, notices, courses } = useAppContext();
-  const enrolledCourses = courses.slice(0, 3);
+  const { subcategories, completedItems, notices } = useAppContext();
+  const [enrolledCourses, setEnrolledCourses] = useState<{ id: string; title: string; duration: string; qualification: string; category: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/student-courses")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.courses)) setEnrolledCourses(data.courses);
+      })
+      .catch(() => {});
+  }, []);
 
   function getCourseProgress(courseId: string) {
     const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
@@ -108,7 +118,7 @@ export default function StudentDashboardPage() {
                           <p className="font-medium text-primary text-sm truncate">{course.title}</p>
                           <Badge variant="outline" className="text-[10px] shrink-0 sm:hidden">{progress}%</Badge>
                         </div>
-                        <p className="text-xs text-muted">{course.duration} · {course.classLevel}</p>
+                        <p className="text-xs text-muted">{course.duration} · {course.qualification}</p>
                         <div className="mt-2 flex items-center gap-2">
                           <div className="flex-1 h-1.5 bg-primary/10 rounded-full overflow-hidden">
                             <div className="h-full bg-secondary rounded-full transition-all" style={{ width: `${progress}%` }} />

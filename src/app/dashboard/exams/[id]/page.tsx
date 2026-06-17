@@ -8,7 +8,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, Printer, HelpCircle, FileQuestion, Bar
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
+import { QuestionEditor } from "@/components/exam/question-editor";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext } from "@/lib/app-context";
 import type { Question } from "@/types";
@@ -26,52 +26,15 @@ export default function AdminExamDetailPage() {
   const category = examCategories.find((c) => c.id === categoryId);
   const categoryQuestions = questions.filter((q) => q.categoryId === categoryId);
 
-  const mcqFields: FieldConfig[] = [
-    { name: "type", label: "Type", type: "select", required: true, options: [
-      { value: "mcq", label: "Multiple Choice" },
-      { value: "subjective", label: "Subjective" },
-    ] },
-    { name: "question", label: "Question", type: "textarea", required: true, placeholder: "Enter the question..." },
-    { name: "option1", label: "Option A", type: "text", required: false, placeholder: "First option (for MCQ)" },
-    { name: "option2", label: "Option B", type: "text", required: false, placeholder: "Second option (for MCQ)" },
-    { name: "option3", label: "Option C", type: "text", required: false, placeholder: "Third option (for MCQ)" },
-    { name: "option4", label: "Option D", type: "text", required: false, placeholder: "Fourth option (for MCQ)" },
-    { name: "answer", label: "Correct Answer", type: "text", required: true, placeholder: "Correct answer text" },
-    { name: "explanation", label: "Explanation", type: "textarea", required: true, placeholder: "Explain why this answer is correct..." },
-  ];
-
-  const editFields: FieldConfig[] = mcqFields;
-
-  function handleAdd(data: Record<string, string>) {
-    const isMcq = data.type === "mcq";
-    const options = isMcq
-      ? [data.option1, data.option2, data.option3, data.option4].filter(Boolean)
-      : [];
-    addQuestion({
-      categoryId,
-      type: data.type as "mcq" | "subjective",
-      question: data.question,
-      options,
-      answer: data.answer,
-      explanation: data.explanation,
-    });
+  function handleAdd(data: { type: "mcq" | "subjective"; question: string; options: string[]; answer: string; explanation: string }) {
+    addQuestion({ categoryId, ...data });
     setShowAdd(false);
     toast.success("Question added");
   }
 
-  function handleEdit(data: Record<string, string>) {
+  function handleEdit(data: { type: "mcq" | "subjective"; question: string; options: string[]; answer: string; explanation: string }) {
     if (!editing) return;
-    const isMcq = data.type === "mcq";
-    const options = isMcq
-      ? [data.option1, data.option2, data.option3, data.option4].filter(Boolean)
-      : [];
-    updateQuestion(editing.id, {
-      type: data.type as "mcq" | "subjective",
-      question: data.question,
-      options,
-      answer: data.answer,
-      explanation: data.explanation,
-    });
+    updateQuestion(editing.id, data);
     setEditing(null);
     toast.success("Question updated");
   }
@@ -231,22 +194,19 @@ export default function AdminExamDetailPage() {
         )}
       </div>
 
-      <FormModal open={showAdd} onClose={() => setShowAdd(false)} title="Add Question" fields={mcqFields} onSubmit={handleAdd} />
-      <FormModal
+      <QuestionEditor
+        open={showAdd}
+        onClose={() => setShowAdd(false)}
+        title="Add Question"
+        existingQuestions={categoryQuestions}
+        onSubmit={handleAdd}
+      />
+      <QuestionEditor
         open={!!editing}
         onClose={() => setEditing(null)}
         title="Edit Question"
-        fields={editFields}
-        initialValues={editing ? {
-          type: editing.type,
-          question: editing.question,
-          option1: editing.options[0] || "",
-          option2: editing.options[1] || "",
-          option3: editing.options[2] || "",
-          option4: editing.options[3] || "",
-          answer: editing.answer,
-          explanation: editing.explanation,
-        } : undefined}
+        existingQuestions={categoryQuestions}
+        initialValues={editing || undefined}
         onSubmit={handleEdit}
       />
       <DeleteModal open={!!deleting} onClose={() => setDeleting(null)} title="Delete Question" message="Are you sure you want to delete this question?" onConfirm={handleDelete} />

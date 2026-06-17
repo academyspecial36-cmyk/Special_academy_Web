@@ -129,7 +129,7 @@ export default function CoursesPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Users className="w-3.5 h-3.5" />
-                        {course.classLevel}
+                        {course.qualification}
                       </span>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-primary/5">
@@ -206,7 +206,7 @@ export default function CoursesPage() {
                   <div className="p-3 bg-accent rounded-lg text-center">
                     <Users className="w-5 h-5 text-secondary mx-auto mb-1" />
                     <p className="text-xs text-muted">Class Level</p>
-                    <p className="font-semibold text-primary text-sm">{selectedCourse.classLevel}</p>
+                    <p className="font-semibold text-primary text-sm">{selectedCourse.qualification}</p>
                   </div>
                   <div className="p-3 bg-accent rounded-lg text-center">
                     <Star className="w-5 h-5 text-secondary mx-auto mb-1" />

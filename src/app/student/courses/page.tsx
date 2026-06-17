@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { BookOpen, Clock, Users, CheckCircle2, PlayCircle, FileText, ChevronRight } from "lucide-react";
@@ -9,8 +10,17 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { useAppContext } from "@/lib/app-context";
 
 export default function StudentCoursesPage() {
-  const { subcategories, completedItems, courses } = useAppContext();
-  const enrolledCourses = courses.slice(0, 3);
+  const { subcategories, completedItems } = useAppContext();
+  const [enrolledCourses, setEnrolledCourses] = useState<{ id: string; title: string; duration: string; qualification: string; category: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/student-courses")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.courses)) setEnrolledCourses(data.courses);
+      })
+      .catch(() => {});
+  }, []);
 
   function getCourseProgress(courseId: string) {
     const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
@@ -56,7 +66,7 @@ export default function StudentCoursesPage() {
                       {course.title}
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                     </h3>
-                    <p className="text-xs text-muted mb-4">{course.duration} · {course.classLevel}</p>
+                    <p className="text-xs text-muted mb-4">{course.duration} · {course.qualification}</p>
 
                     <div className="mb-4">
                       <div className="flex items-center justify-between text-xs mb-1.5">

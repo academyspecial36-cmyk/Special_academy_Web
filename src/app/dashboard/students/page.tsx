@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Search, Filter, Plus, Pencil, Trash2 } from "lucide-react";
+import { Search, Filter, Plus, Pencil, Trash2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,22 +11,32 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
-import { useAppContext } from "@/lib/app-context";
+import { useAppContext, type Qualification } from "@/lib/app-context";
 import type { Student } from "@/types";
 
-const fields: FieldConfig[] = [
-  { name: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. John Doe" },
-  { name: "email", label: "Email", type: "email", required: true, placeholder: "john@example.com" },
-  { name: "phone", label: "Phone", type: "tel", required: true, placeholder: "98XXXXXXXX" },
-  { name: "class", label: "Class", type: "text", required: true, placeholder: "e.g. Class 8" },
-  { name: "status", label: "Status", type: "select", required: true, options: [
-    { label: "Active", value: "active" },
-    { label: "Inactive", value: "inactive" },
-  ]},
-];
+function makeFields(qualOptions: Qualification[], courseOptions: { id: string; title: string }[]): FieldConfig[] {
+  return [
+    { name: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. John Doe" },
+    { name: "email", label: "Email", type: "email", required: true, placeholder: "john@example.com" },
+    { name: "phone", label: "Phone", type: "tel", required: true, placeholder: "98XXXXXXXX" },
+    { name: "qualificationId", label: "Qualification", type: "select", required: true, options: qualOptions.map(q => ({ label: q.name, value: q.id })) },
+    {
+      name: "enrolledCourses",
+      label: "Enrolled Courses",
+      type: "multi-select",
+      options: courseOptions.map(c => ({ label: c.title, value: c.id })),
+    },
+    { name: "status", label: "Status", type: "select", required: true, options: [
+      { label: "Active", value: "active" },
+      { label: "Inactive", value: "inactive" },
+    ]},
+  ];
+}
 
 export default function StudentsPage() {
-  const { students, addStudent, updateStudent, deleteStudent, courses, loadAdminData } = useAppContext();
+  const { students, addStudent, updateStudent, deleteStudent, courses, qualifications, loadAdminData } = useAppContext();
+
+  const fields = useMemo(() => makeFields(qualifications, courses), [qualifications, courses]);
 
   useEffect(() => { loadAdminData(); }, [loadAdminData]);
   const [search, setSearch] = useState("");
@@ -46,14 +56,21 @@ export default function StudentsPage() {
     });
   }, [search, statusFilter, students]);
 
+  function resolveCourseIds(raw: string[]): string[] {
+    return raw.map((v) => {
+      const match = courses.find((c) => c.id === v || c.title === v);
+      return match ? match.id : v;
+    });
+  }
+
   function handleAdd(data: Record<string, string>) {
     addStudent({
       name: data.name,
       email: data.email,
       phone: data.phone,
-      class: data.class,
+      qualificationId: data.qualificationId,
       status: data.status as "active" | "inactive",
-      enrolledCourses: [],
+      enrolledCourses: resolveCourseIds((data.enrolledCourses || "").split(",").filter(Boolean)),
       joinDate: new Date().toISOString().split("T")[0],
     });
     setAddOpen(false);
@@ -66,8 +83,9 @@ export default function StudentsPage() {
       name: data.name,
       email: data.email,
       phone: data.phone,
-      class: data.class,
+      qualificationId: data.qualificationId,
       status: data.status as "active" | "inactive",
+      enrolledCourses: resolveCourseIds((data.enrolledCourses || "").split(",").filter(Boolean)),
     });
     setEditOpen(false);
     setSelected(null);
@@ -132,7 +150,8 @@ export default function StudentsPage() {
               <thead>
                 <tr className="border-b border-primary/5 bg-accent/50">
                   <th className="text-left text-xs font-medium text-muted py-3 px-6">Student</th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Class</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Phone</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Qualification</th>
                   <th className="text-left text-xs font-medium text-muted py-3 px-4">Courses</th>
                   <th className="text-left text-xs font-medium text-muted py-3 px-4">Join Date</th>
                   <th className="text-left text-xs font-medium text-muted py-3 px-4">Status</th>
@@ -162,11 +181,23 @@ export default function StudentsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-sm text-muted">{student.class}</td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm text-muted">{student.phone}</span>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(student.phone); toast.success("Phone copied"); }}
+                          className="p-0.5 rounded hover:bg-accent text-muted hover:text-primary transition-colors"
+                          title="Copy phone"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-sm text-muted">{qualifications.find((q) => q.id === student.qualificationId)?.name ?? student.qualification ?? "—"}</td>
                     <td className="py-4 px-4">
                       <div className="flex flex-wrap gap-1">
                         {student.enrolledCourses.slice(0, 2).map((cid) => {
-                          const course = courses.find((c) => c.id === cid);
+                          const course = courses.find((c) => c.id === cid || c.title === cid);
                           return (
                             <Badge key={cid} variant="outline" className="text-[10px]">
                               {course?.title || cid}
@@ -228,13 +259,20 @@ export default function StudentsPage() {
         onClose={() => { setEditOpen(false); setSelected(null); }}
         title="Edit Student"
         fields={fields}
-        initialValues={selected ? {
-          name: selected.name,
-          email: selected.email,
-          phone: selected.phone,
-          class: selected.class,
-          status: selected.status,
-        } : undefined}
+        initialValues={selected ? (() => {
+          const resolved = selected.enrolledCourses.map((ec) => {
+            const match = courses.find((c) => c.id === ec || c.title === ec);
+            return match ? match.id : ec;
+          });
+          return {
+            name: selected.name,
+            email: selected.email,
+            phone: selected.phone,
+            qualificationId: selected.qualificationId || "",
+            enrolledCourses: resolved.join(","),
+            status: selected.status,
+          };
+        })() : undefined}
         onSubmit={handleEdit}
         submitLabel="Update Student"
       />

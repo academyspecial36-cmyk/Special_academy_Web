@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Modal } from "./modal";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
@@ -11,7 +12,7 @@ import { apiUpload } from "@/lib/api-client";
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "email" | "tel" | "textarea" | "select" | "number" | "url" | "image";
+  type: "text" | "email" | "tel" | "textarea" | "select" | "multi-select" | "number" | "url" | "image";
   required?: boolean;
   options?: { label: string; value: string }[];
   placeholder?: string;
@@ -102,6 +103,69 @@ export function FormModal({
                   </option>
                 ))}
               </select>
+            ) : field.type === "multi-select" ? (
+              <div className="space-y-2">
+                {(() => {
+                  const vals = (form[field.name] || "").split(",").filter(Boolean);
+                  function isSelected(opt: { value: string; label: string }) {
+                    return vals.some((v) => v === opt.value || v === opt.label);
+                  }
+                  function toggle(opt: { value: string; label: string }) {
+                    const on = isSelected(opt);
+                    let next = on
+                      ? vals.filter((v) => v !== opt.value && v !== opt.label)
+                      : [...vals.filter((v) => v !== opt.label), opt.value];
+                    updateField(field.name, next.join(","));
+                  }
+                  return (
+                    <>
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {vals.map((val) => {
+                          const match = field.options?.find((o) => o.value === val || o.label === val);
+                          return (
+                            <span key={val} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary">
+                              {match?.label ?? val}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cur = (form[field.name] || "").split(",").filter(Boolean);
+                                  const labelMatch = field.options?.find((o) => o.label === val);
+                                  updateField(field.name, cur.filter((v) => v !== val && v !== labelMatch?.value).join(","));
+                                }}
+                                className="hover:text-red-500 transition-colors"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <div className="max-h-40 overflow-y-auto border border-primary/10 rounded-lg divide-y divide-primary/5">
+                        {field.options?.map((opt) => {
+                          const on = isSelected(opt);
+                          return (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => toggle(opt)}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${
+                                on ? "bg-secondary/5 text-secondary font-medium" : "text-primary hover:bg-accent"
+                              }`}
+                            >
+                              <span className={`w-4 h-4 rounded border flex items-center justify-center text-[10px] transition-colors ${
+                                on ? "bg-secondary border-secondary text-white" : "border-primary/20"
+                              }`}>
+                                {on ? "✓" : ""}
+                              </span>
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             ) : field.type === "image" ? (
               <div className="space-y-2">
                 <input
@@ -163,12 +227,12 @@ export function FormModal({
                   }}
                 />
                 {(localPreviews[field.name] || form[field.name]) && (
-                  <div className="relative w-full h-32 rounded-lg overflow-hidden bg-[image:repeating-conic-gradient(#e5e5e5_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden" style={{ backgroundImage: "repeating-conic-gradient(hsl(var(--primary) / 0.08) 0% 25%, transparent 0% 50%)", backgroundSize: "16px 16px" }}>
+                    <Image
                       src={localPreviews[field.name] || form[field.name]}
                       alt="Preview"
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
                     />
                   </div>
                 )}

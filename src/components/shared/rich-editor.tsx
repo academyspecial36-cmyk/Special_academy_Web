@@ -84,7 +84,7 @@ export function RichEditor({ content, onChange, placeholder, className }: RichEd
       </div>
       <style jsx global>{`
         .ProseMirror p.is-editor-empty:first-child::before {
-          color: #adb5bd;
+          color: hsl(var(--primary) / 0.35);
           content: attr(data-placeholder);
           float: left;
           height: 0;

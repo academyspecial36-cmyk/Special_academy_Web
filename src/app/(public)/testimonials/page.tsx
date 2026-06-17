@@ -130,7 +130,7 @@ export default function TestimonialsPage() {
                 <div className="flex items-center justify-between pt-4 border-t border-primary/5">
                   <div>
                     <p className="font-semibold text-primary text-sm">{t.name}</p>
-                    {t.class && <p className="text-xs text-muted">{t.class}</p>}
+                    {t.qualification && <p className="text-xs text-muted">{t.qualification}</p>}
                   </div>
                   <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${roleColors[t.role]}`}>
                     {roleLabels[t.role]}

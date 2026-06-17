@@ -11,11 +11,13 @@ export async function GET() {
 
     const svc = createServiceRoleSupabase();
 
-    const { data: student } = await svc
+    const { data: studentRows } = await svc
       .from("students")
       .select("*")
       .eq("email", user.email)
-      .maybeSingle();
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const student = studentRows?.[0] ?? null;
 
     const { data: enrollment } = await svc
       .from("enrollments")
@@ -25,7 +27,7 @@ export async function GET() {
 
     const { data: profile } = await svc
       .from("profiles")
-      .select("avatar_url")
+      .select("avatar_url, phone, name")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -67,6 +69,14 @@ export async function POST(request: Request) {
       const { error } = await svc
         .from("students")
         .update({ phone: body.phone })
+        .eq("email", user.email);
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (body.qualification) {
+      const { error } = await svc
+        .from("students")
+        .update({ class: body.qualification })
         .eq("email", user.email);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
