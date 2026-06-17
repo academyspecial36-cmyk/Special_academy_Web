@@ -2,25 +2,44 @@
 
 import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon, ChevronRight, ListChecks } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PreviewModal } from "@/components/ui/preview-modal";
+import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
   const courseId = params.id as string;
+  const { user } = useAuth();
   const { subcategories, completedItems, toggleItemComplete, courses } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);
 
-  const courseSubs = subcategories.filter((s) => s.courseId === courseId && !s.hidden);
+  const courseSubs = useMemo(
+    () => subcategories.filter((s) => s.courseId === courseId && !s.hidden),
+    [subcategories, courseId]
+  );
+
+  const [activeSubId, setActiveSubId] = useState<string | null>(
+    courseSubs.length > 0 ? courseSubs[0].id : null
+  );
+
+  const activeSub = useMemo(
+    () => courseSubs.find((s) => s.id === activeSubId) || null,
+    [courseSubs, activeSubId]
+  );
+
+  const activeItems = useMemo(
+    () => (activeSub ? activeSub.items.filter((item) => !item.hidden).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) : []),
+    [activeSub]
+  );
 
   const allItems = useMemo(
     () => courseSubs.flatMap((s) => s.items.filter((item) => !item.hidden)),
@@ -30,6 +49,18 @@ export default function StudentCourseDetailPage() {
   const totalItems = allItems.length;
   const completedCount = allItems.filter((item) => completedItems.includes(item.id)).length;
   const progress = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
+
+  const subCompletedCount = (subId: string) => {
+    const sub = courseSubs.find((s) => s.id === subId);
+    if (!sub) return 0;
+    return sub.items.filter((item) => !item.hidden && completedItems.includes(item.id)).length;
+  };
+
+  const subTotalItems = (subId: string) => {
+    const sub = courseSubs.find((s) => s.id === subId);
+    if (!sub) return 0;
+    return sub.items.filter((item) => !item.hidden).length;
+  };
 
   if (!course) {
     return (
@@ -43,8 +74,9 @@ export default function StudentCourseDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
-            <div className="flex items-center gap-3 sm:gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3 sm:gap-4">
         <Button variant="ghost" size="icon" asChild>
           <Link href="/student/courses">
             <ArrowLeft className="w-5 h-5" />
@@ -56,9 +88,10 @@ export default function StudentCourseDetailPage() {
         </div>
       </div>
 
+      {/* Progress Bar */}
       {totalItems > 0 && (
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             <div className="flex items-center justify-between mb-2 gap-2">
               <span className="text-sm font-medium text-primary">Course Progress</span>
               <span className="text-xs sm:text-sm text-muted shrink-0">{completedCount}/{totalItems} items · {progress}%</span>
@@ -82,104 +115,196 @@ export default function StudentCourseDetailPage() {
           <p className="text-sm text-muted">Course content is being prepared. Check back later.</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 gap-5">
-          {courseSubs.map((sub, i) => (
-            <motion.div
-              key={sub.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+        <div className="flex flex-col lg:flex-row gap-5">
+          {/* Mobile subcategory selector */}
+          <div className="lg:hidden">
+            <label className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 block">Chapter</label>
+            <select
+              value={activeSubId || ""}
+              onChange={(e) => setActiveSubId(e.target.value)}
+              className="w-full h-10 rounded-xl border border-primary/10 bg-white px-3 py-2 text-sm text-primary outline-none focus:border-primary/30"
             >
-              <Card className="overflow-hidden">
-                <div className="relative h-28 sm:h-36">
-                  <Image
-                    src={sub.thumbnail || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&q=80"}
-                    alt={sub.title}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
-                    <Badge variant="secondary" className="text-[9px] sm:text-[10px]">
-                      <BookOpen className="w-3 h-3 mr-1" /> {sub.status === "free" ? "Free" : "Available"}
-                    </Badge>
-                  </div>
-                  <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2 sm:right-3">
-                    <h3 className="text-white font-bold text-base sm:text-lg drop-shadow-sm truncate">{sub.title}</h3>
-                  </div>
-                </div>
-                <CardContent className="p-3 sm:p-4">
-                  <p className="text-xs text-muted mb-3 line-clamp-2">{sub.shortDescription}</p>
-                  <div className="space-y-2">
-                    {sub.items.filter((item) => !item.hidden).map((item) => {
-                      const isCompleted = completedItems.includes(item.id);
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex items-center gap-2"
-                        >
-                          <button
-                            onClick={() => toggleItemComplete(item.id)}
-                            className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
-                              isCompleted
-                                ? "text-emerald-500"
-                                : "text-muted hover:text-secondary"
-                            }`}
-                            title={isCompleted ? "Mark as incomplete" : "Mark as complete"}
+              {courseSubs.map((sub) => {
+                const completed = subCompletedCount(sub.id);
+                const total = subTotalItems(sub.id);
+                return (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.title} ({completed}/{total} completed)
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Sidebar — Chapters */}
+          <div className="hidden lg:flex w-64 shrink-0 flex-col">
+            <span className="text-xs font-semibold text-muted uppercase tracking-wider mb-3 block">Chapters</span>
+            <div className="flex-1 overflow-y-auto space-y-1 pr-2">
+              {courseSubs.map((sub) => {
+                const completed = subCompletedCount(sub.id);
+                const total = subTotalItems(sub.id);
+                const isActive = activeSubId === sub.id;
+                const allDone = total > 0 && completed === total;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => setActiveSubId(sub.id)}
+                    className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-primary text-white shadow-sm"
+                        : "text-muted hover:bg-accent hover:text-primary"
+                    }`}
+                  >
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
+                      isActive ? "bg-white/20 text-white" : allDone ? "bg-emerald-50 text-emerald-600" : "bg-primary/5 text-primary"
+                    }`}>
+                      {allDone ? <CheckCircle className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate">{sub.title}</div>
+                      <div className={`text-[10px] mt-0.5 ${isActive ? "text-white/70" : "text-muted"}`}>
+                        {completed}/{total} completed
+                      </div>
+                    </div>
+                    <ChevronRight className={`w-3.5 h-3.5 shrink-0 transition-transform ${isActive ? "rotate-90" : ""}`} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Main Content — Items Area */}
+          <div className="flex-1 min-w-0">
+            <AnimatePresence mode="wait">
+              {activeSub ? (
+                <motion.div
+                  key={activeSub.id}
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="space-y-4"
+                >
+                  {/* Subcategory Header */}
+                  <Card className="overflow-hidden border-none shadow-sm bg-gradient-to-br from-primary/[0.02] to-transparent">
+                    <CardContent className="p-4 sm:p-5">
+                      <div className="flex items-start gap-4">
+                        {activeSub.thumbnail ? (
+                          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 relative shadow-sm">
+                            <Image src={activeSub.thumbnail} alt={activeSub.title} fill className="object-cover" unoptimized />
+                          </div>
+                        ) : (
+                          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center shrink-0">
+                            <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-primary/40" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg font-bold text-primary">{activeSub.title}</h2>
+                          <p className="text-sm text-muted mt-0.5">{activeSub.shortDescription}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted">
+                            <span className="flex items-center gap-1">
+                              <ListChecks className="w-3 h-3" />
+                              {subCompletedCount(activeSub.id)}/{activeItems.length} completed
+                            </span>
+                            <span className="text-muted/30">·</span>
+                            <span>{activeSub.status === "free" ? "Free" : "Available"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Items List */}
+                  {activeItems.length === 0 ? (
+                    <div className="text-center py-12 bg-accent/30 rounded-xl border border-dashed border-primary/10">
+                      <BookOpen className="w-10 h-10 text-muted mx-auto mb-3" />
+                      <h3 className="font-semibold text-primary mb-1">No items in this chapter</h3>
+                      <p className="text-sm text-muted">Check back later for new content.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {activeItems.map((item) => {
+                        const isCompleted = completedItems.includes(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            className="group flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-sm border-primary/5 hover:border-primary/20 hover:bg-primary/[0.02]"
                           >
-                            {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPreviewItem({
-                                type: item.type,
-                                title: item.title,
-                                url: item.url,
-                                images: item.images,
-                              });
-                              setPreviewOpen(true);
-                            }}
-                            className={`flex-1 flex items-center gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg transition-colors text-left ${
-                              isCompleted
-                                ? "bg-emerald-50 hover:bg-emerald-100 cursor-pointer"
-                                : "bg-accent hover:bg-primary/5 cursor-pointer"
-                            }`}
-                          >
-                            <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                              item.type === "video" ? "bg-blue-50 text-blue-600"
-                              : item.type === "image" ? "bg-purple-50 text-purple-600"
-                              : "bg-amber-50 text-amber-600"
-                            }`}>
-                              {item.type === "video" ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                : item.type === "image" ? <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                : <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                                <span className={`text-xs sm:text-sm font-medium truncate max-w-full ${
-                                  isCompleted ? "text-emerald-700" : "text-primary"
-                                }`}>{item.title}</span>
-                                <Badge variant="outline" className="text-[7px] sm:text-[8px] uppercase px-1 shrink-0">{item.type}</Badge>
+                            <button
+                              onClick={() => toggleItemComplete(item.id)}
+                              className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
+                                isCompleted
+                                  ? "text-emerald-500"
+                                  : "text-muted hover:text-secondary"
+                              }`}
+                              title={isCompleted ? "Mark as incomplete" : "Mark as complete"}
+                            >
+                              {isCompleted ? <CheckCircle className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setPreviewItem({
+                                  type: item.type,
+                                  title: item.title,
+                                  url: item.url,
+                                  images: item.images,
+                                });
+                                setPreviewOpen(true);
+                              }}
+                              className="flex-1 flex items-center gap-3 min-w-0"
+                            >
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                                item.type === "video" ? "bg-blue-50 text-blue-600"
+                                : item.type === "image" ? "bg-purple-50 text-purple-600"
+                                : "bg-amber-50 text-amber-600"
+                              }`}>
+                                {item.type === "video" ? <Play className="w-4 h-4" />
+                                  : item.type === "image" ? <ImageIcon className="w-4 h-4" />
+                                  : <FileText className="w-4 h-4" />}
                               </div>
-                              <div className="flex items-center gap-2 mt-0.5">
+                              <div className="flex-1 min-w-0 text-left">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`text-sm font-medium truncate max-w-full ${
+                                    isCompleted ? "text-emerald-700" : "text-primary"
+                                  }`}>{item.title}</span>
+                                  <Badge variant="outline" className="text-[8px] uppercase px-1.5 shrink-0">{item.type}</Badge>
+                                </div>
                                 {item.duration && (
-                                  <span className="text-[10px] text-muted flex items-center gap-0.5">
+                                  <span className="text-[10px] text-muted flex items-center gap-0.5 mt-0.5">
                                     <Clock className="w-3 h-3" /> {item.duration}
                                   </span>
                                 )}
                               </div>
-                            </div>
-                            <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-secondary shrink-0" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setPreviewItem({
+                                  type: item.type,
+                                  title: item.title,
+                                  url: item.url,
+                                  images: item.images,
+                                });
+                                setPreviewOpen(true);
+                              }}
+                              className="shrink-0 w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-muted hover:text-secondary hover:bg-accent/80 transition-colors"
+                              title="View content"
+                            >
+                              <Play className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+                  <BookOpen className="w-12 h-12 text-muted mx-auto mb-3" />
+                  <h3 className="font-semibold text-primary mb-1">Select a chapter</h3>
+                  <p className="text-sm text-muted">Choose a chapter from the sidebar to view its content.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 
@@ -190,6 +315,7 @@ export default function StudentCourseDetailPage() {
         title={previewItem?.title || ""}
         url={previewItem?.url || ""}
         images={previewItem?.images}
+        studentName={user?.name}
       />
     </div>
   );
