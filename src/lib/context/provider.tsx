@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { apiList, clearCache } from "@/lib/api-client";
 import { useCoursesState } from "./courses-context";
 import { useExamsState } from "./exams-context";
-import { useStudentsState } from "./students-context";
+import { useStudentsState, type Enrollment } from "./students-context";
 import { useContentState } from "./content-context";
 import { useSettingsState } from "./settings-context";
 import {
@@ -19,7 +19,7 @@ export interface AppContextValue {
   dataLoading: boolean;
   loadAdminData: () => Promise<void>;
   faqs: FAQ[]; facultyMembers: FacultyMember[]; courses: Course[]; notices: Notice[];
-  testimonials: Testimonial[]; galleryImages: GalleryImage[]; students: Student[]; enrollments: any[];
+  testimonials: Testimonial[]; galleryImages: GalleryImage[]; students: Student[]; enrollments: Enrollment[];
   courseCategories: string[]; noticeCategories: NoticeCategory[]; settings: AppSettings;
   subcategories: Subcategory[]; completedItems: string[]; qualifications: Qualification[];
   setQualifications: (q: Qualification[]) => void;
@@ -49,10 +49,10 @@ export interface AppContextValue {
   addStudent: (s: Omit<Student, "id">) => void;
   updateStudent: (id: string, data: Partial<Student>) => void;
   deleteStudent: (id: string) => void;
-  addEnrollment: (e: any) => void;
-  updateEnrollment: (id: string, data: any) => void;
+  addEnrollment: (e: Omit<Enrollment, "id">) => void;
+  updateEnrollment: (id: string, data: Partial<Enrollment>) => void;
   deleteEnrollment: (id: string) => void;
-  setEnrollments: React.Dispatch<React.SetStateAction<any[]>>;
+  setEnrollments: React.Dispatch<React.SetStateAction<Enrollment[]>>;
   setCourseCategories: (cats: string[]) => void;
   addCourseCategory: (cat: string) => void;
   deleteCourseCategory: (cat: string) => void;
@@ -91,7 +91,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const settings = useSettingsState();
 
   // Merge nested state setters into the proper shape
-  const setEnrollments = students.setEnrollments as React.Dispatch<React.SetStateAction<any[]>>;
+  const setEnrollments = students.setEnrollments;
   const setCourseCategories = settings.setCourseCategories as (cats: string[]) => void;
 
   useEffect(() => {

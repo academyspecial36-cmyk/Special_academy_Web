@@ -6,6 +6,7 @@ import { getToolsForModel, executeTool, getTool } from "@/lib/ai/tools/registry"
 import { buildContext, getContextSummary } from "@/lib/ai/context";
 import { AI_SYSTEM_PROMPT } from "@/constants/ai";
 import { extractBlocks } from "@/lib/ai/response-parser";
+import { checkRateLimit } from "@/lib/rate-limit";
 import type { AIResponseBlock } from "@/types/ai";
 
 export const runtime = "nodejs";
@@ -67,13 +68,19 @@ export async function POST(req: NextRequest) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const userId = session.user.id;
+    const rateCheck = checkRateLimit(`ai:${userId}`, { maxRequests: 20, windowMs: 60000 });
+    if (!rateCheck.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please slow down." }), { status: 429 });
+    }
+
     const { conversationId, message, pathname } = await req.json();
     if (!message || typeof message !== "string") {
       return new Response(JSON.stringify({ error: "Message is required" }), { status: 400 });
     }
 
     const svc = createServiceRoleSupabase();
-    const userId = session.user.id;
     const context = buildContext(pathname || "/dashboard");
     const contextSummary = getContextSummary(context);
 

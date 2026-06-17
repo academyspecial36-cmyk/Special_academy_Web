@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { DeleteModal } from "@/components/ui/delete-modal";
 import { cn } from "@/lib/utils";
 import { WindowsFolderIcon } from "@/components/shared/windows-folder-icon";
 import type { MediaFile, MediaFolder } from "@/types/media";
@@ -59,6 +60,8 @@ export default function MediaManagerPage() {
   const [moveTargetId, setMoveTargetId] = useState<string | null>(null);
   const [cropFile, setCropFile] = useState<MediaFile | null>(null);
   const [optimizing, setOptimizing] = useState(false);
+  const [deletingFolder, setDeletingFolder] = useState<MediaFolder | null>(null);
+  const [deletingFiles, setDeletingFiles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
@@ -196,31 +199,35 @@ export default function MediaManagerPage() {
     }
   }
 
-  async function deleteFolder(folder: MediaFolder) {
-    if (!confirm(`Delete folder "${folder.name}" and all its contents?`)) return;
+  async function confirmDeleteFolder() {
+    if (!deletingFolder) return;
     try {
-      const res = await fetch(`/api/media/folders/${folder.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/media/folders/${deletingFolder.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete folder");
       toast.success("Folder deleted");
-      if (currentFolderId === folder.id) setCurrentFolderId(null);
+      if (currentFolderId === deletingFolder.id) setCurrentFolderId(null);
+      setDeletingFolder(null);
       fetchData();
     } catch (e) {
       toast.error((e as Error).message);
+      setDeletingFolder(null);
     }
   }
 
-  async function deleteFiles() {
+  async function confirmDeleteFiles() {
     if (!selected.size) return;
-    if (!confirm(`Delete ${selected.size} file${selected.size > 1 ? "s" : ""}?`)) return;
+    setDeletingFiles(true);
     try {
       for (const id of selected) {
         await fetch(`/api/media/${id}`, { method: "DELETE" });
       }
       setSelected(new Set());
+      setDeletingFiles(false);
       toast.success("Deleted");
       fetchData();
     } catch (e) {
       toast.error((e as Error).message);
+      setDeletingFiles(false);
     }
   }
 
@@ -385,7 +392,7 @@ export default function MediaManagerPage() {
               <Button size="sm" variant="outline" onClick={() => setShowMoveModal(true)}>
               <WindowsFolderIcon className="w-3.5 h-3.5 mr-1" /> Move
             </Button>
-            <Button size="sm" variant="outline" className="text-red-600" onClick={deleteFiles}>
+            <Button size="sm" variant="outline" className="text-red-600" onClick={() => setDeletingFiles(true)}>
               <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
             </Button>
             <Button size="sm" variant="outline" onClick={() => setSelected(new Set())}>
@@ -436,7 +443,7 @@ export default function MediaManagerPage() {
                           className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
                           <Pencil className="w-3 h-3" />
                         </button>
-                        <button onClick={() => deleteFolder(folder)}
+                        <button onClick={() => setDeletingFolder(folder)}
                           className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-red-600">
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -455,7 +462,7 @@ export default function MediaManagerPage() {
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => { setEditingFolder(folder); setEditName(folder.name); }}
                           className="p-1 rounded text-muted hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => deleteFolder(folder)}
+                        <button onClick={() => setDeletingFolder(folder)}
                           className="p-1 rounded text-muted hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                       </div>
                     </div>
@@ -750,6 +757,22 @@ export default function MediaManagerPage() {
           </div>
         </div>
       )}
+
+      <DeleteModal
+        open={!!deletingFolder}
+        onClose={() => setDeletingFolder(null)}
+        title="Delete Folder"
+        message={deletingFolder ? `Delete folder "${deletingFolder.name}" and all its contents?` : ""}
+        onConfirm={confirmDeleteFolder}
+      />
+      <DeleteModal
+        open={deletingFiles}
+        onClose={() => setDeletingFiles(false)}
+        title="Delete Files"
+        message={`Delete ${selected.size} file${selected.size > 1 ? "s" : ""}?`}
+        onConfirm={confirmDeleteFiles}
+        loading={deletingFiles}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { validateUploadFile } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -12,10 +13,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
+    const allFiles = files.length > 0 ? files : [singleFile!];
+    for (const file of allFiles) {
+      const validation = validateUploadFile(file);
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+    }
+
     const bucket = process.env.NEXT_PUBLIC_BUCKET_NAME || "my-bucket";
 
     const supabase = await createServerSupabase();
-    const allFiles = files.length > 0 ? files : [singleFile!];
     const urls: string[] = [];
 
     for (const file of allFiles) {

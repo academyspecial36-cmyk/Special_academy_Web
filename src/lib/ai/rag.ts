@@ -1,6 +1,7 @@
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { AI_RAG_TOP_K, AI_EMBEDDING_MODEL, OPENROUTER_BASE_URL } from "@/constants/ai";
 import type { AIDocument } from "@/types/ai";
+import { sections as guideSections } from "@/app/dashboard/guide/guide-data";
 
 function getApiKey(): string {
   const key = process.env.OPENROUTER_API_KEY;
@@ -85,11 +86,26 @@ export async function seedDocuments(): Promise<number> {
 
   const sources: Array<{ title: string; content: string; source_type: AIDocument["source_type"] }> = [];
 
+  // Seed guide sections from guide-data.ts
+  for (const section of guideSections) {
+    const stepText = section.steps
+      ? section.steps.map((s) => `Step ${s.step}: ${s.title}\n${s.desc}`).join("\n")
+      : "";
+    const tipsText = section.tips ? `Tips:\n${section.tips.map((t) => `- ${t}`).join("\n")}` : "";
+    const warnsText = section.warns ? `Warnings:\n${section.warns.map((w) => `- ${w}`).join("\n")}` : "";
+    const content = [section.title, stepText, tipsText, warnsText].filter(Boolean).join("\n\n");
+    sources.push({
+      title: `Guide: ${section.title}`,
+      content,
+      source_type: "guide",
+    });
+  }
+
   // Fetch guide pages
   const { data: guideContent } = await svc.from("settings").select("*").eq("key", "guide_content");
   if (guideContent?.length) {
     sources.push({
-      title: "Admin Guide",
+      title: "Admin Guide (settings)",
       content: JSON.stringify(guideContent),
       source_type: "guide",
     });

@@ -6,6 +6,7 @@ import { ChatInterface } from "@/components/ai/chat-interface";
 import { ConversationHistory } from "@/components/ai/conversation-history";
 import { ContextPanel } from "@/components/ai/context-panel";
 import { CommandPalette } from "@/components/ai/command-palette";
+import { DeleteModal } from "@/components/ui/delete-modal";
 import { apiList, apiDelete } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import type { AIConversation, PageContext } from "@/types/ai";
@@ -19,6 +20,7 @@ export default function AICommandCenterPage() {
   const [cmdOpen, setCmdOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const context: PageContext = {
     route: pathname,
@@ -64,14 +66,21 @@ export default function AICommandCenterPage() {
   }, []);
 
   const handleDelete = useCallback((id: string) => {
-    if (!confirm("Delete this conversation and all its messages?")) return;
+    setDeleting(id);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!deleting) return;
+    const id = deleting;
     apiDelete("ai_conversations", id).then(() => {
       setConversations((prev) => prev.filter((c) => c.id !== id));
       if (activeId === id) setActiveId(null);
+      setDeleting(null);
     }).catch((err) => {
       console.error("Failed to delete conversation:", err);
+      setDeleting(null);
     });
-  }, [activeId]);
+  }, [deleting, activeId]);
 
   const handleCommand = useCallback((command: string) => {
     setCmdOpen(false);
@@ -159,6 +168,14 @@ export default function AICommandCenterPage() {
         open={cmdOpen}
         onClose={() => setCmdOpen(false)}
         onCommand={handleCommand}
+      />
+
+      <DeleteModal
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        title="Delete Conversation"
+        message="Delete this conversation and all its messages?"
+        onConfirm={confirmDelete}
       />
     </>
   );

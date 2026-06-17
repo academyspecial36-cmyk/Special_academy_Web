@@ -5,6 +5,9 @@ import { Loader2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRef, useEffect, useCallback } from "react";
 
+const SOFT_LIMIT = 4000;
+const HARD_LIMIT = 8000;
+
 interface ChatInputProps {
   input: string;
   setInput: (value: string) => void;
@@ -16,6 +19,10 @@ interface ChatInputProps {
 }
 
 export function ChatInput({ input, setInput, isStreaming, error, onSend, onDismissError, textareaRef }: ChatInputProps) {
+  const charCount = input.length;
+  const overSoft = charCount > SOFT_LIMIT;
+  const overHard = charCount > HARD_LIMIT;
+
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
     if (el) {
@@ -60,16 +67,26 @@ export function ChatInput({ input, setInput, isStreaming, error, onSend, onDismi
             placeholder="Type your command..."
             rows={1}
             disabled={isStreaming}
+            aria-label="Chat message"
             className={cn(
-              "w-full resize-none rounded-xl border border-input bg-background px-4 py-2.5 pr-12 text-sm ring-offset-background placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:opacity-50 transition-all min-h-[44px] max-h-[160px]"
+              "w-full resize-none rounded-xl border border-input bg-background px-4 py-2.5 pr-12 text-sm ring-offset-background placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary disabled:opacity-50 transition-all min-h-[44px] max-h-[160px]",
+              overHard && "border-red-400 focus-visible:ring-red-300",
+              overSoft && !overHard && "border-amber-400 focus-visible:ring-amber-300",
             )}
           />
+          <div className={cn(
+            "absolute bottom-2 right-3 text-[10px] pointer-events-none",
+            overHard ? "text-red-500" : overSoft ? "text-amber-500" : "text-muted/50",
+          )}>
+            {charCount > 0 && `${charCount}${overHard ? " (limit exceeded)" : ""}`}
+          </div>
         </div>
         <Button
           onClick={onSend}
-          disabled={!input.trim() || isStreaming}
+          disabled={!input.trim() || isStreaming || overHard}
           size="icon"
           className="shrink-0 h-[44px] w-[44px] rounded-xl"
+          aria-label="Send message"
         >
           {isStreaming ? (
             <Loader2 className="w-4 h-4 animate-spin" />

@@ -18,9 +18,13 @@ interface NotificationsContextType {
   notifications: Notification[];
   unreadCount: number;
   loading: boolean;
+  hasMore: boolean;
+  loadMore: () => Promise<void>;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
 }
+
+const PAGE_SIZE = 20;
 
 const NotificationsContext = createContext<NotificationsContextType | null>(null);
 
@@ -29,6 +33,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const prevCount = useRef(0);
 
   const playSound = useCallback(() => {
@@ -49,7 +55,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const res = await fetch("/api/notifications");
+      const res = await fetch(`/api/notifications?limit=${PAGE_SIZE}`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       const newCount = data.unreadCount ?? 0;
@@ -58,6 +64,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       }
       prevCount.current = newCount;
       setNotifications(data.notifications ?? []);
+      setHasMore(!!data.nextCursor);
       setUnreadCount(newCount);
     } catch {
       setNotifications([]);
@@ -66,6 +73,22 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }, [isAuthenticated, user, playSound]);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || notifications.length === 0) return;
+    setLoadingMore(true);
+    try {
+      const cursor = notifications[notifications.length - 1].created_at;
+      const res = await fetch(`/api/notifications?limit=${PAGE_SIZE}&cursor=${encodeURIComponent(cursor)}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setNotifications((prev) => [...prev, ...(data.notifications ?? [])]);
+      setHasMore(!!data.nextCursor);
+    } catch {
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, notifications]);
 
   useEffect(() => {
     fetchNotifications();
@@ -96,7 +119,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <NotificationsContext.Provider value={{ notifications, unreadCount, loading, markRead, markAllRead }}>
+    <NotificationsContext.Provider value={{ notifications, unreadCount, loading, hasMore, loadMore, markRead, markAllRead }}>
       {children}
     </NotificationsContext.Provider>
   );

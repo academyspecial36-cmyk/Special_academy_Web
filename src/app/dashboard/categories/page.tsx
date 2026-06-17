@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext, type Qualification } from "@/lib/app-context";
 
 export default function DashboardCategoriesPage() {
@@ -33,6 +34,7 @@ export default function DashboardCategoriesPage() {
   const [newQualName, setNewQualName] = useState("");
   const [editingQual, setEditingQual] = useState<string | null>(null);
   const [editQualName, setEditQualName] = useState("");
+  const [deleting, setDeleting] = useState<{ type: "courseCat"; name: string } | { type: "noticeCat"; value: string; label: string } | { type: "qualification"; id: string; name: string } | null>(null);
 
   function handleAddCourseCat() {
     if (newCourseCat.trim()) {
@@ -49,6 +51,19 @@ export default function DashboardCategoriesPage() {
       setNewNoticeLabel("");
       toast.success("Notice category added");
     }
+  }
+
+  function confirmDelete() {
+    if (!deleting) return;
+    if (deleting.type === "courseCat") {
+      deleteCourseCategory(deleting.name);
+    } else if (deleting.type === "noticeCat") {
+      deleteNoticeCategory(deleting.value);
+    } else if (deleting.type === "qualification") {
+      deleteQualification(deleting.id);
+    }
+    setDeleting(null);
+    toast.success("Deleted");
   }
 
   function handleAddQual() {
@@ -115,7 +130,7 @@ export default function DashboardCategoriesPage() {
                 {courseCategories.map((cat) => (
                   <Badge key={cat} variant="secondary" className="gap-2 px-3 py-1.5">
                     {cat}
-                    <button onClick={() => { deleteCourseCategory(cat); toast.success("Course category deleted"); }} className="hover:text-red-600 transition-colors">
+                    <button onClick={() => setDeleting({ type: "courseCat", name: cat })} className="hover:text-red-600 transition-colors">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </Badge>
@@ -167,7 +182,7 @@ export default function DashboardCategoriesPage() {
                           <button onClick={() => startEditNotice(cat.value, cat.label)} className="p-1 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => { deleteNoticeCategory(cat.value); toast.success("Notice category deleted"); }} className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
+                          <button onClick={() => setDeleting({ type: "noticeCat", value: cat.value, label: cat.label })} className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -221,7 +236,7 @@ export default function DashboardCategoriesPage() {
                           <button onClick={() => startEditQual(q.id, q.name)} className="p-1 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors">
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => { deleteQualification(q.id); toast.success("Qualification deleted"); }} className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
+                          <button onClick={() => setDeleting({ type: "qualification", id: q.id, name: q.name })} className="p-1 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -237,6 +252,14 @@ export default function DashboardCategoriesPage() {
           </Card>
         </motion.div>
       </div>
+
+      <DeleteModal
+        open={!!deleting}
+        onClose={() => setDeleting(null)}
+        title={deleting?.type === "courseCat" ? "Delete Course Category" : deleting?.type === "noticeCat" ? "Delete Notice Category" : "Delete Qualification"}
+        message={deleting ? `Are you sure you want to delete "${deleting.type === "noticeCat" ? deleting.label : deleting.name}"?` : ""}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

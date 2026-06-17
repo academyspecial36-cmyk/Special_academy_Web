@@ -80,6 +80,9 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingMessage, status]);
 
+  const convIdRef = useRef(convId);
+  convIdRef.current = convId;
+
   const sendMessage = useCallback(async (text: string) => {
     if (!text || isStreaming) return;
 
@@ -102,110 +105,136 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
     const controller = new AbortController();
     abortRef.current = controller;
 
-    let currentConvId = convId;
+    let currentConvId = convIdRef.current;
     let fullContent = "";
-    let pendingBlocks: AIResponseBlock[] = [];
+    let finalContent = "";
+    let finalBlocks: AIResponseBlock[] = [];
+
+    const maxRetries = 3;
+    const baseDelay = 1000;
 
     try {
-      const res = await fetch("/api/ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId: currentConvId,
-          message: text,
-          pathname,
-        }),
-        signal: controller.signal,
-      });
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        if (attempt > 0) {
+          setStatus("reconnecting");
+          const delay = baseDelay * Math.pow(2, attempt - 1);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          // Reset for retry
+          fullContent = "";
+          finalContent = "";
+          finalBlocks = [];
+        }
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error ?? `Request failed (${res.status})`);
-      }
+        try {
+          const res = await fetch("/api/ai/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              conversationId: currentConvId,
+              message: text,
+              pathname,
+            }),
+            signal: controller.signal,
+          });
 
-      const convIdFromHeader = res.headers.get("X-Conversation-Id");
-      if (convIdFromHeader && !currentConvId) {
-        currentConvId = convIdFromHeader;
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error("No response stream available");
-
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let finalContent = "";
-      let finalBlocks: AIResponseBlock[] = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed || !trimmed.startsWith("data: ")) continue;
-
-          try {
-            const data: AIStreamChunk & {
-              conversationId?: string;
-              content?: string;
-              blocks?: AIResponseBlock[];
-            } = JSON.parse(trimmed.slice(6));
-
-            switch (data.type) {
-              case "status":
-                setStatus(data.status ?? null);
-                break;
-              case "token":
-                fullContent += data.content ?? "";
-                setStreamingMessage(fullContent);
-                break;
-              case "tool_call":
-                toolNameRef.current = data.toolCall?.function.name ?? null;
-                setStreamingTool(toolNameRef.current);
-                break;
-              case "tool_result": {
-                const tr = data.toolResult as { name: string; result: unknown } | undefined;
-                if (tr) {
-                  setMessages((prev) => [
-                    ...prev,
-                    {
-                      id: crypto.randomUUID(),
-                      role: "assistant",
-                      content: fullContent || null,
-                      tool_name: tr.name,
-                      tool_result: tr.result,
-                    },
-                  ]);
-                  fullContent = "";
-                  setStreamingMessage("");
-                  toolNameRef.current = null;
-                  setStreamingTool(null);
-                }
-                break;
-              }
-              case "block":
-                if (data.block) {
-                  finalBlocks.push(data.block);
-                }
-                break;
-              case "done":
-                finalContent = data.content || fullContent;
-                if (data.conversationId && !currentConvId) {
-                  currentConvId = data.conversationId;
-                }
-                break;
-              case "error":
-                setError(data.error ?? "An error occurred");
-                toast.error(data.error ?? "An error occurred");
-                break;
-            }
-          } catch {
-            // skip malformed lines
+          if (!res.ok) {
+            const errData = await res.json().catch(() => null);
+            throw new Error(errData?.error ?? `Request failed (${res.status})`);
           }
+
+          const convIdFromHeader = res.headers.get("X-Conversation-Id");
+          if (convIdFromHeader && !currentConvId) {
+            currentConvId = convIdFromHeader;
+          }
+
+          const reader = res.body?.getReader();
+          if (!reader) throw new Error("No response stream available");
+
+          const decoder = new TextDecoder();
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() ?? "";
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith("data: ")) continue;
+
+              try {
+                const data: AIStreamChunk & {
+                  conversationId?: string;
+                  content?: string;
+                  blocks?: AIResponseBlock[];
+                } = JSON.parse(trimmed.slice(6));
+
+                switch (data.type) {
+                  case "status":
+                    setStatus(data.status ?? null);
+                    break;
+                  case "token":
+                    fullContent += data.content ?? "";
+                    setStreamingMessage(fullContent);
+                    break;
+                  case "tool_call":
+                    toolNameRef.current = data.toolCall?.function.name ?? null;
+                    setStreamingTool(toolNameRef.current);
+                    break;
+                  case "tool_result": {
+                    const tr = data.toolResult as { name: string; result: unknown } | undefined;
+                    if (tr) {
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          id: crypto.randomUUID(),
+                          role: "assistant",
+                          content: fullContent || null,
+                          tool_name: tr.name,
+                          tool_result: tr.result,
+                        },
+                      ]);
+                      fullContent = "";
+                      setStreamingMessage("");
+                      toolNameRef.current = null;
+                      setStreamingTool(null);
+                    }
+                    break;
+                  }
+                  case "block":
+                    if (data.block) {
+                      finalBlocks.push(data.block);
+                    }
+                    break;
+                  case "done":
+                    finalContent = data.content || fullContent;
+                    if (data.conversationId && !currentConvId) {
+                      currentConvId = data.conversationId;
+                    }
+                    break;
+                  case "error":
+                    setError(data.error ?? "An error occurred");
+                    toast.error(data.error ?? "An error occurred");
+                    break;
+                }
+              } catch {
+                // skip malformed lines
+              }
+            }
+          }
+
+          // Success — break out of retry loop
+          break;
+        } catch (err) {
+          if (err instanceof Error && err.name === "AbortError") return;
+          const isNetworkError = err instanceof TypeError || (err instanceof Error && err.message?.includes("fetch"));
+          if (isNetworkError && attempt < maxRetries - 1) {
+            continue;
+          }
+          throw err;
         }
       }
 
@@ -245,8 +274,9 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
     } finally {
       setIsStreaming(false);
       abortRef.current = null;
+      setStatus(null);
     }
-  }, [isStreaming, convId, pathname, onConversationChange]);
+  }, [isStreaming, pathname, onConversationChange]);
 
   useEffect(() => {
     if (pendingCommand && !isStreaming) {
@@ -274,11 +304,27 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
     ]);
   }, []);
 
+  const handleExport = useCallback(() => {
+    if (messages.length === 0) return;
+    const lines = messages.map((m) => {
+      const role = m.role === "user" ? "**You**" : "**AI Assistant**";
+      return `${role}:\n${m.content ?? ""}`;
+    });
+    const markdown = lines.join("\n\n---\n\n");
+    const blob = new Blob([markdown], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `conversation-${new Date().toISOString().slice(0, 10)}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [messages]);
+
   const showEmptyState = messages.length === 0 && !isStreaming;
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <ChatHeader />
+      <ChatHeader onExport={handleExport} hasConversation={!!convId} />
 
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {showEmptyState ? (

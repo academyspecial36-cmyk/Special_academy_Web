@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { DeleteModal } from "@/components/ui/delete-modal";
 import { cn } from "@/lib/utils";
 import { formatShortDate } from "@/lib/utils";
 
@@ -92,6 +93,7 @@ export default function CommunicationsPage() {
   const [templateForm, setTemplateForm] = useState({ name: "", type: "email" as "email" | "sms", subject: "", body: "" });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [showSamplePicker, setShowSamplePicker] = useState(false);
+  const [deletingTemplate, setDeletingTemplate] = useState<string | null>(null);
 
   const [selectedComm, setSelectedComm] = useState<Communication & { recipients?: { id: string; recipient_name: string; recipient_email: string; status: string; error_message: string | null }[] } | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -177,15 +179,17 @@ export default function CommunicationsPage() {
     }
   }
 
-  async function handleDeleteTemplate(id: string) {
-    if (!confirm("Delete this template?")) return;
+  async function confirmDeleteTemplate() {
+    if (!deletingTemplate) return;
     try {
-      const res = await fetch(`/api/communications/templates/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/communications/templates/${deletingTemplate}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      setTemplates((p) => p.filter((t) => t.id !== id));
+      setTemplates((p) => p.filter((t) => t.id !== deletingTemplate));
+      setDeletingTemplate(null);
       toast.success("Template deleted");
     } catch {
       toast.error("Failed to delete template");
+      setDeletingTemplate(null);
     }
   }
 
@@ -610,7 +614,7 @@ export default function CommunicationsPage() {
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setEditingTemplate(t); setTemplateForm({ name: t.name, type: t.type, subject: t.subject || "", body: t.body }); }} title="Edit">
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => handleDeleteTemplate(t.id)} title="Delete">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => setDeletingTemplate(t.id)} title="Delete">
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         </div>
@@ -753,6 +757,14 @@ export default function CommunicationsPage() {
           )}
         </motion.div>
       )}
+
+      <DeleteModal
+        open={!!deletingTemplate}
+        onClose={() => setDeletingTemplate(null)}
+        title="Delete Template"
+        message="Delete this template?"
+        onConfirm={confirmDeleteTemplate}
+      />
     </div>
   );
 }

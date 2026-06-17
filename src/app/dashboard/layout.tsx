@@ -36,6 +36,7 @@ import { DASHBOARD_SIDEBAR } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
 import { LandingLoader } from "@/components/landing/landing-loader";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { CommandPalette } from "@/components/ai/command-palette";
@@ -359,7 +360,7 @@ export default function DashboardLayout({
 
         {/* Page Content */}
         <main className="p-4 lg:p-8">
-          {loading ? <LandingLoader /> : children}
+          {loading ? <LandingLoader /> : <ErrorBoundary>{children}</ErrorBoundary>}
         </main>
         </NotificationsProvider>
       </div>

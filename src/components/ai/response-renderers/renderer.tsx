@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { AIResponseBlock } from "@/types/ai";
+import type { AIResponseBlock, BlockDataMap } from "@/types/ai";
 
 const Loading = () => (
   <div className="p-8 bg-white border border-primary/5 rounded-xl space-y-3">
@@ -34,33 +34,33 @@ interface RendererProps {
 export function ResponseRenderer({ block, onConfirmTool }: RendererProps) {
   switch (block.type) {
     case "notice_draft":
-      return <NoticeDraftRenderer data={block.data as any} />;
+      return <NoticeDraftRenderer data={block.data as unknown as BlockDataMap["notice_draft"]} />;
     case "course_draft":
-      return <CourseDraftRenderer data={block.data as any} />;
+      return <CourseDraftRenderer data={block.data as unknown as BlockDataMap["course_draft"]} />;
     case "exam_draft":
-      return <ExamDraftRenderer data={block.data as any} />;
+      return <ExamDraftRenderer data={block.data as unknown as BlockDataMap["exam_draft"]} />;
     case "student_table":
-      return <StudentTableRenderer data={block.data as any} />;
+      return <StudentTableRenderer data={block.data as unknown as BlockDataMap["student_table"]} />;
     case "enrollment_table":
-      return <EnrollmentTableRenderer data={block.data as any} />;
+      return <EnrollmentTableRenderer data={block.data as unknown as BlockDataMap["enrollment_table"]} />;
     case "faq_table":
-      return <FAQsTableRenderer data={block.data as any} />;
+      return <FAQsTableRenderer data={block.data as unknown as BlockDataMap["faq_table"]} />;
     case "notice_table":
-      return <NoticeTableRenderer data={block.data as any} />;
+      return <NoticeTableRenderer data={block.data as unknown as BlockDataMap["notice_table"]} />;
     case "confirmation_card":
-      return <ConfirmationCardRenderer data={block.data as any} onConfirmTool={onConfirmTool} />;
+      return <ConfirmationCardRenderer data={block.data as unknown as BlockDataMap["confirmation_card"]} onConfirmTool={onConfirmTool} />;
     case "action_result":
-      return <ActionResultRenderer data={block.data as any} />;
+      return <ActionResultRenderer data={block.data as unknown as BlockDataMap["action_result"]} />;
     case "error_card":
-      return <ErrorCardRenderer data={block.data as any} />;
+      return <ErrorCardRenderer data={block.data as unknown as BlockDataMap["error_card"]} />;
     case "analytics_card":
-      return <AnalyticsCardRenderer data={block.data as any} />;
+      return <AnalyticsCardRenderer data={block.data as unknown as BlockDataMap["analytics_card"]} />;
     case "knowledge_answer":
-      return <KnowledgeAnswerRenderer data={block.data as any} />;
+      return <KnowledgeAnswerRenderer data={block.data as unknown as BlockDataMap["knowledge_answer"]} />;
     case "faq_draft":
-      return <FAQDraftRenderer data={block.data as any} />;
+      return <FAQDraftRenderer data={block.data as unknown as BlockDataMap["faq_draft"]} />;
     case "blog_draft":
-      return <BlogDraftRenderer data={block.data as any} />;
+      return <BlogDraftRenderer data={block.data as unknown as BlockDataMap["blog_draft"]} />;
     default:
       return null;
   }

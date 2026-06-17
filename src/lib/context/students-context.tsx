@@ -5,7 +5,7 @@ import type { Student } from "@/types";
 import { apiCreate, apiUpdate, apiDelete } from "@/lib/api-client";
 import { generateId, initialEnrollments } from "./seed-data";
 
-interface Enrollment {
+export interface Enrollment {
   id: string; fullName: string; email: string; interestedCourse: string;
   qualificationId: string; createdAt: string; status: "unverified" | "pending" | "approved" | "rejected"; rejectionMessage?: string;
 }

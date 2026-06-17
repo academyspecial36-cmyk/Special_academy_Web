@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Modal } from "./modal";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
@@ -227,11 +228,11 @@ export function FormModal({
                 />
                 {(localPreviews[field.name] || form[field.name]) && (
                   <div className="relative w-full h-32 rounded-lg overflow-hidden" style={{ backgroundImage: "repeating-conic-gradient(hsl(var(--primary) / 0.08) 0% 25%, transparent 0% 50%)", backgroundSize: "16px 16px" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={localPreviews[field.name] || form[field.name]}
                       alt="Preview"
-                      className="w-full h-full object-contain"
+                      fill
+                      className="object-contain"
                     />
                   </div>
                 )}
