@@ -152,7 +152,7 @@ export default function StudentCourseDetailPage() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3 sm:gap-4">
-        <Button variant="ghost" size="icon" asChild>
+        <Button className="hidden md:block" variant="ghost" size="icon" asChild>
           <Link href="/student/courses">
             <ArrowLeft className="w-5 h-5" />
           </Link>

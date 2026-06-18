@@ -5,8 +5,8 @@ import { MessageCircle, X, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppContext } from "@/lib/app-context";
 
-const PHONE_NUMBER = "9860302036";
-const DEFAULT_MESSAGE = "How can I help you?";
+const DEFAULT_MESSAGE =
+  "Hi, I'm interested in your courses and would like more information.";
 
 export function WhatsAppButton() {
   const { settings } = useAppContext();
@@ -15,7 +15,7 @@ export function WhatsAppButton() {
 
   function openWhatsApp() {
     const encoded = encodeURIComponent(DEFAULT_MESSAGE);
-    window.open(`https://wa.me/${PHONE_NUMBER}?text=${encoded}`, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/${settings?.phone}?text=${encoded}`, "_blank", "noopener,noreferrer");
     setPopupOpen(false);
   }
 

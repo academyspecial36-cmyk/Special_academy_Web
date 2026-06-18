@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import Link from "next/link";
 import {
   MapPin,
   Phone,
@@ -12,6 +11,7 @@ import {
   Loader2,
   CheckCircle2,
 } from "lucide-react";
+
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,36 +23,54 @@ import { toast } from "sonner";
 export function ContactSection() {
   const { settings } = useAppContext();
   const labels = settings.config.sectionLabels?.contact;
-  const btns = settings.config.buttonLabels || {} as Record<string, string>;
+  const btns = (settings.config.buttonLabels || {}) as Record<string, string>;
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!name.trim() || !email.trim() || !message.trim()) {
       toast.error("Please fill in name, email, and message.");
       return;
     }
+
     setSending(true);
+
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), email: email.trim(), phone: phone.trim(), subject: subject.trim(), message: message.trim() }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+          subject: subject.trim(),
+          message: message.trim(),
+        }),
       });
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to send");
       }
+
       setSent(true);
+
       toast.success("Message sent! We'll get back to you soon.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send message");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to send message",
+      );
     } finally {
       setSending(false);
     }
@@ -60,96 +78,132 @@ export function ContactSection() {
 
   if (sent) {
     return (
-      <section className="py-20 md:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-lg mx-auto text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+      <section className="bg-white py-16 md:py-24 lg:py-28 overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-lg py-12 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/5">
+              <CheckCircle2 className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-primary mb-3">Thank You!</h2>
-            <p className="text-muted">Your message has been received. Our team will review it and get back to you as soon as possible.</p>
+
+            <h2 className="mb-3 text-2xl font-bold text-primary">Thank You!</h2>
+
+            <p className="text-muted">
+              Your message has been received. Our team will review it and get
+              back to you as soon as possible.
+            </p>
           </div>
         </div>
       </section>
     );
   }
 
+  const contactItems = [
+    {
+      icon: MapPin,
+      title: "Address",
+      content: (
+        <p className="break-words text-sm leading-relaxed text-muted">
+          {settings.address}
+        </p>
+      ),
+    },
+    {
+      icon: Phone,
+      title: "Phone",
+      content: (
+        <>
+          <p className="break-words text-sm text-muted">{settings.phone}</p>
+
+          {settings.secondaryPhone && (
+            <p className="break-words text-sm text-muted">
+              {settings.secondaryPhone}
+            </p>
+          )}
+        </>
+      ),
+    },
+    {
+      icon: Mail,
+      title: "Email",
+      content: (
+        <>
+          <p className="break-words text-sm text-muted">{settings.email}</p>
+
+          {settings.admissionEmail && (
+            <p className="break-words text-sm text-muted">
+              {settings.admissionEmail}
+            </p>
+          )}
+        </>
+      ),
+    },
+    {
+      icon: Clock,
+      title: "Office Hours",
+      content: (
+        <>
+          <p className="break-words text-sm text-muted">
+            {settings.officeHours}
+          </p>
+
+          <p className="break-words text-sm text-muted">{settings.holiday}</p>
+        </>
+      ),
+    },
+  ];
+
   return (
-    <section className="py-20 md:py-28 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="bg-white py-16 md:py-24 lg:py-28 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeader
           label={labels?.label || "Get in Touch"}
           title={labels?.title || `Contact ${settings.academyName}`}
           description={labels?.description || ""}
         />
 
-        <div className="grid lg:grid-cols-5 gap-10 lg:gap-16">
-          {/* Contact Info */}
+        <div className="grid gap-10 lg:grid-cols-5 lg:gap-16">
+          {/* Contact Information */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="lg:col-span-2 space-y-8"
+            className="space-y-8 lg:col-span-2"
           >
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-primary mb-1">Address</h4>
-                  <p className="text-sm text-muted leading-relaxed">
-                    {settings.address}
-                  </p>
-                </div>
-              </div>
+            {/* Mobile Card Layout */}
+            <div className="grid gap-4 sm:gap-5">
+              {contactItems.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-start gap-4 rounded-xl border border-primary/5 bg-accent p-4"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/5">
+                    <item.icon className="h-5 w-5 text-primary" />
+                  </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-primary mb-1">Phone</h4>
-                  <p className="text-sm text-muted">{settings.phone}</p>
-                  {settings.secondaryPhone && (
-                    <p className="text-sm text-muted">{settings.secondaryPhone}</p>
-                  )}
-                </div>
-              </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="mb-1 font-semibold text-primary">
+                      {item.title}
+                    </h4>
 
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5 text-primary" />
+                    {item.content}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-primary mb-1">Email</h4>
-                  <p className="text-sm text-muted">{settings.email}</p>
-                  <p className="text-sm text-muted">{settings.admissionEmail}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-primary mb-1">Office Hours</h4>
-                  <p className="text-sm text-muted">{settings.officeHours}</p>
-                  <p className="text-sm text-muted">{settings.holiday}</p>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Social */}
+            {/* Social Links */}
             <div>
-              <h4 className="font-semibold text-primary mb-3">Follow Us</h4>
-              <SocialLinks
-                links={settings.socialLinks}
-                baseColor="bg-primary/5 text-primary"
-                hoverColor="hover:bg-primary hover:text-white"
-                size="lg"
-              />
+              <h4 className="mb-3 font-semibold text-primary">Follow Us</h4>
+
+              <div className="overflow-hidden">
+                <SocialLinks
+                  links={settings.socialLinks}
+                  baseColor="bg-primary/5 text-primary"
+                  hoverColor="hover:bg-primary hover:text-white"
+                  size="lg"
+                />
+              </div>
             </div>
           </motion.div>
 
@@ -161,38 +215,95 @@ export function ContactSection() {
             transition={{ duration: 0.5 }}
             className="lg:col-span-3"
           >
-            <div className="bg-accent rounded-xl p-6 md:p-8 border border-primary/5">
-              <h3 className="text-lg font-semibold text-primary mb-6">
+            <div className="rounded-xl border border-primary/5 bg-accent p-4 sm:p-6 md:p-8">
+              <h3 className="mb-6 text-lg font-semibold text-primary">
                 Send us a Message
               </h3>
+
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium text-primary mb-1.5 block">Full Name *</label>
-                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required />
+                    <label className="mb-1.5 block text-sm font-medium text-primary">
+                      Full Name *
+                    </label>
+
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                      required
+                    />
                   </div>
+
                   <div>
-                    <label className="text-sm font-medium text-primary mb-1.5 block">Email *</label>
-                    <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required />
+                    <label className="mb-1.5 block text-sm font-medium text-primary">
+                      Email *
+                    </label>
+
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                    />
                   </div>
                 </div>
-                <div className="grid sm:grid-cols-2 gap-4">
+
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="text-sm font-medium text-primary mb-1.5 block">Phone</label>
-                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98XXXXXXXX" />
+                    <label className="mb-1.5 block text-sm font-medium text-primary">
+                      Phone
+                    </label>
+
+                    <Input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="98XXXXXXXX"
+                    />
                   </div>
+
                   <div>
-                    <label className="text-sm font-medium text-primary mb-1.5 block">Subject</label>
-                    <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="How can we help?" />
+                    <label className="mb-1.5 block text-sm font-medium text-primary">
+                      Subject
+                    </label>
+
+                    <Input
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="How can we help?"
+                    />
                   </div>
                 </div>
+
                 <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Message *</label>
-                  <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Tell us about your inquiry..." rows={5} required />
+                  <label className="mb-1.5 block text-sm font-medium text-primary">
+                    Message *
+                  </label>
+
+                  <Textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Tell us about your inquiry..."
+                    rows={5}
+                    required
+                    className="resize-none"
+                  />
                 </div>
-                <Button className="w-full" size="lg" type="submit" disabled={sending}>
-                  {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                  {sending ? "Sending..." : (btns.sendMessage || "Send Message")}
+
+                <Button
+                  className="w-full"
+                  size="lg"
+                  type="submit"
+                  disabled={sending}
+                >
+                  {sending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+
+                  {sending ? "Sending..." : btns.sendMessage || "Send Message"}
                 </Button>
               </form>
             </div>

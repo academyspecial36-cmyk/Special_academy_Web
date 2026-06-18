@@ -18,43 +18,140 @@ export type SidebarItem =
   | { type: "group"; label: string; icon: string; children: { label: string; href: string; icon: string }[] };
 
 export const DASHBOARD_SIDEBAR: SidebarItem[] = [
-  { type: "link", label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   {
-    type: "group", label: "Content", icon: "BookOpen",
+    type: "link",
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: "LayoutDashboard",
+  },
+
+  {
+    type: "group",
+    label: "Admissions",
+    icon: "Users",
     children: [
-      { label: "Courses", href: "/dashboard/courses", icon: "BookOpen" },
-      { label: "Media", href: "/dashboard/media", icon: "ImageIcon" },
-      { label: "Notices", href: "/dashboard/notices", icon: "Bell" },
-      { label: "Blog", href: "/dashboard/blog", icon: "FileText" },
-      { label: "FAQs", href: "/dashboard/faqs", icon: "HelpCircle" },
-      { label: "Gallery", href: "/dashboard/gallery", icon: "ImageIcon" },
-      { label: "Notes", href: "/dashboard/notes", icon: "StickyNote" },
-      { label: "Testimonials", href: "/dashboard/testimonials", icon: "MessageSquare" },
-      { label: "Faculty", href: "/dashboard/faculty", icon: "GraduationCap" },
+      {
+        label: "Enrollments",
+        href: "/dashboard/enrollments",
+        icon: "FileText",
+      },
+      {
+        label: "Students",
+        href: "/dashboard/students",
+        icon: "Users",
+      },
+      {
+        label: "Contact Inquiries",
+        href: "/dashboard/contact-submissions",
+        icon: "MessageSquare",
+      },
     ],
   },
+
   {
-    type: "group", label: "People", icon: "Users",
+    type: "group",
+    label: "Courses & Learning",
+    icon: "GraduationCap",
     children: [
-      { label: "Students", href: "/dashboard/students", icon: "Users" },
-      { label: "Enrollments", href: "/dashboard/enrollments", icon: "FileText" },
+      {
+        label: "Courses",
+        href: "/dashboard/courses",
+        icon: "BookOpen",
+      },
+      {
+        label: "Faculty",
+        href: "/dashboard/faculty",
+        icon: "GraduationCap",
+      },
+      {
+        label: "Notes",
+        href: "/dashboard/notes",
+        icon: "StickyNote",
+      },
+      {
+        label: "Exams",
+        href: "/dashboard/exams",
+        icon: "ClipboardCheck",
+      },
     ],
   },
+
   {
-    type: "group", label: "Academics", icon: "ClipboardCheck",
+    type: "group",
+    label: "Website Content",
+    icon: "FileText",
     children: [
-      { label: "Exams", href: "/dashboard/exams", icon: "ClipboardCheck" },
+      {
+        label: "Notices",
+        href: "/dashboard/notices",
+        icon: "Bell",
+      },
+      {
+        label: "Blog Posts",
+        href: "/dashboard/blog",
+        icon: "FileText",
+      },
+      {
+        label: "FAQs",
+        href: "/dashboard/faqs",
+        icon: "HelpCircle",
+      },
+      {
+        label: "Testimonials",
+        href: "/dashboard/testimonials",
+        icon: "MessageSquare",
+      },
+      {
+        label: "Gallery",
+        href: "/dashboard/gallery",
+        icon: "ImageIcon",
+      },
+      {
+        label: "Media Library",
+        href: "/dashboard/media",
+        icon: "ImageIcon",
+      },
     ],
   },
+
   {
-    type: "group", label: "System", icon: "Settings",
+    type: "group",
+    label: "Marketing",
+    icon: "Megaphone",
     children: [
-      { label: "AI Command Center", href: "/dashboard/ai", icon: "Sparkles" },
-      { label: "Categories", href: "/dashboard/categories", icon: "Tags" },
-      { label: "Communications", href: "/dashboard/communications", icon: "Megaphone" },
-      { label: "Contact", href: "/dashboard/contact-submissions", icon: "MessageSquare" },
-      { label: "Settings", href: "/dashboard/settings", icon: "Settings" },
-      { label: "Guide", href: "/dashboard/guide", icon: "BookOpen" },
+      {
+        label: "Communications",
+        href: "/dashboard/communications",
+        icon: "Megaphone",
+      },
+    ],
+  },
+
+  {
+    type: "group",
+    label: "Administration",
+    icon: "Settings",
+    children: [
+      {
+        label: "Categories",
+        href: "/dashboard/categories",
+        icon: "Tags",
+      },
+      {
+        label: "AI Assistant",
+        href: "/dashboard/ai",
+        icon: "Sparkles",
+      },
+      {
+        label: "Settings",
+        href: "/dashboard/settings",
+        icon: "Settings",
+      },
+      {
+        label: "User Guide",
+        href: "/dashboard/guide",
+        icon: "BookOpen",
+      },
     ],
   },
 ];
