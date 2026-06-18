@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Search, Pin, PinOff, Trash2, Palette, Tag,
-  StickyNote, X, Loader2, Clock, Hash, Check,
+  StickyNote, X, Loader2, Clock, Hash, Check, Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -512,6 +512,10 @@ function NoteCard({ note, onEdit, onPin, onDelete, pinningId }: {
 
         {/* Hover actions */}
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${note.title}\n\n${stripHtml(note.content)}`); toast.success("Note copied to clipboard"); }}
+            className="w-7 h-7 rounded-lg bg-white/90 shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary transition-colors">
+            <Copy className="w-3.5 h-3.5" />
+          </button>
           <button onClick={(e) => { e.stopPropagation(); onPin(note); }}
             className="w-7 h-7 rounded-lg bg-white/90 shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary transition-colors"
             disabled={isPinning}>

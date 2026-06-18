@@ -12,13 +12,33 @@ import { useAppContext } from "@/lib/app-context";
 export default function StudentExamResultPage() {
   const params = useParams();
   const categoryId = params.id as string;
-  const { examCategories, questions, attempts } = useAppContext();
+  const { examCategories, questions, attempts, dataLoading } = useAppContext();
 
   const category = examCategories.find((c) => c.id === categoryId);
   const categoryQuestions = questions.filter((q) => q.categoryId === categoryId);
   const latestAttempt = [...attempts]
     .filter((a) => a.categoryId === categoryId)
     .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())[0];
+
+  if (dataLoading) {
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg animate-pulse" />
+          <div>
+            <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
+            <div className="h-4 w-32 bg-primary/10 rounded-md animate-pulse mt-1" />
+          </div>
+        </div>
+        <div className="h-64 bg-primary/5 rounded-xl animate-pulse" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-28 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!category || !latestAttempt) {
     return (

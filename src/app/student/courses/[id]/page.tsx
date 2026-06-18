@@ -1,26 +1,39 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useState, useMemo, useEffect, type ComponentType } from "react";
+import dynamic from "next/dynamic";
+import { useParams, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon, ChevronRight, ListChecks } from "lucide-react";
+import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon, ChevronRight, ListChecks, Search, X, LayoutGrid, List } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PreviewModal } from "@/components/ui/preview-modal";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
+
+const PreviewModal = dynamic(() => import("@/components/ui/preview-modal").then(m => ({ default: m.PreviewModal })), { ssr: false }) as ComponentType<{
+  open: boolean;
+  onClose: () => void;
+  type: "video" | "image" | "pdf";
+  title: string;
+  url: string;
+  images?: string[];
+  studentName?: string;
+}>;
 
 export default function StudentCourseDetailPage() {
   const params = useParams();
   const courseId = params.id as string;
   const { user } = useAuth();
-  const { subcategories, completedItems, toggleItemComplete, courses } = useAppContext();
+  const { subcategories, completedItems, toggleItemComplete, courses, dataLoading } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
+  const searchParams = useSearchParams();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const courseSubs = useMemo(
     () => subcategories.filter((s) => s.courseId === courseId && !s.hidden),
@@ -41,10 +54,43 @@ export default function StudentCourseDetailPage() {
     [activeSub]
   );
 
+  const filteredItems = useMemo(
+    () => {
+      if (!searchQuery.trim()) return activeItems;
+      const q = searchQuery.toLowerCase();
+      return activeItems.filter((item) =>
+        item.title.toLowerCase().includes(q) || item.type.toLowerCase().includes(q)
+      );
+    },
+    [activeItems, searchQuery]
+  );
+
   const allItems = useMemo(
     () => courseSubs.flatMap((s) => s.items.filter((item) => !item.hidden)),
     [courseSubs]
   );
+
+  // Auto-open preview from ?itemId= query param
+  useEffect(() => {
+    const itemId = searchParams.get("itemId");
+    if (!itemId) return;
+    for (const sub of courseSubs) {
+      const found = sub.items.find((item) => item.id === itemId && !item.hidden);
+      if (found) {
+        setActiveSubId(sub.id);
+        setTimeout(() => {
+          setPreviewItem({
+            type: found.type,
+            title: found.title,
+            url: found.url,
+            images: found.images,
+          });
+          setPreviewOpen(true);
+        }, 200);
+        break;
+      }
+    }
+  }, [searchParams, courseSubs]);
 
   const totalItems = allItems.length;
   const completedCount = allItems.filter((item) => completedItems.includes(item.id)).length;
@@ -61,6 +107,35 @@ export default function StudentCourseDetailPage() {
     if (!sub) return 0;
     return sub.items.filter((item) => !item.hidden).length;
   };
+
+  if (dataLoading) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg animate-pulse" />
+          <div>
+            <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
+            <div className="h-4 w-64 bg-primary/10 rounded-md animate-pulse mt-1" />
+          </div>
+        </div>
+        <div className="h-20 bg-primary/5 rounded-xl animate-pulse" />
+        <div className="flex flex-col lg:flex-row gap-5">
+          <div className="hidden lg:flex w-64 flex-col gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-12 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+            ))}
+          </div>
+          <div className="flex-1 space-y-3">
+            <div className="h-44 bg-primary/5 rounded-xl animate-pulse" />
+            <div className="h-10 bg-primary/5 rounded-xl animate-pulse" />
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-16 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!course) {
     return (
@@ -213,16 +288,130 @@ export default function StudentCourseDetailPage() {
                     </CardContent>
                   </Card>
 
+                  {/* Search + View Toggle */}
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search items by title or type..."
+                        className="w-full h-10 pl-9 pr-9 rounded-xl border border-primary/10 bg-white text-sm text-primary outline-none focus:border-primary/30"
+                      />
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 bg-accent rounded-xl p-0.5 shrink-0">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-white shadow-sm text-primary" : "text-muted hover:text-primary"}`}
+                        title="Grid view"
+                      >
+                        <LayoutGrid className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-white shadow-sm text-primary" : "text-muted hover:text-primary"}`}
+                        title="List view"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Items List */}
-                  {activeItems.length === 0 ? (
+                  {filteredItems.length === 0 ? (
                     <div className="text-center py-12 bg-accent/30 rounded-xl border border-dashed border-primary/10">
                       <BookOpen className="w-10 h-10 text-muted mx-auto mb-3" />
-                      <h3 className="font-semibold text-primary mb-1">No items in this chapter</h3>
-                      <p className="text-sm text-muted">Check back later for new content.</p>
+                      <h3 className="font-semibold text-primary mb-1">
+                        {searchQuery ? "No matching items" : "No items in this chapter"}
+                      </h3>
+                      <p className="text-sm text-muted">
+                        {searchQuery ? "Try a different search term." : "Check back later for new content."}
+                      </p>
+                    </div>
+                  ) : viewMode === "grid" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {filteredItems.map((item) => {
+                        const isCompleted = completedItems.includes(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            className="group relative flex flex-col rounded-xl border transition-all hover:shadow-md border-primary/5 hover:border-primary/20 bg-white overflow-hidden"
+                          >
+                            {/* Thumbnail */}
+                            <div
+                              onClick={() => {
+                                setPreviewItem({ type: item.type, title: item.title, url: item.url, images: item.images });
+                                setPreviewOpen(true);
+                              }}
+                              className={`relative h-28 flex items-center justify-center cursor-pointer ${
+                                item.type === "video" ? "bg-blue-50" : item.type === "image" ? "bg-purple-50" : "bg-amber-50"
+                              }`}
+                            >
+                              {item.type === "video" ? <Play className="w-8 h-8 text-blue-500/60" />
+                                : item.type === "image" ? <ImageIcon className="w-8 h-8 text-purple-500/60" />
+                                : <FileText className="w-8 h-8 text-amber-500/60" />}
+                              <Badge variant="outline" className="absolute top-2 right-2 text-[8px] uppercase bg-white/90 border-0">
+                                {item.type}
+                              </Badge>
+                              {isCompleted && (
+                                <div className="absolute top-2 left-2">
+                                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Body */}
+                            <div className="p-3 flex-1 flex flex-col">
+                              <h4
+                                onClick={() => {
+                                  setPreviewItem({ type: item.type, title: item.title, url: item.url, images: item.images });
+                                  setPreviewOpen(true);
+                                }}
+                                className={`text-sm font-medium line-clamp-2 cursor-pointer ${isCompleted ? "text-emerald-700" : "text-primary"} group-hover:text-secondary transition-colors`}
+                              >
+                                {item.title}
+                              </h4>
+                              {item.duration && (
+                                <span className="text-[10px] text-muted flex items-center gap-0.5 mt-1">
+                                  <Clock className="w-3 h-3" /> {item.duration}
+                                </span>
+                              )}
+                              <div className="mt-auto pt-2 flex items-center justify-between">
+                                <button
+                                  onClick={() => toggleItemComplete(item.id)}
+                                  className={`text-[10px] font-medium flex items-center gap-1 transition-colors ${
+                                    isCompleted ? "text-emerald-600" : "text-muted hover:text-secondary"
+                                  }`}
+                                >
+                                  {isCompleted ? <CheckCircle className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                                  {isCompleted ? "Completed" : "Mark done"}
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setPreviewItem({ type: item.type, title: item.title, url: item.url, images: item.images });
+                                    setPreviewOpen(true);
+                                  }}
+                                  className="text-[10px] font-medium text-secondary hover:underline"
+                                >
+                                  Preview
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {activeItems.map((item) => {
+                      {filteredItems.map((item) => {
                         const isCompleted = completedItems.includes(item.id);
                         return (
                           <div

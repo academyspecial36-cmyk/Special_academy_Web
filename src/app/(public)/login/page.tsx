@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { PageWrapper } from "@/components/shared/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
-import { getSupabase } from "@/lib/supabase";
+
+const PageWrapper = dynamic(() => import("@/components/shared/page-wrapper").then(m => ({ default: m.PageWrapper })), { ssr: false });
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -33,18 +34,21 @@ export default function LoginPage() {
           if (res.ok) {
             const data = await res.json();
             if (data.status !== "approved") {
+              const { getSupabase } = await import("@/lib/supabase");
               await getSupabase()?.auth.signOut();
               setError("Your account is not yet approved. Please contact 986-0302036 for assistance.");
               return;
             }
           }
         } catch {
+          const { getSupabase } = await import("@/lib/supabase");
           await getSupabase()?.auth.signOut();
           setError("Unable to verify enrollment status. Please try again.");
           return;
         }
         window.location.href = "/student";
       } else {
+        const { getSupabase } = await import("@/lib/supabase");
         await getSupabase()?.auth.signOut();
         setError("Access denied. Student account required.");
       }

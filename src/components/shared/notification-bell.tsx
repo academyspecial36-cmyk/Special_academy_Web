@@ -56,7 +56,7 @@ export function NotificationBell() {
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             role="dialog"
             aria-label="Notifications"
-            className="absolute right-0 max-sm:-right-2 top-full mt-2 w-80 max-sm:w-[calc(100vw-2rem)] bg-white rounded-xl shadow-elevated border border-primary/5 z-50 max-h-[400px] flex flex-col"
+            className="absolute right-0 top-full mt-2 w-[calc(100vw-2rem)] sm:w-[400px] bg-white rounded-xl shadow-elevated border border-primary/5 z-50 max-h-[80dvh] sm:max-h-[32rem] flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-primary/5 shrink-0">
               <h3 className="text-sm font-bold text-primary">Notifications</h3>
@@ -78,7 +78,7 @@ export function NotificationBell() {
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 bg-primary/10 rounded-full shrink-0 animate-pulse" />
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 min-w-0 space-y-2">
                         <div className="h-3 w-3/4 bg-primary/10 rounded animate-pulse" />
                         <div className="h-3 w-1/2 bg-primary/10 rounded animate-pulse" />
                       </div>
@@ -96,20 +96,20 @@ export function NotificationBell() {
                     >
                       <div className="flex items-start gap-2.5">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs font-medium text-primary truncate">{n.title}</span>
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="text-xs font-medium text-primary truncate max-w-[200px] sm:max-w-none">{n.title}</span>
                             {!n.is_read && (
                               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                             )}
                           </div>
-                          <p className="text-xs text-muted line-clamp-2 leading-relaxed">{n.message}</p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-[10px] text-muted/60">{timeAgo(n.created_at)}</span>
+                          <p className="text-xs text-muted line-clamp-2 leading-relaxed break-words">{n.message}</p>
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span className="text-[10px] text-muted/60 shrink-0">{timeAgo(n.created_at)}</span>
                             {n.link && (
                               <Link
                                 href={n.link}
                                 onClick={() => { markRead(n.id); setOpen(false); }}
-                                className="text-[10px] text-secondary hover:underline"
+                                className="text-[10px] text-secondary hover:underline shrink-0"
                               >
                                 View
                               </Link>
@@ -117,7 +117,7 @@ export function NotificationBell() {
                             {!n.is_read && (
                               <button
                                 onClick={() => markRead(n.id)}
-                                className="text-[10px] text-muted/60 hover:text-primary ml-auto"
+                                className="text-[10px] text-muted/60 hover:text-primary ml-auto shrink-0"
                                 aria-label={`Mark "${n.title}" as read`}
                               >
                                 Mark read

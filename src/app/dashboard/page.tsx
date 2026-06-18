@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import dynamic from "next/dynamic";
 import {
   Users, BookOpen, FileText, Bell, TrendingUp, ArrowUpRight, ArrowDownRight,
   BarChart3, PieChart, Activity, DollarSign, GraduationCap, MessageSquare,
-  Newspaper, Star,
+  Newspaper, Star, ImageIcon, Video, File, PlayCircle,
 } from "lucide-react";
 
 const DashboardCharts = dynamic(
@@ -83,12 +84,23 @@ function ChartSkeleton() {
 export default function DashboardPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mediaFiles, setMediaFiles] = useState<{ id: string; url: string; thumbnail_url: string | null; name: string; mime_type: string }[]>([]);
 
   useEffect(() => {
     fetch("/api/analytics")
       .then((r) => r.json())
       .then((d) => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/media")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d)) setMediaFiles(d.slice(0, 6));
+        else if (d.files) setMediaFiles(d.files.slice(0, 6));
+      })
+      .catch(() => {});
   }, []);
 
   if (loading) {
@@ -373,6 +385,78 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Media Preview */}
+      {mediaFiles.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-secondary" />
+                Media Preview
+              </CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/dashboard/media">View All</Link>
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {mediaFiles.map((file) => {
+                const isVideo = file.mime_type?.startsWith("video/");
+                const isImage = file.mime_type?.startsWith("image/");
+                const isPdf = file.mime_type === "application/pdf";
+                return (
+                  <Link
+                    key={file.id}
+                    href="/dashboard/media"
+                    className="group relative aspect-square rounded-xl overflow-hidden border border-primary/5 bg-accent hover:border-secondary/30 hover:shadow-soft transition-all"
+                  >
+                    {isImage ? (
+                      <Image
+                        src={file.thumbnail_url || file.url}
+                        alt={file.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        unoptimized
+                      />
+                    ) : isVideo ? (
+                      <div className="relative w-full h-full flex items-center justify-center bg-black/5">
+                        <Video className="w-8 h-8 text-muted" />
+                        {file.thumbnail_url && (
+                          <Image
+                            src={file.thumbnail_url}
+                            alt={file.name}
+                            fill
+                            className="object-cover opacity-40"
+                            unoptimized
+                          />
+                        )}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center">
+                            <PlayCircle className="w-5 h-5 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                    ) : isPdf ? (
+                      <div className="w-full h-full flex items-center justify-center bg-red-50">
+                        <File className="w-8 h-8 text-red-500" />
+                      </div>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <File className="w-8 h-8 text-muted" />
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-6">
+                      <p className="text-[10px] text-white truncate font-medium">{file.name}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

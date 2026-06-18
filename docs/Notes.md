@@ -189,3 +189,77 @@ Route (app)                                 Size  First Load JS
 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
 ƒ  (Dynamic)  server-rendered on demand
 
+
+
+ ## Performance & Bundle Size Analysis
+
+Here's a comprehensive breakdown of your Next.js app's performance based on the build output:
+
+---
+
+### Overall Performance Grade: **B (Good)** 🟡
+
+| Metric | Value |
+|--------|-------|
+| **Average First Load JS** | **172.6 kB** |
+| **Max First Load JS** | 260 kB (`/dashboard/settings`) |
+| **Min First Load JS** | 103 kB (`/_not-found`, `/student/guide`) |
+| **Total Shared JS** | 102.8 kB |
+| **Grand Total JS** | ~395 kB |
+
+---
+
+### Page Performance Distribution
+
+| Grade | Pages | % |
+|-------|-------|---|
+| 🟢 **A (Very Good)** — <150 kB | 8 | 16% |
+| 🟡 **B (Good)** — 150–200 kB | 36 | **72%** |
+| 🟠 **C (Needs Improvement)** — 200–300 kB | 6 | 12% |
+| 🔴 **D (Poor)** — >300 kB | 0 | 0% |
+
+---
+
+### ⚠️ Pages That Need Optimization (>200 kB)
+
+| Route | First Load JS | Issue |
+|-------|--------------|-------|
+| `/dashboard/settings` | **260 kB** | Likely heavy form libraries, rich text editor, or settings UI |
+| `/student/courses/[id]` | **247 kB** | Course content rendering, possibly video/media components |
+| `/student` | **235 kB** | Dashboard home with many widgets |
+| `/student/exams/[id]` | **235 kB** | Exam interface, possibly heavy validation/state |
+| `/student/profile` | **235 kB** | Profile forms, image upload components |
+| `/login` | **220 kB** | Auth libraries (e.g., OAuth providers, form handling) |
+
+---
+
+### Shared Chunks Breakdown
+
+| Chunk | Size |
+|-------|------|
+| `chunks/4bd1b696-100b9d70ed4e49c1.js` | 54.2 kB |
+| `chunks/1255-b8cf77ab14370e57.js` | 46.0 kB |
+| Other shared | 2.64 kB |
+| **Total** | **102.8 kB** |
+
+---
+
+### Recommendations
+
+1. **Optimize the 6 heavy pages** — Use `next/dynamic` with `ssr: false` or `loading` boundaries for heavy components (charts, editors, forms).
+2. **Audit `/dashboard/settings`** — At 260 kB, this is your biggest concern. Check for large third-party libraries.
+3. **Code splitting** — Ensure route-level and component-level dynamic imports are used for dashboard and student pages.
+4. **Login page** — 220 kB is high for a login screen. Consider lazy-loading auth providers.
+5. **Shared chunks** — 102.8 kB is reasonable, but verify both chunks are actually needed on every page.
+
+
+Role-Based Admin Permissions — Granular access control: Super Admin, Editor, Teacher, Admissions. Each role sees only relevant sidebar items and actions.
+ 3. Feature Recommendations
+  To take the Cadet Academy to the next level, I suggest adding:
+
+   * Student Attendance System: A QR-code based or manual attendance tracker to help staff monitor student presence in physical or live classes.
+   * Automated Communication Workflows: Trigger "Welcome" emails, "Birthday" wishes, and "Exam Reminders" automatically based on student data, reducing manual admin work.
+   * Payment Gateway Integration: Integrate local payment providers (like Khalti/Esewa) or international ones (Stripe) to automate the enrollment-to-payment lifecycle.
+   * Advanced Student Analytics: Visual charts showing enrollment trends over time, course completion rates, and student performance comparisons.
+   * Proctored Online Exams: Simple security features for exams, such as detecting when a student switches browser tabs or providing a time-limited countdown.
+   * Role-Based Access (RBAC): Support for multiple admin roles (e.g., "Editor" for blog/notices only, "Tutor" for courses/exams only) to improve security as your team grows.

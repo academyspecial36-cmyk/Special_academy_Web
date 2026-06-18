@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Search, Plus, Pin, Pencil, Trash2, Calendar } from "lucide-react";
+import { Search, Plus, Pin, Pencil, Trash2, Calendar, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -148,6 +148,16 @@ export default function DashboardNoticesPage() {
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${notice.title}\n\n${notice.content}`);
+                        toast.success("Notice copied to clipboard");
+                      }}
+                      className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                      title="Copy notice"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       onClick={() => { setSelected(notice); setEditOpen(true); }}
                       className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"

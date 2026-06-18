@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentType } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { Building2, User, Layout, ToggleLeft, TrendingUp, FileText, Palette, HardDrive } from "lucide-react";
 import { toast } from "sonner";
@@ -8,15 +9,16 @@ import { useAppContext } from "@/lib/app-context";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import type { AppSettings } from "@/lib/app-context";
-import { ProfileTab } from "@/components/settings/profile-tab";
-import { SiteTab } from "@/components/settings/site-tab";
-import { LandingTab } from "@/components/settings/landing-tab";
-import { SectionsTab } from "@/components/settings/sections-tab";
-import { FeaturesTab } from "@/components/settings/features-tab";
-import { ContentTab } from "@/components/settings/content-tab";
-import { ThemeTab } from "@/components/settings/theme-tab";
-import { LegalTab } from "@/components/settings/legal-tab";
-import { BackupTab } from "@/components/settings/backup-tab";
+
+const ProfileTab = dynamic(() => import("@/components/settings/profile-tab").then(m => ({ default: m.ProfileTab })), { ssr: false }) as ComponentType<{ user: import("@/lib/auth-context").AuthUser | null }>;
+const SiteTab = dynamic(() => import("@/components/settings/site-tab").then(m => ({ default: m.SiteTab })), { ssr: false }) as ComponentType<{ form: any; setForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const LandingTab = dynamic(() => import("@/components/settings/landing-tab").then(m => ({ default: m.LandingTab })), { ssr: false }) as ComponentType<{ landingForm: any; setLandingForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const SectionsTab = dynamic(() => import("@/components/settings/sections-tab").then(m => ({ default: m.SectionsTab })), { ssr: false }) as ComponentType<{ sectionsForm: any; setSectionsForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const FeaturesTab = dynamic(() => import("@/components/settings/features-tab").then(m => ({ default: m.FeaturesTab })), { ssr: false }) as ComponentType<any>;
+const ContentTab = dynamic(() => import("@/components/settings/content-tab").then(m => ({ default: m.ContentTab })), { ssr: false }) as ComponentType<{ contentForm: any; setContentForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const ThemeTab = dynamic(() => import("@/components/settings/theme-tab").then(m => ({ default: m.ThemeTab })), { ssr: false }) as ComponentType<{ themeForm: any; setThemeForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const LegalTab = dynamic(() => import("@/components/settings/legal-tab").then(m => ({ default: m.LegalTab })), { ssr: false }) as ComponentType<{ legalForm: any; setLegalForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const BackupTab = dynamic(() => import("@/components/settings/backup-tab").then(m => ({ default: m.BackupTab })), { ssr: false }) as ComponentType<{ backupConfig: any; setBackupConfig: any; backupHistory: any; setBackupHistory: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
 
 type Tab = "profile" | "site" | "landing" | "sections" | "features" | "content" | "theme" | "legal" | "backup";
 

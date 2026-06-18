@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, HelpCircle, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ export default function StudentTakeExamPage() {
   const router = useRouter();
   const categoryId = params.id as string;
   const { user } = useAuth();
-  const { examCategories, questions, attempts, addAttempt } = useAppContext();
+  const { examCategories, questions, attempts, addAttempt, dataLoading } = useAppContext();
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const category = examCategories.find((c) => c.id === categoryId);
@@ -27,6 +27,26 @@ export default function StudentTakeExamPage() {
       router.replace(`/student/exams/${categoryId}/result`);
     }
   }, [alreadyAttempted, categoryId, router]);
+
+  if (dataLoading) {
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg animate-pulse" />
+          <div>
+            <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
+            <div className="h-4 w-24 bg-primary/10 rounded-md animate-pulse mt-1" />
+          </div>
+        </div>
+        <div className="h-20 bg-primary/5 rounded-xl animate-pulse" />
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-32 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (!category) {
     return (

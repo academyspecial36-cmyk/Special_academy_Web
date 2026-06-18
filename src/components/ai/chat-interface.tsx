@@ -326,7 +326,7 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
     <div className="flex flex-col h-full bg-white">
       <ChatHeader onExport={handleExport} hasConversation={!!convId} />
 
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      <div className="flex-1 overflow-y-auto px-4 py-2 sm:px-4 sm:py-6">
         {showEmptyState ? (
           <ChatEmptyState sendMessage={sendMessage} />
         ) : (

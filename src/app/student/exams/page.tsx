@@ -1,15 +1,25 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ClipboardCheck, FileQuestion, ChevronRight, CheckCircle, Clock, RotateCcw, BarChart3 } from "lucide-react";
+import { ClipboardCheck, FileQuestion, ChevronRight, CheckCircle, Clock, RotateCcw, BarChart3, Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 
 export default function StudentExamsPage() {
-  const { examCategories, questions, attempts } = useAppContext();
+  const { examCategories, questions, attempts, dataLoading } = useAppContext();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return examCategories;
+    const q = searchQuery.toLowerCase();
+    return examCategories.filter((cat) =>
+      cat.name.toLowerCase().includes(q) || cat.description.toLowerCase().includes(q)
+    );
+  }, [examCategories, searchQuery]);
 
   function getAttempts(categoryId: string) {
     return attempts.filter((a) => a.categoryId === categoryId);
@@ -22,12 +32,39 @@ export default function StudentExamsPage() {
     return sorted[0] || null;
   }
 
+  if (dataLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="h-8 w-36 bg-primary/10 rounded-md animate-pulse" />
+        <div className="h-4 w-64 bg-primary/10 rounded-md animate-pulse" />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-52 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-primary">Exam Center</h1>
         <p className="text-sm text-muted">Take exams and test your knowledge across different subjects.</p>
       </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search exams by name or description..."
+          className="w-full h-10 pl-9 pr-3 rounded-xl border border-primary/10 bg-white text-sm text-primary outline-none focus:border-primary/30"
+        />
+      </div>
+
       <div className="flex justify-end -mt-2">
         <Button variant="outline" size="sm" asChild>
           <Link href="/student/exams/results">
@@ -37,7 +74,7 @@ export default function StudentExamsPage() {
         </Button>
       </div>
 
-      {examCategories.length === 0 ? (
+      {filteredCategories.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <ClipboardCheck className="w-12 h-12 text-muted mx-auto mb-3" />
@@ -47,7 +84,7 @@ export default function StudentExamsPage() {
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {examCategories.map((cat, i) => {
+          {filteredCategories.map((cat, i) => {
             const count = questions.filter((q) => q.categoryId === cat.id).length;
             const allAttempts = getAttempts(cat.id);
             const lastAttempt = getLastAttempt(cat.id);

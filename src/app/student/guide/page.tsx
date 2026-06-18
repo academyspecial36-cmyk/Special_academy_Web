@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -10,6 +13,7 @@ import {
   ArrowRight,
   HelpCircle,
   GraduationCap,
+  Search,
 } from "lucide-react";
 
 const sections = [
@@ -98,6 +102,25 @@ const sections = [
 ];
 
 export default function StudentGuidePage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredSections = useMemo(() => {
+    if (!searchQuery.trim()) return sections;
+    const q = searchQuery.toLowerCase();
+    return sections.filter((section) => {
+      if (section.title.toLowerCase().includes(q)) return true;
+      if ("items" in section) {
+        const s = section as typeof sections[number] & { items: string[] };
+        if (s.items.some((item) => item.toLowerCase().includes(q))) return true;
+      }
+      if ("steps" in section) {
+        const s = section as typeof sections[number] & { steps: { title: string; desc: string }[] };
+        if (s.steps.some((step) => (step.title + " " + step.desc).toLowerCase().includes(q))) return true;
+      }
+      return false;
+    });
+  }, [searchQuery]);
+
   return (
     <div>
       <div className="mb-8">
@@ -107,43 +130,61 @@ export default function StudentGuidePage() {
         </p>
       </div>
 
-      <div className="space-y-10">
-        {sections.map((section) => (
-          <div key={section.id} id={section.id} className="bg-white rounded-xl border border-primary/5 p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center">
-                <section.icon className="w-5 h-5 text-primary" />
-              </div>
-              <h2 className="text-lg font-bold text-primary">{section.title}</h2>
-            </div>
-
-            {"steps" in section && section.steps ? (
-              <div className="space-y-5">
-                {section.steps.map((s) => (
-                  <div key={s.step} className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
-                      {s.step}
-                    </div>
-                    <div className="pt-0.5">
-                      <h3 className="font-semibold text-primary text-sm mb-0.5">{s.title}</h3>
-                      <p className="text-muted text-sm leading-relaxed">{s.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <ul className="space-y-2.5">
-                {section.items.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-muted text-sm leading-relaxed">
-                    <ArrowRight className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+      {/* Search */}
+      <div className="relative mb-6">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search guide sections..."
+          className="w-full h-10 pl-9 pr-3 rounded-xl border border-primary/10 bg-white text-sm text-primary outline-none focus:border-primary/30"
+        />
       </div>
+
+      {filteredSections.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted text-sm">No guide sections match your search.</p>
+        </div>
+      ) : (
+        <div className="space-y-10">
+          {filteredSections.map((section) => (
+            <div key={section.id} id={section.id} className="bg-white rounded-xl border border-primary/5 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center">
+                  <section.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h2 className="text-lg font-bold text-primary">{section.title}</h2>
+              </div>
+
+              {"steps" in section && section.steps ? (
+                <div className="space-y-5">
+                  {section.steps.map((s) => (
+                    <div key={s.step} className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+                        {s.step}
+                      </div>
+                      <div className="pt-0.5">
+                        <h3 className="font-semibold text-primary text-sm mb-0.5">{s.title}</h3>
+                        <p className="text-muted text-sm leading-relaxed">{s.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ul className="space-y-2.5">
+                  {section.items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-muted text-sm leading-relaxed">
+                      <ArrowRight className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
