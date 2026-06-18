@@ -35,15 +35,22 @@ export function Navbar() {
       window.dispatchEvent(new CustomEvent("open-admin-modal"));
       return;
     }
-    tapTimer.current = setTimeout(() => { tapCount.current = 0; }, 2000);
+    tapTimer.current = setTimeout(() => {
+      tapCount.current = 0;
+    }, 2000);
   }
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { settings } = useAppContext();
 
   const initials = user?.name
-    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : user?.email?.charAt(0).toUpperCase() ?? "U";
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : (user?.email?.charAt(0).toUpperCase() ?? "U");
 
   const dashboardHref = user?.role === "admin" ? "/dashboard" : "/student";
 
@@ -65,8 +72,12 @@ export function Navbar() {
           <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
             Admission Open
           </span>
-          Session 2026-27 enrollment is now open. Apply today and get 10% early bird discount.
-          <Link href="/enrollment" className="underline underline-offset-2 hover:text-secondary transition-colors inline-flex items-center gap-1">
+          Session 2026-27 enrollment is now open. Apply today and get 10% early
+          bird discount.
+          <Link
+            href="/enrollment"
+            className="underline underline-offset-2 hover:text-secondary transition-colors inline-flex items-center gap-1"
+          >
             Apply Now <ChevronRight className="w-3 h-3" />
           </Link>
         </span>
@@ -75,27 +86,37 @@ export function Navbar() {
       {/* Navbar */}
       <header
         className={cn(
-          "sticky top-0 z-50 transition-all duration-300",
+          "header transition-all duration-300",
           scrolled
             ? "bg-white/90 backdrop-blur-lg shadow-soft border-b border-primary/5"
-            : "bg-white"
+            : "bg-white",
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div onClick={handleLogoTap} className="flex items-center gap-2.5 group cursor-pointer">
+            <div
+              onClick={handleLogoTap}
+              className="flex items-center gap-2.5 group cursor-pointer"
+            >
               <Link href="/" className="flex items-center gap-2.5 group">
                 <div className="w-9 h-9 relative">
-                  <Image src={settings?.appIcon || "/icon-image.png"} alt="Special academy" width={36} height={36} className="object-contain" unoptimized />
+                  <Image
+                    src={settings?.appIcon || "/icon-image.png"}
+                    alt="Special academy"
+                    width={36}
+                    height={36}
+                    className="object-contain"
+                    unoptimized
+                  />
                 </div>
               </Link>
               <Link href="/" className="flex flex-col">
                 <span className="text-primary font-bold text-lg leading-tight tracking-tight">
-                 {settings?.academyName}
+                  {settings?.academyName}
                 </span>
                 <span className="text-[10px] text-muted leading-tight tracking-wide uppercase">
-                 {settings?.tagline}
+                  {settings?.tagline}
                 </span>
               </Link>
             </div>
@@ -110,7 +131,7 @@ export function Navbar() {
                     "px-3 py-2 text-sm font-medium rounded-md transition-all duration-200",
                     pathname === item.href
                       ? "text-primary bg-primary/5"
-                      : "text-muted hover:text-primary hover:bg-primary/5"
+                      : "text-muted hover:text-primary hover:bg-primary/5",
                   )}
                 >
                   {item.label}
@@ -128,7 +149,14 @@ export function Navbar() {
                   >
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
                       {user?.avatar_url ? (
-                        <Image src={user.avatar_url} alt="" width={32} height={32} className="w-full h-full object-cover" unoptimized />
+                        <Image
+                          src={user.avatar_url}
+                          alt=""
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
                       ) : (
                         initials
                       )}
@@ -146,8 +174,12 @@ export function Navbar() {
                         className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-elevated border border-primary/5 py-1 z-50"
                       >
                         <div className="px-4 py-2 border-b border-primary/5">
-                          <p className="text-sm font-medium text-primary truncate">{user?.name ?? "User"}</p>
-                          <p className="text-xs text-muted truncate">{user?.email}</p>
+                          <p className="text-sm font-medium text-primary truncate">
+                            {user?.name ?? "User"}
+                          </p>
+                          <p className="text-xs text-muted truncate">
+                            {user?.email}
+                          </p>
                         </div>
                         <Link
                           href={dashboardHref}
@@ -158,7 +190,10 @@ export function Navbar() {
                           Dashboard
                         </Link>
                         <button
-                          onClick={() => { setProfileOpen(false); logout(); }}
+                          onClick={() => {
+                            setProfileOpen(false);
+                            logout();
+                          }}
                           className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
@@ -188,7 +223,11 @@ export function Navbar() {
               onClick={() => setIsOpen(!isOpen)}
               className="lg:hidden p-2 rounded-md text-primary hover:bg-primary/5 transition-colors"
             >
-              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </button>
           </div>
         </div>
@@ -230,7 +269,7 @@ export function Navbar() {
                       "flex items-center px-4 py-3 rounded-lg text-sm font-medium transition-colors",
                       pathname === item.href
                         ? "bg-primary text-white"
-                        : "text-muted hover:bg-primary/5 hover:text-primary"
+                        : "text-muted hover:bg-primary/5 hover:text-primary",
                     )}
                   >
                     {item.label}
@@ -243,23 +282,48 @@ export function Navbar() {
                     <div className="flex items-center gap-3 px-3 py-2 mb-2 bg-accent rounded-lg">
                       <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                         {user?.avatar_url ? (
-                          <Image src={user.avatar_url} alt="" width={36} height={36} className="w-full h-full object-cover rounded-full" unoptimized />
+                          <Image
+                            src={user.avatar_url}
+                            alt=""
+                            width={36}
+                            height={36}
+                            className="w-full h-full object-cover rounded-full"
+                            unoptimized
+                          />
                         ) : (
                           initials
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-primary truncate">{user?.name ?? "User"}</p>
-                        <p className="text-xs text-muted truncate">{user?.email}</p>
+                        <p className="text-sm font-medium text-primary truncate">
+                          {user?.name ?? "User"}
+                        </p>
+                        <p className="text-xs text-muted truncate">
+                          {user?.email}
+                        </p>
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full justify-start" asChild>
-                      <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      asChild
+                    >
+                      <Link
+                        href={dashboardHref}
+                        onClick={() => setIsOpen(false)}
+                      >
                         <LayoutDashboard className="w-4 h-4 mr-2" />
                         Dashboard
                       </Link>
                     </Button>
-                    <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-600" onClick={() => { setIsOpen(false); logout(); }}>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-red-600 hover:text-red-600"
+                      onClick={() => {
+                        setIsOpen(false);
+                        logout();
+                      }}
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
                     </Button>

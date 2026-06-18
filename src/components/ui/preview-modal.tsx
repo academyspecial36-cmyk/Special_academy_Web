@@ -39,7 +39,7 @@ function getGoogleDriveEmbed(url: string): string {
 }
 
 function WatermarkOverlay({ studentName }: { studentName?: string }) {
-  const text = `Licensed to: ${studentName || "Student"} — Do not share`;
+  const text = `Licensed to: Special Academy from ${studentName || "Student"} — Do not share`;
   return (
     <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden select-none">
       {Array.from({ length: 10 }).map((_, i) => (

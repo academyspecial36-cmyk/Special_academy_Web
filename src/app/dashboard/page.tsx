@@ -279,83 +279,163 @@ export default function DashboardPage() {
       {/* Recent Activity */}
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Recent Enrollments */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Enrollments</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/dashboard/enrollments">View All</Link>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {data?.recentEnrollments && data.recentEnrollments.length > 0 ? (
-              <>
-                <div className="space-y-3 sm:hidden">
-                  {data.recentEnrollments.map((e) => (
-                    <div key={e.id} className="flex items-center gap-3 p-3 bg-accent rounded-xl border border-primary/5">
-                      <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                        {e.fullName.split(" ").map((n: string) => n[0]).join("")}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-primary truncate">{e.fullName}</p>
-                        <p className="text-xs text-muted truncate">{e.course}</p>
-                      </div>
-                      <Badge
-                        variant={e.status === "approved" ? "success" : e.status === "rejected" ? "destructive" : "outline"}
-                        className="text-[10px] shrink-0"
-                      >
-                        {e.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-                <div className="hidden sm:block overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-primary/5">
-                        <th className="text-left text-xs font-medium text-muted pb-3 pr-4">Name</th>
-                        <th className="text-left text-xs font-medium text-muted pb-3 pr-4">Course</th>
-                        <th className="text-left text-xs font-medium text-muted pb-3 pr-4">Date</th>
-                        <th className="text-left text-xs font-medium text-muted pb-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.recentEnrollments.map((e) => (
-                        <tr key={e.id} className="border-b border-primary/5 last:border-0">
-                          <td className="py-3 pr-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0">
-                                {e.fullName.split(" ").map((n: string) => n[0]).join("")}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-primary truncate">{e.fullName}</p>
-                                <p className="text-xs text-muted truncate">{e.email}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 pr-4 text-sm text-muted truncate max-w-[180px]">{e.course}</td>
-                          <td className="py-3 pr-4 text-sm text-muted whitespace-nowrap">{formatShortDate(e.createdAt)}</td>
-                          <td className="py-3">
-                            <Badge
-                              variant={e.status === "approved" ? "success" : e.status === "rejected" ? "destructive" : "outline"}
-                              className="text-[10px]"
-                            >
-                              {e.status}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted text-center py-4">No enrollments yet</p>
-            )}
-          </CardContent>
-        </Card>
+       <Card className="lg:col-span-2 overflow-hidden">
+  <CardHeader className="pb-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <CardTitle>Recent Enrollments</CardTitle>
 
+      <Button
+        variant="ghost"
+        size="sm"
+        asChild
+        className="w-full sm:w-auto"
+      >
+        <Link href="/dashboard/enrollments">
+          View All
+        </Link>
+      </Button>
+    </div>
+  </CardHeader>
+
+  <CardContent className="px-4 sm:px-6">
+    {data?.recentEnrollments && data.recentEnrollments.length > 0 ? (
+      <>
+        {/* Mobile & Tablet Cards */}
+        <div className="space-y-3 md:hidden">
+          {data.recentEnrollments.map((e) => (
+            <div
+              key={e.id}
+              className="rounded-xl border border-primary/5 bg-accent p-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-bold text-primary">
+                  {e.fullName
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .join("")}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-sm font-semibold text-primary">
+                    {e.fullName}
+                  </p>
+
+                  <p className="mt-0.5 break-words text-xs text-muted">
+                    {e.email}
+                  </p>
+
+                  <p className="mt-2 break-words text-xs text-muted">
+                    {e.course}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between border-t border-primary/5 pt-3">
+                <span className="text-xs text-muted">
+                  {formatShortDate(e.createdAt)}
+                </span>
+
+                <Badge
+                  variant={
+                    e.status === "approved"
+                      ? "success"
+                      : e.status === "rejected"
+                      ? "destructive"
+                      : "outline"
+                  }
+                  className="text-[10px]"
+                >
+                  {e.status}
+                </Badge>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-primary/5">
+                <th className="pb-3 pr-4 text-left text-xs font-medium text-muted">
+                  Name
+                </th>
+                <th className="pb-3 pr-4 text-left text-xs font-medium text-muted">
+                  Course
+                </th>
+                <th className="pb-3 pr-4 text-left text-xs font-medium text-muted">
+                  Date
+                </th>
+                <th className="pb-3 text-left text-xs font-medium text-muted">
+                  Status
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {data.recentEnrollments.map((e) => (
+                <tr
+                  key={e.id}
+                  className="border-b border-primary/5 last:border-0"
+                >
+                  <td className="py-3 pr-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-bold text-primary">
+                        {e.fullName
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")}
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-primary">
+                          {e.fullName}
+                        </p>
+
+                        <p className="truncate text-xs text-muted">
+                          {e.email}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td className="max-w-[220px] truncate py-3 pr-4 text-sm text-muted">
+                    {e.course}
+                  </td>
+
+                  <td className="whitespace-nowrap py-3 pr-4 text-sm text-muted">
+                    {formatShortDate(e.createdAt)}
+                  </td>
+
+                  <td className="py-3">
+                    <Badge
+                      variant={
+                        e.status === "approved"
+                          ? "success"
+                          : e.status === "rejected"
+                          ? "destructive"
+                          : "outline"
+                      }
+                      className="text-[10px]"
+                    >
+                      {e.status}
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>
+    ) : (
+      <div className="py-8 text-center">
+        <p className="text-sm text-muted">
+          No enrollments yet
+        </p>
+      </div>
+    )}
+  </CardContent>
+</Card>
         {/* Latest Notices */}
         <Card>
           <CardHeader className="pb-3">
