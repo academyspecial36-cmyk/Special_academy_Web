@@ -184,3 +184,15 @@
 .ProseMirror s {
   text-decoration: line-through;
 }
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+@media (display-mode: standalone) {
+  .header {
+    position: relative;
+  }
+}
