@@ -1,12 +1,12 @@
 "use client";
 
-import { Download, Upload, Cloud, Clock, AlertTriangle, Save, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Download, Upload, Cloud, Clock, AlertTriangle, Save, Loader2, History, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useState } from "react";
 
 interface BackupConfig {
   autoBackup: { enabled: boolean; frequency: string; lastBackup: string | null };
@@ -26,9 +26,85 @@ interface BackupTabProps {
   handleSave: () => Promise<void>;
 }
 
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBackupHistory, savingSettings, handleSave }: BackupTabProps) {
   const [backingUp, setBackingUp] = useState(false);
   const [importing, setImporting] = useState(false);
+
+  // Weekly auto-backup check
+  useEffect(() => {
+    if (!backupConfig.autoBackup.enabled) return;
+
+    const lastBackup = backupConfig.autoBackup.lastBackup;
+    const needsBackup = !lastBackup || (Date.now() - new Date(lastBackup).getTime() >= ONE_WEEK_MS);
+
+    if (!needsBackup) return;
+
+    const timer = setTimeout(() => {
+      performCloudBackup("automatic");
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [backupConfig.autoBackup.enabled, backupConfig.autoBackup.lastBackup]);
+
+  // Periodic check every hour for weekly backup
+  useEffect(() => {
+    if (!backupConfig.autoBackup.enabled) return;
+
+    const interval = setInterval(() => {
+      const lastBackup = backupConfig.autoBackup.lastBackup;
+      const needsBackup = !lastBackup || (Date.now() - new Date(lastBackup).getTime() >= ONE_WEEK_MS);
+      if (needsBackup) {
+        performCloudBackup("automatic");
+      }
+    }, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [backupConfig.autoBackup.enabled, backupConfig.autoBackup.lastBackup]);
+
+  async function performCloudBackup(type: string) {
+    try {
+      const exp = await fetch("/api/backup?action=export");
+      const data = await exp.json();
+      const storageRes = await fetch("/api/backup?action=supabase-storage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+      if (!storageRes.ok) throw new Error((await storageRes.json()).error || "Upload failed");
+      const storageResult = await storageRes.json();
+      const entry: BackupHistoryItem = {
+        id: crypto.randomUUID(), timestamp: new Date().toISOString(), type,
+        destination: "cloud", status: "success", fileSize: storageResult.fileSize,
+        errorMessage: null, fileName: storageResult.fileName,
+      };
+      setBackupHistory((p) => [entry, ...p].slice(0, 50));
+      await fetch("/api/backup?action=history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) });
+      await fetch("/api/backup?action=update-last-backup", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      setBackupConfig((p) => ({ ...p, autoBackup: { ...p.autoBackup, lastBackup: new Date().toISOString() } }));
+      if (type === "automatic") {
+        toast.success("Weekly auto-backup completed");
+      }
+    } catch (e) {
+      const entry: BackupHistoryItem = {
+        id: crypto.randomUUID(), timestamp: new Date().toISOString(), type,
+        destination: "cloud", status: "failed", fileSize: null,
+        errorMessage: String(e), fileName: null,
+      };
+      setBackupHistory((p) => [entry, ...p].slice(0, 50));
+      await fetch("/api/backup?action=history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) });
+      if (type === "automatic") {
+        console.error("Weekly auto-backup failed:", e);
+      }
+    }
+  }
+
+  async function handleManualBackup() {
+    setBackingUp(true);
+    await performCloudBackup("manual");
+    setBackingUp(false);
+  }
 
   return (
     <div className="space-y-6">
@@ -96,30 +172,7 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
               <p className="text-sm font-medium text-primary">Backup to Cloud Now</p>
               <p className="text-xs text-muted">Export all data and save to Supabase Storage</p>
             </div>
-            <Button size="sm" onClick={async () => {
-              setBackingUp(true);
-              try {
-                const exp = await fetch("/api/backup?action=export");
-                const data = await exp.json();
-                const storageRes = await fetch("/api/backup?action=supabase-storage", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ data }),
-                });
-                if (!storageRes.ok) throw new Error((await storageRes.json()).error || "Upload failed");
-                const storageResult = await storageRes.json();
-                const entry = { id: crypto.randomUUID(), timestamp: new Date().toISOString(), type: "manual", destination: "cloud", status: "success", fileSize: storageResult.fileSize, errorMessage: null, fileName: storageResult.fileName };
-                setBackupHistory((p) => [entry, ...p].slice(0, 50));
-                await fetch("/api/backup?action=history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) });
-                await fetch("/api/backup?action=update-last-backup", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-                toast.success("Backup saved to cloud storage");
-              } catch (e) {
-                const entry = { id: crypto.randomUUID(), timestamp: new Date().toISOString(), type: "manual", destination: "cloud", status: "failed", fileSize: null, errorMessage: String(e), fileName: null };
-                setBackupHistory((p) => [entry, ...p].slice(0, 50));
-                await fetch("/api/backup?action=history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(entry) });
-                toast.error("Cloud backup failed");
-              } finally { setBackingUp(false); }
-            }} disabled={backingUp}>
+            <Button size="sm" onClick={handleManualBackup} disabled={backingUp}>
               {backingUp ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Upload className="w-4 h-4 mr-1" />}
               Backup Now
             </Button>
@@ -140,43 +193,75 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
               onChange={() => setBackupConfig((p) => ({ ...p, autoBackup: { ...p.autoBackup, enabled: !p.autoBackup.enabled } }))}
             />
           </div>
-          {backupConfig.autoBackup.lastBackup && (
-            <p className="text-xs text-muted">Last automatic backup: {new Date(backupConfig.autoBackup.lastBackup).toLocaleString()}</p>
+          {backupConfig.autoBackup.lastBackup ? (
+            <div className="flex items-center gap-2 text-xs text-muted">
+              <RefreshCw className="w-3 h-3" />
+              Last auto-backup: {new Date(backupConfig.autoBackup.lastBackup).toLocaleString()}
+              {backupConfig.autoBackup.enabled && (
+                <span className="text-emerald-600 font-medium">
+                  · Next: {new Date(new Date(backupConfig.autoBackup.lastBackup).getTime() + ONE_WEEK_MS).toLocaleDateString()}
+                </span>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs text-muted">No automatic backup has run yet. Enable and save settings to start.</p>
           )}
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Clock className="w-4 h-4 text-secondary" /> Backup History</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2"><History className="w-4 h-4 text-secondary" /> Backup History & Logs</CardTitle>
+          {backupHistory.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setBackupHistory(() => [])} className="text-xs text-muted hover:text-red-500">
+              Clear Logs
+            </Button>
+          )}
+        </CardHeader>
         <CardContent>
           {backupHistory.length === 0 ? (
-            <p className="text-sm text-muted text-center py-4">No backups recorded yet.</p>
+            <div className="text-center py-8">
+              <History className="w-8 h-8 text-muted mx-auto mb-2" />
+              <p className="text-sm text-muted">No backup logs recorded yet.</p>
+              <p className="text-xs text-muted mt-1">Run a manual backup or enable automatic backups to see logs here.</p>
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-primary/5">
-                    <th className="text-left py-2 px-2 font-medium text-muted">Date</th>
-                    <th className="text-left py-2 px-2 font-medium text-muted">Type</th>
-                    <th className="text-left py-2 px-2 font-medium text-muted">Destination</th>
-                    <th className="text-left py-2 px-2 font-medium text-muted">Status</th>
-                    <th className="text-left py-2 px-2 font-medium text-muted">Size</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {backupHistory.map((h) => (
-                    <tr key={h.id} className="border-b border-primary/5 last:border-0">
-                      <td className="py-2 px-2 text-primary">{new Date(h.timestamp).toLocaleString()}</td>
-                      <td className="py-2 px-2"><span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/5 text-primary capitalize">{h.type}</span></td>
-                      <td className="py-2 px-2 text-muted capitalize">{h.destination}</td>
-                      <td className="py-2 px-2">
-                        <span className={cn("text-xs font-medium px-1.5 py-0.5 rounded", h.status === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")}>{h.status}</span>
-                      </td>
-                      <td className="py-2 px-2 text-muted">{h.fileSize ? `${(h.fileSize / 1024).toFixed(1)} KB` : "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-2">
+              {backupHistory.map((h) => (
+                <div
+                  key={h.id}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-lg border transition-colors",
+                    h.status === "success" ? "bg-emerald-50/50 border-emerald-200" : "bg-red-50/50 border-red-200"
+                  )}
+                >
+                  {h.status === "success" ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-primary capitalize">{h.type} backup</span>
+                      <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded font-medium",
+                        h.status === "success" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                      )}>
+                        {h.status}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted mt-0.5">
+                      <span>{new Date(h.timestamp).toLocaleString()}</span>
+                      <span>· {h.destination}</span>
+                      {h.fileSize && <span>· {(h.fileSize / 1024).toFixed(1)} KB</span>}
+                      {h.fileName && <span>· {h.fileName}</span>}
+                    </div>
+                    {h.errorMessage && (
+                      <p className="text-xs text-red-600 mt-1 break-words">{h.errorMessage}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

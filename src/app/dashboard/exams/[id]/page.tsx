@@ -98,6 +98,11 @@ export default function AdminExamDetailPage() {
             <Button variant="outline" size="sm" onClick={handlePrint}>
               <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Print PDF
             </Button>
+            <Button size="sm" variant="outline" asChild>
+              <Link href={`/dashboard/exams/${categoryId}/add`}>
+                <FileQuestion className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Add Like Google Form
+              </Link>
+            </Button>
             <Button size="sm" onClick={() => setShowAdd(true)}>
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" /> Add Question
             </Button>

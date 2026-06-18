@@ -1,39 +1,43 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { Pin, Calendar, X, Loader2 } from "lucide-react";
+import { Pin, Calendar, X, Search as SearchIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
+import { useFetch } from "@/lib/use-fetch";
 import { Notice } from "@/types";
 import { formatDate } from "@/lib/utils";
 
 export default function StudentNoticesPage() {
   const { notices: contextNotices, noticeCategories } = useAppContext();
+  const noticesFetch = useFetch<Notice[]>("/api/student/notices");
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
-  const [realNotices, setRealNotices] = useState<Notice[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
 
-  useEffect(() => {
-    fetch("/api/student/notices")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setRealNotices(data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
+  const realNotices = Array.isArray(noticesFetch.data) ? noticesFetch.data : null;
+  const loading = noticesFetch.loading;
   const notices = realNotices ?? contextNotices;
 
   const sorted = useMemo(() => {
-    return [...notices].sort((a, b) => {
+    let filtered = [...notices];
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((n) =>
+        n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)
+      );
+    }
+    if (categoryFilter) {
+      filtered = filtered.filter((n) => n.category === categoryFilter);
+    }
+    return filtered.sort((a, b) => {
       if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
-  }, [notices]);
+  }, [notices, searchQuery, categoryFilter]);
 
   const getCategoryStyle = (category: string) => {
     const cat = noticeCategories.find((c) => c.value === category);
@@ -47,9 +51,41 @@ export default function StudentNoticesPage() {
         <p className="text-sm text-muted">Stay updated with academy announcements.</p>
       </div>
 
+      {/* Search & Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search notices..."
+            className="w-full h-10 pl-9 pr-3 rounded-xl border border-primary/10 bg-white text-sm text-primary outline-none focus:border-primary/30"
+          />
+        </div>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="h-10 rounded-xl border border-primary/10 bg-white px-3 text-sm text-primary outline-none focus:border-primary/30"
+        >
+          <option value="">All Categories</option>
+          {noticeCategories.map((cat) => (
+            <option key={cat.value} value={cat.value}>{cat.label}</option>
+          ))}
+        </select>
+      </div>
+
       {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-muted" />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+      )}
+
+      {!loading && sorted.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-muted text-sm">No notices match your search.</p>
         </div>
       )}
 

@@ -22,7 +22,6 @@ import {
   StickyNote,
   Menu,
   X,
-  Search,
   ChevronDown,
   ChevronRight,
   LogOut,
@@ -116,14 +115,6 @@ export default function DashboardLayout({
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "AD";
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen bg-accent flex items-center justify-center">
-  //       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-  //     </div>
-  //   );
-  // }
-
   if (!user || user.role !== "admin") return null;
 
   return (
@@ -140,7 +131,6 @@ export default function DashboardLayout({
           />
         )}
       </AnimatePresence>
-
       {/* Sidebar */}
       <aside
         className={cn(
@@ -313,8 +303,6 @@ export default function DashboardLayout({
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
-            <NotificationBell />
-
             {/* Profile */}
             <div className="relative">
               <button
@@ -355,6 +343,7 @@ export default function DashboardLayout({
                 )}
               </AnimatePresence>
             </div>
+             <NotificationBell />
           </div>
         </header>
 

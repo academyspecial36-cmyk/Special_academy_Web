@@ -9,6 +9,7 @@ import { CommandPalette } from "@/components/ai/command-palette";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { apiList, apiDelete } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
+import { Menu, X, PanelRightOpen, PanelRightClose } from "lucide-react";
 import type { AIConversation, PageContext } from "@/types/ai";
 
 export default function AICommandCenterPage() {
@@ -17,6 +18,7 @@ export default function AICommandCenterPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState(true);
   const [showActions, setShowActions] = useState(true);
+  const [mobileHistory, setMobileHistory] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
@@ -50,10 +52,12 @@ export default function AICommandCenterPage() {
 
   const handleNew = useCallback(() => {
     setActiveId(null);
+    setMobileHistory(false);
   }, []);
 
   const handleSelect = useCallback((id: string) => {
     setActiveId(id);
+    setMobileHistory(false);
   }, []);
 
   const handleConversationChange = useCallback((id: string) => {
@@ -97,52 +101,122 @@ export default function AICommandCenterPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-4rem)] -mx-6 -mb-6">
-        {/* Conversation History */}
+      <div className="h-[calc(100vh-4rem)] -m-4 lg:-m-8 flex overflow-hidden bg-white">
+        {/* Desktop History Sidebar */}
         <div
           className={cn(
-            "border-r border-primary/5 bg-white transition-all duration-200",
+            "hidden lg:flex border-r border-primary/5 bg-white transition-all duration-200 shrink-0",
             showHistory ? "w-80" : "w-0 overflow-hidden"
           )}
         >
-          <ConversationHistory
-            conversations={conversations}
-            activeId={activeId}
-            onSelect={handleSelect}
-            onNew={handleNew}
-            onDelete={handleDelete}
-            onClose={() => setShowHistory(false)}
-          />
+          <div className="w-80 shrink-0">
+            <ConversationHistory
+              conversations={conversations}
+              activeId={activeId}
+              onSelect={handleSelect}
+              onNew={handleNew}
+              onDelete={handleDelete}
+              onClose={() => setShowHistory(false)}
+            />
+          </div>
         </div>
+
+        {/* Mobile History Drawer */}
+        {mobileHistory && (
+          <div className="fixed inset-0 z-50 lg:hidden flex">
+            <div className="fixed inset-0 bg-black/40" onClick={() => setMobileHistory(false)} />
+            <div className="relative w-80 max-w-[80vw] bg-white shadow-elevated z-10">
+              <ConversationHistory
+                conversations={conversations}
+                activeId={activeId}
+                onSelect={handleSelect}
+                onNew={handleNew}
+                onDelete={handleDelete}
+                onClose={() => setMobileHistory(false)}
+                isMobile
+              />
+            </div>
+          </div>
+        )}
 
         {/* Main Chat */}
-        <div className="flex-1 min-w-0">
-          <ChatInterface
-            pathname={pathname}
-            conversationId={activeId || undefined}
-            onConversationChange={handleConversationChange}
-            pendingCommand={pendingCommand}
-            onCommandConsumed={handleCommandConsumed}
-          />
-        </div>
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Mobile top bar */}
+          <div className="flex lg:hidden items-center gap-2 px-3 py-2 border-b border-primary/5 bg-white shrink-0">
+            <button
+              onClick={() => setMobileHistory(true)}
+              className="p-1.5 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+            <span className="text-sm font-medium text-primary truncate">
+              {activeId ? "AI Command" : "New Chat"}
+            </span>
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                onClick={() => setShowActions((p) => !p)}
+                className="p-1.5 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors lg:hidden"
+              >
+                {showActions ? <PanelRightClose className="w-4 h-4" /> : <PanelRightOpen className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
 
-        {/* Quick Actions Panel */}
-        <div
-          className={cn(
-            "border-l border-primary/5 bg-white transition-all duration-200 hidden lg:block",
-            showActions ? "w-72" : "w-0 overflow-hidden"
-          )}
-        >
-          <ContextPanel
-            pathname={pathname}
-            context={context}
-            onCommand={handleQuickCommand}
-          />
+          <div className="flex-1 min-h-0 flex">
+            <div className="flex-1 min-w-0">
+              <ChatInterface
+                pathname={pathname}
+                conversationId={activeId || undefined}
+                onConversationChange={handleConversationChange}
+                pendingCommand={pendingCommand}
+                onCommandConsumed={handleCommandConsumed}
+              />
+            </div>
+
+            {/* Quick Actions Panel - Desktop */}
+            <div
+              className={cn(
+                "hidden lg:block border-l border-primary/5 bg-white transition-all duration-200 shrink-0",
+                showActions ? "w-72" : "w-0 overflow-hidden"
+              )}
+            >
+              <div className="w-72 shrink-0 h-full overflow-y-auto">
+                <ContextPanel
+                  pathname={pathname}
+                  context={context}
+                  onCommand={handleQuickCommand}
+                />
+              </div>
+            </div>
+
+            {/* Quick Actions Sheet - Mobile */}
+            {showActions && (
+              <div className="lg:hidden fixed inset-0 z-50 flex justify-end">
+                <div className="fixed inset-0 bg-black/40" onClick={() => setShowActions(false)} />
+                <div className="relative w-72 max-w-[80vw] bg-white shadow-elevated z-10 h-full overflow-y-auto">
+                  <div className="flex items-center justify-between p-3 border-b border-primary/5">
+                    <span className="text-sm font-semibold text-primary">Quick Actions</span>
+                    <button
+                      onClick={() => setShowActions(false)}
+                      className="p-1 rounded-lg hover:bg-accent text-muted hover:text-primary"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <ContextPanel
+                    pathname={pathname}
+                    context={context}
+                    onCommand={(p) => { handleQuickCommand(p); setShowActions(false); }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Toggle buttons */}
-      <div className="fixed bottom-6 left-6 z-40 flex gap-2">
+      {/* Desktop toggle buttons */}
+      <div className="hidden lg:flex fixed bottom-6 left-6 z-40 gap-2">
         <button
           onClick={() => setShowHistory((p) => !p)}
           className="w-9 h-9 rounded-lg bg-white border border-primary/10 shadow-sm flex items-center justify-center text-muted hover:text-primary hover:border-primary/30 transition-colors"
@@ -154,7 +228,7 @@ export default function AICommandCenterPage() {
         </button>
         <button
           onClick={() => setShowActions((p) => !p)}
-          className="w-9 h-9 rounded-lg bg-white border border-primary/10 shadow-sm flex items-center justify-center text-muted hover:text-primary hover:border-primary/30 transition-colors hidden lg:flex"
+          className="w-9 h-9 rounded-lg bg-white border border-primary/10 shadow-sm flex items-center justify-center text-muted hover:text-primary hover:border-primary/30 transition-colors"
           title="Toggle quick actions"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

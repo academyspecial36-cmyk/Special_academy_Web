@@ -1,539 +1,209 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import {
-  Search,
-  Filter,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Eye,
-  Trash2,
-  ThumbsUp,
-  ThumbsDown,
-} from "lucide-react";
-import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
+import { Users, CheckCircle, X, Mail, School } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Modal } from "@/components/ui/modal";
-import { DeleteModal } from "@/components/ui/delete-modal";
-import { Textarea } from "@/components/ui/textarea";
 import { useAppContext } from "@/lib/app-context";
-
-interface Enrollment {
-  id: string;
-  fullName: string;
-  email: string;
-  interestedCourse: string;
-  qualificationId: string;
-  createdAt: string;
-  status: "unverified" | "pending" | "approved" | "rejected";
-  rejectionMessage?: string;
-}
+import type { Enrollment } from "@/lib/context/students-context";
+import { toast } from "sonner";
 
 export default function EnrollmentsPage() {
-  const {
-    enrollments,
-    deleteEnrollment,
-    updateEnrollment,
-    setEnrollments,
-    loadAdminData,
-    qualifications,
-  } = useAppContext();
-
-  useEffect(() => {
-    loadAdminData();
-  }, [loadAdminData]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<
-    "all" | "unverified" | "pending" | "approved" | "rejected"
-  >("pending");
-  const [viewOpen, setViewOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [rejectOpen, setRejectOpen] = useState(false);
-  const [approveOpen, setApproveOpen] = useState(false);
-  const [rejectMessage, setRejectMessage] = useState("");
-  const [rejectSubmitting, setRejectSubmitting] = useState(false);
-  const [approveSubmitting, setApproveSubmitting] = useState(false);
+  const { enrollments, updateEnrollment } = useAppContext();
   const [selected, setSelected] = useState<Enrollment | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const filtered = enrollments.filter((e) => {
-    const matchesSearch =
-      e.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      e.interestedCourse.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || e.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  const statusConfig: Record<
-    string,
-    {
-      label: string;
-      variant: "warning" | "success" | "destructive" | "default";
-      icon: React.ElementType;
-    }
-  > = {
-    unverified: { label: "Unverified", variant: "default", icon: Clock },
-    pending: { label: "Pending", variant: "warning", icon: Clock },
-    approved: { label: "Approved", variant: "success", icon: CheckCircle2 },
-    rejected: { label: "Rejected", variant: "destructive", icon: XCircle },
-  };
-
-  function handleDelete() {
-    if (!selected) return;
-    deleteEnrollment(selected.id);
-    setDeleteOpen(false);
-    setSelected(null);
-    toast.success("Enrollment deleted successfully");
-  }
-
-  async function handleApprove() {
-    if (!selected) return;
-    setApproveSubmitting(true);
+  async function handleAction(id: string, status: "approved" | "rejected" | "pending") {
+    setActionLoading(id);
     try {
-      const res = await fetch(`/api/enrollments/${selected.id}/review`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "approved" }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      setEnrollments((prev) =>
-        prev.map((e) =>
-          e.id === selected.id ? { ...e, status: "approved" as const } : e,
-        ),
-      );
-      setApproveOpen(false);
-      setSelected(null);
-      loadAdminData();
-      toast.success("Enrollment approved! Student record created.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to approve");
+      updateEnrollment(id, { status });
+      toast.success(`Enrollment ${status}`);
+    } catch {
+      toast.error("Failed to update enrollment");
     } finally {
-      setApproveSubmitting(false);
+      setActionLoading(null);
     }
   }
 
-  async function handleReject() {
-    if (!selected || !rejectMessage.trim()) {
-      toast.error("Please provide a rejection reason");
-      return;
-    }
-
-    setRejectSubmitting(true);
-    try {
-      const res = await fetch(`/api/enrollments/${selected.id}/review`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "rejected",
-          rejectionMessage: rejectMessage.trim(),
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      setEnrollments((prev) =>
-        prev.map((e) =>
-          e.id === selected.id
-            ? {
-                ...e,
-                status: "rejected" as const,
-                rejectionMessage: rejectMessage.trim(),
-              }
-            : e,
-        ),
-      );
-      setRejectOpen(false);
-      setSelected(null);
-      setRejectMessage("");
-      loadAdminData();
-      toast.success("Enrollment rejected");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to reject");
-    } finally {
-      setRejectSubmitting(false);
-    }
-  }
+  const pending = enrollments.filter((e) => e.status === "pending");
+  const approved = enrollments.filter((e) => e.status === "approved");
+  const rejected = enrollments.filter((e) => e.status === "rejected");
 
   return (
     <div>
-      <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-primary">Enrollments</h1>
-          <p className="text-sm text-muted">
-            Review and manage student enrollment applications.
-          </p>
-        </div>
+      <div className="mb-4 lg:mb-6">
+        <h1 className="text-2xl font-bold text-primary">Enrollments</h1>
+        <p className="text-sm text-muted">Manage student enrollment requests.</p>
       </div>
 
-      <Card className="mb-4 lg:mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-              <Input
-                placeholder="Search enrollments..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 lg:mb-6">
+        <Card className="border-amber-200">
+          <CardContent className="p-4 sm:p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-amber-600" />
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Filter className="w-4 h-4 text-muted" />
-              {(
-                [
-                  "all",
-                  "unverified",
-                  "pending",
-                  "approved",
-                  "rejected",
-                ] as const
-              ).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${statusFilter === s ? "bg-primary text-white" : "bg-accent text-muted hover:bg-primary/5"}`}
-                >
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
+            <div>
+              <p className="text-xs text-muted">Pending</p>
+              <p className="text-xl font-bold text-primary">{pending.length}</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 sm:p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted">Approved</p>
+              <p className="text-xl font-bold text-primary">{approved.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 sm:p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+              <X className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted">Rejected</p>
+              <p className="text-xl font-bold text-primary">{rejected.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-primary/5 bg-accent/50">
-                  <th className="text-left text-xs font-medium text-muted py-3 px-6">
-                    Student
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
-                    Course
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
-                    Qualification
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
-                    Date
-                  </th>
-                  <th className="text-left text-xs font-medium text-muted py-3 px-4">
-                    Status
-                  </th>
-                  <th className="text-right text-xs font-medium text-muted py-3 px-6">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((enrollment) => {
-                  const config =
-                    statusConfig[enrollment.status] || statusConfig.pending;
-                  const StatusIcon = config.icon;
-                  return (
-                    <motion.tr
-                      key={enrollment.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
+        <CardHeader className="px-4 sm:px-6 py-4">
+          <CardTitle className="text-base sm:text-lg">All Enrollment Requests</CardTitle>
+        </CardHeader>
+        <CardContent className="p-2 sm:p-4">
+          {enrollments.length === 0 ? (
+            <p className="text-center text-muted py-10 text-sm">No enrollments yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {enrollments.map((enrollment) => (
+                <div
+                  key={enrollment.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-3 sm:p-4 rounded-lg border border-primary/5 hover:border-primary/10 transition-colors bg-white"
+                >
+                  <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-secondary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-primary text-sm truncate">{enrollment.fullName}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-muted mt-0.5">
+                      <span className="flex items-center gap-1">
+                        <Mail className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{enrollment.email}</span>
+                      </span>
+                      <span className="hidden sm:inline">·</span>
+                      <span className="flex items-center gap-1">
+                        <School className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{enrollment.interestedCourse}</span>
+                      </span>
+                      <span className="hidden sm:inline">·</span>
+                      <span className="shrink-0">{new Date(enrollment.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end w-full sm:w-auto">
+                    <Badge className={
+                      enrollment.status === "approved"
+                        ? "bg-emerald-50 text-emerald-700 border-0 text-[10px]"
+                        : enrollment.status === "rejected"
+                        ? "bg-red-50 text-red-700 border-0 text-[10px]"
+                        : "bg-amber-50 text-amber-700 border-0 text-[10px]"
+                    }>
+                      {enrollment.status.charAt(0).toUpperCase() + enrollment.status.slice(1)}
+                    </Badge>
+                    <button
+                      onClick={() => setSelected(enrollment)}
+                      className="p-1.5 rounded-md hover:bg-accent text-muted hover:text-primary transition-colors text-xs sm:text-sm"
                     >
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary">
-                            {enrollment.fullName
-                              .split(" ")
-                              .map((n: string) => n[0])
-                              .join("")}
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-primary">
-                              {enrollment.fullName}
-                            </p>
-                            <p className="text-xs text-muted">
-                              {enrollment.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-sm text-muted">
-                        {enrollment.interestedCourse}
-                      </td>
-                      <td className="py-4 px-4 text-sm text-muted">
-                        {qualifications.find((q) => q.id === enrollment.qualificationId)?.name ?? "—"}
-                      </td>
-                      <td className="py-4 px-4 text-sm text-muted">
-                        {enrollment.createdAt}
-                      </td>
-                      <td className="py-4 px-4">
-                        <Badge
-                          variant={config.variant}
-                          className="text-[10px] capitalize"
+                      View
+                    </button>
+                    <div className="flex gap-1">
+                      {enrollment.status !== "approved" && (
+                        <button
+                          onClick={() => handleAction(enrollment.id, "approved")}
+                          disabled={actionLoading === enrollment.id}
+                          className="p-1.5 rounded-md hover:bg-emerald-50 text-muted hover:text-emerald-600 transition-colors disabled:opacity-50"
+                          title="Approve"
                         >
-                          <StatusIcon className="w-3 h-3 mr-1" />
-                          {config.label}
-                        </Badge>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {enrollment.status === "pending" && (
-                            <div className="flex items-center gap-2 text-xs">
-                              <button
-                                onClick={() => {
-                                  setSelected(enrollment);
-                                  setApproveOpen(true);
-                                }}
-                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-all duration-200 hover:shadow-sm font-medium"
-                              >
-                                <ThumbsUp className="w-4 h-4" />
-                                <span>Approve</span>
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  setSelected(enrollment);
-                                  setRejectMessage("");
-                                  setRejectOpen(true);
-                                }}
-                                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-all duration-200 hover:shadow-sm font-medium"
-                              >
-                                <ThumbsDown className="w-4 h-4" />
-                                <span>Reject</span>
-                              </button>
-                            </div>
-                          )}
-                          <button
-                            onClick={() => {
-                              setSelected(enrollment);
-                              setViewOpen(true);
-                            }}
-                            className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setSelected(enrollment);
-                              setDeleteOpen(true);
-                            }}
-                            className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {filtered.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted text-sm">No enrollments found.</p>
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {enrollment.status !== "rejected" && (
+                        <button
+                          onClick={() => handleAction(enrollment.id, "rejected")}
+                          disabled={actionLoading === enrollment.id}
+                          className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors disabled:opacity-50"
+                          title="Reject"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
       </Card>
 
-      <Modal
-        open={viewOpen}
-        onClose={() => {
-          setViewOpen(false);
-          setSelected(null);
-        }}
-        title="Enrollment Details"
-      >
-        {selected && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+      {/* Detail Modal */}
+      {selected && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setSelected(null)} />
+          <div className="relative bg-white rounded-xl shadow-lg p-5 sm:p-6 w-full max-w-sm sm:max-w-md">
+            <h3 className="text-base sm:text-lg font-bold text-primary mb-3 sm:mb-4">Enrollment Details</h3>
+            <div className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm break-words">
               <div>
-                <label className="text-xs font-medium text-muted">
-                  Full Name
-                </label>
-                <p className="text-sm text-primary font-medium">
-                  {selected.fullName}
+                <p className="text-muted text-[10px] sm:text-xs">Full Name</p>
+                <p className="font-medium text-primary">{selected.fullName}</p>
+              </div>
+              <div>
+                <p className="text-muted text-[10px] sm:text-xs">Email</p>
+                <p className="font-medium text-primary">{selected.email}</p>
+              </div>
+              <div>
+                <p className="text-muted text-[10px] sm:text-xs">Interested Course</p>
+                <p className="font-medium text-primary">{selected.interestedCourse}</p>
+              </div>
+              <div>
+                <p className="text-muted text-[10px] sm:text-xs">Status</p>
+                <Badge className={
+                  selected.status === "approved"
+                    ? "bg-emerald-50 text-emerald-700 border-0"
+                    : selected.status === "rejected"
+                    ? "bg-red-50 text-red-700 border-0"
+                    : "bg-amber-50 text-amber-700 border-0"
+                }>
+                  {selected.status.charAt(0).toUpperCase() + selected.status.slice(1)}
+                </Badge>
+              </div>
+              <div>
+                <p className="text-muted text-[10px] sm:text-xs">Date</p>
+                <p className="font-medium text-primary">
+                  {new Date(selected.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric", month: "long", day: "numeric",
+                  })}
                 </p>
               </div>
-              <div>
-                <label className="text-xs font-medium text-muted">Email</label>
-                <p className="text-sm text-primary">{selected.email}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted">Course</label>
-                <p className="text-sm text-primary">
-                  {selected.interestedCourse}
-                </p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted">Class</label>
-                <p className="text-sm text-primary">{qualifications.find((q) => q.id === selected.qualificationId)?.name ?? "—"}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted">Date</label>
-                <p className="text-sm text-primary">{selected.createdAt}</p>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted">Status</label>
-                <div className="mt-1">
-                  <Badge
-                    variant={
-                      statusConfig[selected.status]?.variant || "warning"
-                    }
-                    className="text-[10px] capitalize"
-                  >
-                    {statusConfig[selected.status]?.label || selected.status}
-                  </Badge>
+              {selected.rejectionMessage && (
+                <div>
+                  <p className="text-muted text-[10px] sm:text-xs">Rejection Reason</p>
+                  <p className="font-medium text-red-600">{selected.rejectionMessage}</p>
                 </div>
-              </div>
+              )}
             </div>
-            {selected.status === "rejected" && selected.rejectionMessage && (
-              <div>
-                <label className="text-xs font-medium text-muted">
-                  Rejection Reason
-                </label>
-                <div className="mt-1 p-3 bg-red-50 rounded-lg text-sm text-red-700">
-                  {selected.rejectionMessage}
-                </div>
-              </div>
-            )}
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setViewOpen(false);
-                  setSelected(null);
-                }}
-              >
-                Close
-              </Button>
+            <div className="flex justify-end mt-4 sm:mt-5">
+              <Button size="sm" onClick={() => setSelected(null)}>Close</Button>
             </div>
           </div>
-        )}
-      </Modal>
-
-      <Modal
-        open={approveOpen}
-        onClose={() => {
-          setApproveOpen(false);
-          setSelected(null);
-        }}
-        title="Approve Enrollment"
-      >
-        {selected && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted">
-              This will approve <strong>{selected.fullName}</strong>&apos;s
-              enrollment and create a student record. They will receive a
-              confirmation email.
-            </p>
-            <div className="bg-emerald-50 rounded-lg p-3 space-y-1">
-              <p className="text-sm">
-                <strong>Name:</strong> {selected.fullName}
-              </p>
-              <p className="text-sm">
-                <strong>Email:</strong> {selected.email}
-              </p>
-              <p className="text-sm">
-                <strong>Qualification:</strong> {qualifications.find((q) => q.id === selected.qualificationId)?.name ?? "—"}
-              </p>
-              <p className="text-sm">
-                <strong>Course:</strong> {selected.interestedCourse}
-              </p>
-            </div>
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setApproveOpen(false);
-                  setSelected(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleApprove}
-                disabled={approveSubmitting}
-              >
-                {approveSubmitting
-                  ? "Approving..."
-                  : "Approve & Create Student"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      <Modal
-        open={rejectOpen}
-        onClose={() => {
-          setRejectOpen(false);
-          setSelected(null);
-          setRejectMessage("");
-        }}
-        title="Reject Enrollment"
-      >
-        {selected && (
-          <div className="space-y-4">
-            <p className="text-sm text-muted">
-              Provide a reason for rejecting{" "}
-              <strong>{selected.fullName}</strong>&apos;s enrollment. This
-              message will be sent to their email.
-            </p>
-            <Textarea
-              placeholder="Enter rejection reason..."
-              rows={4}
-              value={rejectMessage}
-              onChange={(e) => setRejectMessage(e.target.value)}
-            />
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRejectOpen(false);
-                  setSelected(null);
-                  setRejectMessage("");
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleReject}
-                disabled={rejectSubmitting}
-              >
-                {rejectSubmitting ? "Rejecting..." : "Reject & Send Email"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      <DeleteModal
-        open={deleteOpen}
-        onClose={() => {
-          setDeleteOpen(false);
-          setSelected(null);
-        }}
-        onConfirm={handleDelete}
-        title="Delete Enrollment?"
-        message={`Are you sure you want to delete the enrollment for "${selected?.fullName}"? This action cannot be undone.`}
-      />
+        </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search, Plus, Pencil, Trash2, Calendar, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +66,7 @@ export default function DashboardBlogPage() {
         </Button>
       </div>
 
-      <div className="mb-4 lg:mb-6 relative max-w-sm">
+      <div className="mb-4 lg:mb-6 relative max-w-sm w-full">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
         <Input
           placeholder="Search posts..."
@@ -78,88 +77,82 @@ export default function DashboardBlogPage() {
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-16 bg-primary/10 rounded-lg animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-3">
+              <div className="h-40 bg-primary/10 rounded-xl animate-pulse" />
+              <div className="h-4 w-3/4 bg-primary/10 rounded animate-pulse" />
+              <div className="h-3 w-1/2 bg-primary/10 rounded animate-pulse" />
+            </div>
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-muted">No posts found.</p>
           {posts.length === 0 && (
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => router.push("/dashboard/blog/new")}
-            >
+            <Button variant="outline" className="mt-4" onClick={() => router.push("/dashboard/blog/new")}>
               <Plus className="w-4 h-4 mr-2" />
               Create your first post
             </Button>
           )}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((post, i) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03 }}
+              className="group"
             >
-              <Card>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    {post.image && (
-                      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 hidden sm:block">
-                        <Image
-                          src={post.image}
-                          alt={post.title}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={post.status === "published" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
-                          {post.status === "published" ? (
-                            <><Eye className="w-3 h-3 mr-1" /> Published</>
-                          ) : (
-                            <><EyeOff className="w-3 h-3 mr-1" /> Draft</>
-                          )}
-                        </Badge>
-                        {post.tags?.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-[10px]">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <h3
-                        className="font-semibold text-primary text-sm truncate cursor-pointer hover:text-secondary transition-colors"
-                        onClick={() => router.push(`/dashboard/blog/${post.id}`)}
-                      >
-                        {post.title}
-                      </h3>
-                      <div className="flex items-center gap-3 text-xs text-muted mt-1">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {formatShortDate(post.createdAt)}
-                        </span>
-                        {post.author && <span>By {post.author}</span>}
-                        {post.excerpt && <span className="truncate hidden sm:inline">{post.excerpt}</span>}
-                      </div>
+              <div
+                className="rounded-xl border border-primary/5 overflow-hidden bg-white hover:shadow-md hover:border-primary/10 transition-all cursor-pointer h-full"
+                onClick={() => router.push(`/dashboard/blog/${post.id}`)}
+              >
+                <div className="relative h-36 sm:h-40 overflow-hidden">
+                  <Image
+                    src={post.image || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=400&q=80"}
+                    alt={post.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    unoptimized
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                  <div className="absolute top-2 left-2 flex gap-1.5">
+                    <Badge className={post.status === "published" ? "bg-emerald-500 text-white border-0 text-[10px]" : "bg-amber-500 text-white border-0 text-[10px]"}>
+                      {post.status === "published" ? <><Eye className="w-3 h-3 mr-0.5" /> Published</> : <><EyeOff className="w-3 h-3 mr-0.5" /> Draft</>}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    {post.tags?.slice(0, 2).map((tag) => (
+                      <Badge key={tag} variant="outline" className="text-[9px]">{tag}</Badge>
+                    ))}
+                  </div>
+                  <h3 className="font-semibold text-primary text-sm leading-snug line-clamp-2 mb-2 group-hover:text-secondary transition-colors">
+                    {post.title}
+                  </h3>
+                  {post.excerpt && (
+                    <p className="text-xs text-muted line-clamp-2 mb-3">{post.excerpt}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[10px] text-muted">
+                      <Calendar className="w-3 h-3" />
+                      {formatShortDate(post.createdAt)}
+                      {post.author && <span>· {post.author}</span>}
                     </div>
-                    <div className="flex gap-1 shrink-0">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => router.push(`/dashboard/blog/${post.id}`)}
-                        className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+                        onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/blog/${post.id}`); }}
+                        className="p-1.5 rounded-md hover:bg-accent text-muted hover:text-primary transition-colors"
                         title="Edit"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => { setSelected(post); setDeleteOpen(true); }}
+                        onClick={(e) => { e.stopPropagation(); setSelected(post); setDeleteOpen(true); }}
                         className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
                         title="Delete"
                       >
@@ -167,8 +160,8 @@ export default function DashboardBlogPage() {
                       </button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>

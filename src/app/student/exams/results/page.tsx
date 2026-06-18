@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 
 export default function StudentResultsPage() {
-  const { examCategories, questions, attempts } = useAppContext();
+  const { examCategories, questions, attempts, dataLoading } = useAppContext();
 
   const allAttempts = [...attempts].sort(
     (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
@@ -22,6 +22,26 @@ export default function StudentResultsPage() {
 
   function getCategoryName(id: string) {
     return examCategories.find((c) => c.id === id)?.name ?? id;
+  }
+
+  if (dataLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-primary/10 rounded-lg animate-pulse" />
+          <div>
+            <div className="h-8 w-36 bg-primary/10 rounded-md animate-pulse" />
+            <div className="h-4 w-48 bg-primary/10 rounded-md animate-pulse mt-1" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+          ))}
+        </div>
+        <div className="h-64 bg-primary/5 rounded-xl animate-pulse" />
+      </div>
+    );
   }
 
   return (
