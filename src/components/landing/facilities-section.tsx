@@ -50,12 +50,12 @@ export function FacilitiesSection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.4, delay: index * 0.08 }}
-                className="group p-7 rounded-xl bg-white border border-primary/5 hover:border-primary/10 hover:shadow-card transition-all duration-300"
+                className="group p-5 sm:p-7 rounded-xl bg-white border border-primary/5 hover:border-primary/10 hover:shadow-card transition-all duration-300"
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                  <Icon className="w-6 h-6 text-primary group-hover:text-white transition-colors" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/5 flex items-center justify-center mb-4 sm:mb-5 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:text-white transition-colors" />
                 </div>
-                <h3 className="text-lg font-semibold text-primary mb-3">
+                <h3 className="text-base sm:text-lg font-semibold text-primary mb-3">
                   {facility.title}
                 </h3>
                 <p className="text-sm text-muted leading-relaxed">

@@ -84,6 +84,15 @@ export default function DashboardLayout({
   }, [user, isLoading, router, logout]);
 
   useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
+  useEffect(() => {
     const groupsToOpen = DASHBOARD_SIDEBAR.filter(
       (item): item is { type: "group"; label: string; icon: string; children: { label: string; href: string; icon: string }[] } =>
         item.type === "group" && item.children.some((c) => pathname.startsWith(c.href))
@@ -265,7 +274,7 @@ export default function DashboardLayout({
             )}
           </button>
           <Link
-            href="/"
+            href="/?back=1"
             onClick={() => setSidebarOpen(false)}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all",

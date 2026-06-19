@@ -49,7 +49,7 @@ export function CoursesSection() {
                   className="group bg-white rounded-xl overflow-hidden border border-primary/5 hover:border-primary/10 hover:shadow-elevated transition-all duration-300 flex flex-col"
                 >
                   {/* Image */}
-                  <div className="relative h-52 overflow-hidden">
+                  <div className="relative h-40 sm:h-52 overflow-hidden">
                     <Image
                       src={course.image || "/placeholder.svg"}
                       alt={course.title}

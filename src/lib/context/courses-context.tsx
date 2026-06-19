@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { Course, Subcategory, Item } from "@/types";
 import { apiCreate, apiUpdate, apiDelete } from "@/lib/api-client";
 import { generateId, createSeedSubcategories } from "./seed-data";
@@ -40,10 +40,25 @@ export function useCoursesState() {
   const rollbackCourses = useRollback<Course[]>();
   const rollbackSubs = useRollback<Subcategory[]>();
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("cadet_completed_items");
+      if (stored) {
+        setCompletedItems(JSON.parse(stored));
+      }
+    } catch {}
+  }, []);
+
   const toggleItemComplete = useCallback((itemId: string) => {
-    setCompletedItems((prev) =>
-      prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId]
-    );
+    setCompletedItems((prev) => {
+      const next = prev.includes(itemId)
+        ? prev.filter((id) => id !== itemId)
+        : [...prev, itemId];
+      try {
+        localStorage.setItem("cadet_completed_items", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
   }, []);
 
   const addCourse = useCallback(async (course: Omit<Course, "id">) => {

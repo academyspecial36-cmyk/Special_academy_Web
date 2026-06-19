@@ -220,7 +220,7 @@ export default function EnrollmentPage() {
                 Enrollment
               </h1>
               <p className="text-lg text-white/70">
-                Apply for admission to Cadet Academy.
+                Apply for admission to Special Academy.
               </p>
             </div>
           </div>
@@ -262,7 +262,7 @@ export default function EnrollmentPage() {
               animate={{ opacity: 1, y: 0 }}
               className="text-4xl md:text-5xl font-bold mb-4"
             >
-              Join Cadet Academy
+              Join Special Academy
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 10 }}

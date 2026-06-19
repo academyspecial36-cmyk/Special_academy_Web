@@ -45,7 +45,7 @@ export function FacultySection() {
                   className="group"
                 >
                   <div className="bg-accent rounded-xl overflow-hidden border border-primary/5 hover:border-primary/10 hover:shadow-card transition-all duration-300">
-                    <div className="relative h-64 overflow-hidden">
+                    <div className="relative h-48 sm:h-64 overflow-hidden">
                       <Image
                         src={faculty.image}
                         alt={faculty.name}

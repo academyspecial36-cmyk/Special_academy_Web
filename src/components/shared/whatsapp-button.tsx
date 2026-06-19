@@ -7,6 +7,7 @@ import { useAppContext } from "@/lib/app-context";
 
 const DEFAULT_MESSAGE =
   "Hi, I'm interested in your courses and would like more information.";
+const DEFAULT_PHONE = "9860302036";
 
 export function WhatsAppButton() {
   const { settings } = useAppContext();
@@ -15,7 +16,11 @@ export function WhatsAppButton() {
 
   function openWhatsApp() {
     const encoded = encodeURIComponent(DEFAULT_MESSAGE);
-    window.open(`https://wa.me/${settings?.phone}?text=${encoded}`, "_blank", "noopener,noreferrer");
+    window.open(
+      `https://wa.me/${settings?.phone ? settings.phone : DEFAULT_PHONE}?text=${encoded}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
     setPopupOpen(false);
   }
 
@@ -31,8 +36,14 @@ export function WhatsAppButton() {
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primaryColor}1A` }}>
-                  <MessageCircle className="w-4 h-4" style={{ color: primaryColor }} />
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: `${primaryColor}1A` }}
+                >
+                  <MessageCircle
+                    className="w-4 h-4"
+                    style={{ color: primaryColor }}
+                  />
                 </div>
                 <span className="text-sm font-bold text-primary">WhatsApp</span>
               </div>
@@ -65,7 +76,9 @@ export function WhatsAppButton() {
         aria-label="Chat on WhatsApp"
       >
         <MessageCircle className="w-5 h-5 shrink-0" />
-        <span className="text-sm font-medium hidden md:inline">Chat on WhatsApp</span>
+        <span className="text-sm font-medium hidden md:inline">
+          Chat on WhatsApp
+        </span>
       </button>
     </>
   );

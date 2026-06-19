@@ -92,7 +92,7 @@ export function BlogSection() {
                 href={`/blog/${post.slug}`}
                 className="group block bg-white rounded-xl overflow-hidden border border-primary/5 hover:border-primary/10 hover:shadow-elevated transition-all duration-300 h-full"
               >
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-40 sm:h-48 overflow-hidden">
                   <Image
                     src={post.image || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=600&q=80"}
                     alt={post.title}

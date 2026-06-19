@@ -17,7 +17,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: string }>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<{ success: boolean; error?: string; role?: string }>;
   register: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -48,6 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { setUser(null); setIsLoading(false); return; }
+
+      // Remember-me check: if session exists in a fresh tab without remember-me flag, sign out
+      const hasPersist = localStorage.getItem("persist_session") === "true";
+      const hasTemp = sessionStorage.getItem("temp_session") === "true";
+      if (!hasPersist && !hasTemp) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
 
       const profileUser = await fetchProfileServer();
       if (profileUser) {
@@ -89,6 +99,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (session?.user && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED")) {
+          // Remember-me check: only set user if flags are present
+          const hasPersist = localStorage.getItem("persist_session") === "true";
+          const hasTemp = sessionStorage.getItem("temp_session") === "true";
+          if (!hasPersist && !hasTemp) {
+            if (event !== "SIGNED_IN") {
+              await supabase.auth.signOut();
+              setUser(null);
+              setIsLoading(false);
+              return;
+            }
+            // SIGNED_IN during login: flags are being set by the login function, still allow
+          }
+
           const profileUser = await fetchProfileServer();
           if (profileUser) {
             setUser(profileUser);
@@ -115,14 +138,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { subscription.unsubscribe(); };
   }, [fetchProfileServer]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string, rememberMe = true) => {
     const supabase = getSupabase();
     if (!supabase) return { success: false, error: "Supabase not configured" };
 
+    // Set flags BEFORE signInWithPassword because onAuthStateChange fires synchronously during the call
+    if (!rememberMe) {
+      localStorage.removeItem("persist_session");
+      sessionStorage.setItem("temp_session", "true");
+    } else {
+      localStorage.setItem("persist_session", "true");
+      sessionStorage.removeItem("temp_session");
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      // Clear flags on failure
+      localStorage.removeItem("persist_session");
+      sessionStorage.removeItem("temp_session");
+      return { success: false, error: error.message };
+    }
 
     if (data.user) {
+
       const profileUser = await fetchProfileServer();
       if (profileUser) {
         setUser(profileUser);

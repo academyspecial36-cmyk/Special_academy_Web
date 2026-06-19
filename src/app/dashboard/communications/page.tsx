@@ -65,7 +65,7 @@ const statusColor: Record<string, string> = {
 const defaultVars = ["name", "email", "phone", "academyName"];
 
 const sampleTemplates: Partial<Template>[] = [
-  { name: "Welcome to Cadet Academy", type: "email", subject: "Welcome to Cadet Academy, {{name}}!", body: "<h2>Dear {{name}},</h2><p>Welcome to Cadet Academy! We are excited to have you on board.</p><p>Your journey to excellence starts here.</p><p>Best regards,<br/><strong>{{academyName}}</strong></p>", variables: ["name", "academyName"] },
+  { name: "Welcome to Special Academy", type: "email", subject: "Welcome to Special Academy, {{name}}!", body: "<h2>Dear {{name}},</h2><p>Welcome to Special Academy! We are excited to have you on board.</p><p>Your journey to excellence starts here.</p><p>Best regards,<br/><strong>{{academyName}}</strong></p>", variables: ["name", "academyName"] },
   { name: "Enrollment Confirmation", type: "email", subject: "Enrollment Confirmed - {{name}}", body: "<h2>Enrollment Confirmed</h2><p>Dear {{name}},</p><p>Your enrollment at {{academyName}} has been confirmed.</p><p>We look forward to seeing you.</p>", variables: ["name", "academyName"] },
   { name: "Exam Reminder", type: "sms", subject: "", body: "Dear {{name}}, this is a reminder about your upcoming exam at {{academyName}}. Please be prepared. - Academy", variables: ["name", "academyName"] },
   { name: "Notice Broadcast", type: "email", subject: "Important Notice from {{academyName}}", body: "<h2>Important Notice</h2><p>Dear {{name}},</p><p>Please find below an important notice from {{academyName}}:</p><hr/><p>{{message}}</p>", variables: ["name", "academyName", "message"] },
@@ -226,7 +226,7 @@ export default function CommunicationsPage() {
     name: "John Doe",
     email: "john@example.com",
     phone: "+1 234 567 890",
-    academyName: "Cadet Academy",
+    academyName: "Special Academy",
     message: "Your attention is required.",
   };
 

@@ -181,8 +181,8 @@ export default function DashboardPage() {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-bold text-primary">Dashboard</h1>
-          <p className="text-sm text-muted">Welcome back, Admin. Here&apos;s what&apos;s happening today.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard</h1>
+          <p className="text-xs sm:text-sm text-muted">Welcome back, Admin. Here&apos;s what&apos;s happening today.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" asChild>
@@ -212,7 +212,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <p className="text-xs font-medium text-muted uppercase tracking-wider">{stat.label}</p>
-                      <p className="text-2xl font-bold text-primary mt-0.5">
+                      <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5">
                         {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
                       </p>
                     </div>

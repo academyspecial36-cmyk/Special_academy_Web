@@ -59,7 +59,7 @@ const guideSteps = [
     desc: "Set up a strong password to protect your account and all your personal data.",
     whatToDo: [
       "Create a password that is at least 8 characters long.",
-      "Combine uppercase letters, lowercase letters, numbers, and special characters for maximum security. Example: CadetAcademy2024! or MySecurePass#9.",
+      "Combine uppercase letters, lowercase letters, numbers, and special characters for maximum security. Example: SpecialAcademy2024! or MySecurePass#9.",
       "Avoid using easily guessable information such as your name, birthdate, phone number, or common words like 'password' or '123456'.",
       "Type the same password again in the confirmation field to ensure there are no typing errors.",
       "Click the eye icon next to the password field if you want to temporarily reveal the characters you are typing.",
@@ -75,7 +75,7 @@ const guideSteps = [
     whatToDo: [
       "After completing Step 3, our system will automatically send a 6-digit verification code to the email address you provided.",
       "Open your email inbox in a new browser tab or on your mobile device.",
-      "Look for an email from Cadet Academy with the subject line: 'Your Email Verification Code'.",
+      "Look for an email from Special Academy with the subject line: 'Your Email Verification Code'.",
       "If you do not see the email within 2 minutes, check your Spam, Junk, or Promotions folder. Email filters sometimes misclassify automated messages.",
       "Copy the 6-digit code exactly as shown and paste it into the verification input field on this page.",
       "Click the 'Verify Email' button. A green confirmation message will appear if the code is correct.",
