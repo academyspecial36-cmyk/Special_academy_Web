@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(email, password, rememberMe);
     setLoading(false);
 
     if (result.success) {
@@ -48,9 +49,7 @@ export default function LoginPage() {
         }
         window.location.href = "/student";
       } else {
-        const { getSupabase } = await import("@/lib/supabase");
-        await getSupabase()?.auth.signOut();
-        setError("Access denied. Student account required.");
+        window.location.href = "/dashboard";
       }
     } else {
       setError(result.error || "Invalid credentials");
@@ -119,7 +118,12 @@ export default function LoginPage() {
 
               <div className="flex items-center justify-between text-sm">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="rounded border-primary/20 text-primary focus:ring-primary" />
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-primary/20 text-primary focus:ring-primary"
+                  />
                   <span className="text-muted">Remember me</span>
                 </label>
                 <Link href="/forgot-password" className="text-secondary hover:underline font-medium">

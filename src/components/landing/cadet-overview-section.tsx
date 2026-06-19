@@ -31,7 +31,7 @@ export function CadetOverviewSection() {
             transition={{ duration: 0.6 }}
             className="order-2 lg:order-1"
           >
-            <h3 className="mb-6 text-2xl font-bold text-primary">
+            <h3 className="mb-6 text-xl sm:text-2xl font-bold text-primary">
               {data.heading || "What We Prepare You For"}
             </h3>
 

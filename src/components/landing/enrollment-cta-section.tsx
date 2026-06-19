@@ -29,16 +29,16 @@ export function EnrollmentCtaSection() {
             }} />
           </div>
 
-          <div className="relative grid lg:grid-cols-2 gap-10 p-10 md:p-16 items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm text-white">
-                <GraduationCap className="w-4 h-4" />
+          <div className="relative grid lg:grid-cols-2 gap-6 sm:gap-10 p-6 sm:p-10 md:p-16 items-center">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm text-white">
+                <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>{cta.badge || "Admissions Open"}</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight">
                 {cta.heading || "Begin Your Journey Today"}
               </h2>
-              <p className="text-white/70 text-lg leading-relaxed max-w-lg">
+              <p className="text-white/70 text-sm sm:text-base lg:text-lg leading-relaxed max-w-lg">
                 {cta.description || ""}
               </p>
               <div className="flex flex-wrap gap-4">

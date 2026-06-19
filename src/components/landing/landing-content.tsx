@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAppContext } from "@/lib/app-context";
+import { useAuth } from "@/lib/auth-context";
 import { LandingLoader } from "./landing-loader";
 import { HeroSection } from "./hero-section";
 import { AboutSection } from "./about-section";
@@ -50,6 +53,16 @@ const ContactSection = dynamic(() => import("./contact-section").then((m) => m.C
 
 export function LandingContent() {
   const { loading, settings } = useAppContext();
+  const { isAuthenticated, user } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (isAuthenticated && searchParams.get("back") !== "1") {
+      router.replace(user?.role === "admin" ? "/dashboard" : "/student");
+    }
+  }, [isAuthenticated, user, router, searchParams]);
+
   const s = (settings.config?.sections || {}) as Record<string, boolean>;
 
   if (loading) return <LandingLoader />;

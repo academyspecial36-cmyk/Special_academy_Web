@@ -66,7 +66,7 @@ export function ActivitiesSection() {
                     {/* Content */}
                     <div className="flex-1 pt-1 md:pt-2">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-primary">
+                        <h3 className="text-base sm:text-lg font-semibold text-primary">
                           {activity.title}
                         </h3>
                         <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary w-fit">

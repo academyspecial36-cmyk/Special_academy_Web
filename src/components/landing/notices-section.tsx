@@ -75,7 +75,7 @@ export function NoticesSection() {
                       {formatShortDate(notice.date)}
                     </span>
                   </div>
-                  <h3 className="font-semibold text-primary mb-2 group-hover:text-secondary transition-colors line-clamp-1">
+                  <h3 className="text-sm sm:text-base font-semibold text-primary mb-2 group-hover:text-secondary transition-colors line-clamp-1">
                     {notice.title}
                   </h3>
                   <p className="text-sm text-muted line-clamp-2 mb-4">

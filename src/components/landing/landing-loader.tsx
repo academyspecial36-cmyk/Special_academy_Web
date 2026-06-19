@@ -2,88 +2,145 @@
 
 import { motion } from "framer-motion";
 
-function Skeleton({ className = "" }: { className?: string }) {
+function Skel({ w = "100%", h = 8, r = 4, opacity = 0.22, delay = 0 }: {
+  w?: string | number; h?: number; r?: number; opacity?: number; delay?: number;
+}) {
   return (
-    <div
-      className={`rounded-md bg-slate-200/80 animate-pulse ${className}`}
+    <motion.div
+      animate={{ opacity: [opacity * 0.5, opacity, opacity * 0.5] }}
+      transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut", delay }}
+      style={{
+        width: w, height: h, borderRadius: r,
+        background: "currentColor", color: "rgba(128,128,128,0.45)",
+        flexShrink: 0,
+      }}
     />
   );
 }
 
-function CadetSkeleton() {
+function AK47Soldier() {
   return (
     <motion.div
-      animate={{
-        x: [0, 30, 0],
-      }}
-      transition={{
-        duration: 1.4,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      className="relative h-32 w-32"
+      animate={{ x: [0, 28, 0] }}
+      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+      style={{ position: "relative" }}
     >
-      {/* Head */}
-      <Skeleton className="absolute left-12 top-0 h-6 w-6 rounded-full" />
+      <svg
+        viewBox="0 0 240 200"
+        width={220}
+        height={200}
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ overflow: "visible" }}
+      >
+        {/* Shadow */}
+        <ellipse cx="110" cy="194" rx="52" ry="5" fill="rgba(128,128,128,0.12)" />
 
-      {/* Body */}
-      <Skeleton className="absolute left-[22px] top-8 h-2 w-12 rotate-45" />
+        {/* Helmet */}
+        <ellipse cx="110" cy="22" rx="18" ry="10" fill="rgba(128,128,128,0.30)" />
+        <rect x="92" y="29" width="36" height="4" rx="2" fill="rgba(128,128,128,0.25)" />
 
-      {/* Rifle */}
-      <Skeleton className="absolute left-[42px] top-[38px] h-1.5 w-16" />
+        {/* Head */}
+        <ellipse cx="110" cy="40" rx="13" ry="14" fill="rgba(128,128,128,0.28)" />
 
-      {/* Arm */}
-      <Skeleton className="absolute left-[35px] top-[34px] h-1.5 w-12 rotate-12" />
+        {/* Torso */}
+        <rect x="94" y="54" width="32" height="36" rx="5" fill="rgba(128,128,128,0.28)" />
+        {/* Belt */}
+        <rect x="94" y="86" width="32" height="5" rx="2" fill="rgba(128,128,128,0.20)" />
 
-      {/* Legs */}
-      <Skeleton className="absolute left-[22px] top-[58px] h-1.5 w-14 rotate-45" />
-      <Skeleton className="absolute left-[42px] top-[62px] h-1.5 w-14 -rotate-45" />
+        {/* Left arm */}
+        <rect x="80" y="58" width="14" height="8" rx="3" fill="rgba(128,128,128,0.25)" />
+        <rect x="72" y="64" width="12" height="7" rx="3" fill="rgba(128,128,128,0.22)" />
 
-      {/* Foot */}
-      <Skeleton className="absolute left-[12px] top-[78px] h-1.5 w-8" />
-      <Skeleton className="absolute left-[62px] top-[82px] h-1.5 w-8" />
+        {/* Right arm (trigger hand) */}
+        <motion.g
+          animate={{ rotate: [0, -1.5, 0.5, 0] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", times: [0, 0.88, 0.92, 1] }}
+          style={{ transformOrigin: "126px 66px" }}
+        >
+          <rect x="124" y="60" width="12" height="8" rx="3" fill="rgba(128,128,128,0.25)" />
+        </motion.g>
+
+        {/* ── AK-47 rifle group ── */}
+        <motion.g
+          animate={{ x: [0, -5, 2, 0], rotate: [0, -1.5, 0.5, 0] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", times: [0, 0.88, 0.92, 1] }}
+          style={{ transformOrigin: "98px 68px" }}
+        >
+          {/* Stock */}
+          <rect x="130" y="65" width="26" height="7" rx="2" fill="rgba(128,128,128,0.30)" />
+          {/* Receiver */}
+          <rect x="88" y="63" width="44" height="9" rx="2" fill="rgba(128,128,128,0.35)" />
+          {/* Barrel */}
+          <rect x="46" y="64" width="42" height="5" rx="1.5" fill="rgba(128,128,128,0.30)" />
+          {/* Muzzle brake */}
+          <rect x="38" y="63" width="10" height="7" rx="1" fill="rgba(128,128,128,0.25)" />
+          {/* Banana magazine */}
+          <path
+            d="M100 72 Q98 88 104 90 Q112 90 114 88 Q118 76 118 72 Z"
+            fill="rgba(128,128,128,0.28)"
+          />
+          {/* Gas tube */}
+          <rect x="60" y="61" width="28" height="3" rx="1" fill="rgba(128,128,128,0.20)" />
+          {/* Front sight */}
+          <rect x="92" y="61" width="6" height="4" rx="1" fill="rgba(128,128,128,0.20)" />
+
+          {/* Muzzle flash */}
+          <motion.g
+            animate={{ opacity: [0, 0, 1, 0], scale: [0.5, 0.5, 1.2, 0.8] }}
+            transition={{ duration: 2.8, repeat: Infinity, times: [0, 0.84, 0.87, 0.92] }}
+            style={{ transformOrigin: "34px 67px" }}
+          >
+            <ellipse cx="30" cy="67" rx="9" ry="5" fill="rgba(128,128,128,0.55)" />
+            <ellipse cx="26" cy="67" rx="4" ry="3" fill="rgba(128,128,128,0.40)" />
+          </motion.g>
+
+          {/* Shell casing */}
+          <motion.g
+            animate={{ opacity: [0, 0, 1, 0], x: [0, 0, 22], y: [0, 0, -18], rotate: [0, 0, 120] }}
+            transition={{ duration: 2.8, repeat: Infinity, times: [0, 0.84, 0.87, 1] }}
+            style={{ transformOrigin: "120px 68px" }}
+          >
+            <rect x="118" y="66" width="6" height="3" rx="1" fill="rgba(128,128,128,0.45)" />
+          </motion.g>
+        </motion.g>
+
+        {/* Pelvis */}
+        <rect x="96" y="91" width="28" height="8" rx="3" fill="rgba(128,128,128,0.22)" />
+
+        {/* Left leg */}
+        <rect x="96" y="99" width="11" height="30" rx="4" fill="rgba(128,128,128,0.25)" />
+        <rect x="93" y="128" width="13" height="28" rx="4" fill="rgba(128,128,128,0.22)" />
+        <rect x="89" y="153" width="19" height="8" rx="3" fill="rgba(128,128,128,0.28)" />
+
+        {/* Right leg */}
+        <rect x="113" y="99" width="11" height="28" rx="4" fill="rgba(128,128,128,0.25)" />
+        <rect x="114" y="126" width="12" height="26" rx="4" fill="rgba(128,128,128,0.22)" />
+        <rect x="112" y="149" width="18" height="8" rx="3" fill="rgba(128,128,128,0.28)" />
+      </svg>
     </motion.div>
   );
 }
 
-function TrainingFlow() {
-  const items = ["Run", "Aim", "Shoot", "Graduate"];
-
+function TrainingSteps() {
+  const steps = ["Run", "Aim", "Shoot", "Graduate"];
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      <div className="flex items-center justify-between">
-        {items.map((item, index) => (
-          <div
-            key={item}
-            className="flex items-center"
-          >
+    <div className="flex items-center w-full max-w-xs mx-auto">
+      {steps.map((_, i) => (
+        <div key={i} className="flex items-center flex-1 last:flex-none">
+          <div className="flex flex-col items-center gap-1.5">
             <motion.div
-              animate={{
-                opacity: [0.4, 1, 0.4],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                delay: index * 0.2,
-              }}
-              className="h-5 w-5 rounded-full bg-slate-200"
+              animate={{ opacity: [0.25, 0.65, 0.25] }}
+              transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.25, ease: "easeInOut" }}
+              className="w-2.5 h-2.5 rounded-full"
+              style={{ background: "rgba(128,128,128,0.55)" }}
             />
-
-            {index < items.length - 1 && (
-              <div className="mx-2 sm:mx-4 h-1 w-10 sm:w-20 bg-slate-200 rounded-full" />
-            )}
+            <Skel w={36} h={7} opacity={0.20} delay={i * 0.1} />
           </div>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between">
-        {items.map((item) => (
-          <Skeleton
-            key={item}
-            className="h-3 w-10 sm:w-14"
-          />
-        ))}
-      </div>
+          {i < steps.length - 1 && (
+            <div className="flex-1 h-px mx-1" style={{ background: "rgba(128,128,128,0.18)" }} />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -91,146 +148,76 @@ function TrainingFlow() {
 export function LandingLoader() {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
+
       {/* Navbar */}
       <header className="border-b">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Skeleton className="h-10 w-40" />
-
-          <div className="hidden md:flex gap-6">
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-16" />
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-6">
+          <Skel w={120} h={10} />
+          <div className="hidden md:flex gap-5">
+            {[52, 68, 52, 80, 52].map((w, i) => <Skel key={i} w={w} h={8} delay={i * 0.1} />)}
           </div>
-
-          <Skeleton className="h-10 w-28" />
+          <Skel w={90} h={34} r={6} />
         </div>
       </header>
 
       {/* Hero */}
-      <section className="py-12 md:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-2 items-center">
-            <div>
-              <Skeleton className="h-5 w-32 mb-4" />
+      <section className="py-12">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-10 lg:grid-cols-2 items-center">
 
-              <Skeleton className="h-14 w-full max-w-xl mb-3" />
-              <Skeleton className="h-14 w-4/5 mb-6" />
-
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-4 w-11/12 mb-2" />
-              <Skeleton className="h-4 w-4/5 mb-8" />
-
-              <div className="flex gap-4">
-                <Skeleton className="h-12 w-40" />
-                <Skeleton className="h-12 w-32" />
+            {/* Left: text */}
+            <div className="flex flex-col gap-3">
+              <Skel w={100} h={9} />
+              <Skel w="90%" h={36} r={6} delay={0.1} />
+              <Skel w="72%" h={36} r={6} delay={0.2} />
+              <div className="mt-1 flex flex-col gap-1.5">
+                <Skel h={8} opacity={0.16} delay={0.3} />
+                <Skel w="88%" h={8} opacity={0.16} delay={0.35} />
+                <Skel w="74%" h={8} opacity={0.16} delay={0.4} />
+              </div>
+              <div className="mt-4 flex gap-3">
+                <Skel w={130} h={40} r={6} delay={0.5} />
+                <Skel w={100} h={40} r={6} opacity={0.16} delay={0.6} />
               </div>
             </div>
 
-            {/* Military Skeleton */}
-            <div className="flex flex-col items-center justify-center">
-              <CadetSkeleton />
-
-              <div className="mt-8 w-full max-w-md">
-                <TrainingFlow />
-              </div>
+            {/* Right: soldier */}
+            <div className="flex flex-col items-center gap-6">
+              <AK47Soldier />
+              <TrainingSteps />
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="py-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="pb-8">
+        <div className="mx-auto max-w-7xl px-6">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className="rounded-xl border p-6"
-              >
-                <Skeleton className="mx-auto h-8 w-20" />
-                <Skeleton className="mx-auto mt-3 h-4 w-16" />
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border p-5 flex flex-col items-center gap-2">
+                <Skel w={60} h={22} delay={i * 0.1} />
+                <Skel w={48} h={7} opacity={0.16} delay={i * 0.1 + 0.05} />
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Training Programs */}
-      <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <Skeleton className="mx-auto h-5 w-28 mb-4" />
-            <Skeleton className="mx-auto h-10 w-72 mb-4" />
-            <Skeleton className="mx-auto h-4 w-96 max-w-full" />
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border p-6"
-              >
-                <Skeleton className="h-16 w-16 rounded-xl mb-5" />
-
-                <Skeleton className="h-6 w-40 mb-4" />
-
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-5/6 mb-2" />
-                <Skeleton className="h-4 w-4/6" />
-
-                <Skeleton className="mt-6 h-10 w-full" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Courses */}
-      <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-6 md:grid-cols-3">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="overflow-hidden rounded-2xl border"
-              >
-                <Skeleton className="h-52 w-full rounded-none" />
-
-                <div className="p-5">
-                  <Skeleton className="h-6 w-3/4 mb-3" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-5/6 mb-5" />
-
-                  <Skeleton className="h-10 w-full" />
+      {/* Program cards */}
+      <section className="pb-10">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-5 md:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-2xl border p-6 flex flex-col gap-3">
+                <Skel w={40} h={40} r={8} delay={i * 0.1} />
+                <Skel w="70%" h={14} delay={i * 0.1 + 0.05} />
+                <div className="flex flex-col gap-1.5">
+                  <Skel h={8} opacity={0.16} />
+                  <Skel w="82%" h={8} opacity={0.16} />
+                  <Skel w="65%" h={8} opacity={0.16} />
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-6 md:grid-cols-3">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border p-6"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <Skeleton className="h-12 w-12 rounded-full" />
-                  <div>
-                    <Skeleton className="h-4 w-24 mb-2" />
-                    <Skeleton className="h-3 w-16" />
-                  </div>
-                </div>
-
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-4/5" />
+                <Skel h={34} r={5} opacity={0.20} delay={0.4} />
               </div>
             ))}
           </div>
@@ -238,15 +225,16 @@ export function LandingLoader() {
       </section>
 
       {/* CTA */}
-      <section className="pb-20">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl border p-10">
-            <Skeleton className="mx-auto h-10 w-80 max-w-full mb-4" />
-            <Skeleton className="mx-auto h-4 w-[500px] max-w-full mb-8" />
-            <Skeleton className="mx-auto h-12 w-48" />
+      <section className="pb-16">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="rounded-3xl border p-10 flex flex-col items-center gap-4">
+            <Skel w={260} h={22} delay={0.1} />
+            <Skel w={380} h={8} opacity={0.16} delay={0.2} />
+            <Skel w={140} h={40} r={6} delay={0.3} />
           </div>
         </div>
       </section>
+
     </div>
   );
 }

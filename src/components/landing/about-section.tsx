@@ -36,7 +36,7 @@ export function AboutSection() {
                   alt="Special academy Classroom"
                   width={600}
                   height={450}
-                  className="w-full h-[400px] object-cover"
+                  className="w-full h-[250px] sm:h-[400px] object-cover"
                   unoptimized
                 />
             </div>
@@ -58,7 +58,7 @@ export function AboutSection() {
                 <div className="w-11 h-11 rounded-lg bg-primary/5 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
                   {(() => { const Icon = valueIcons[index % valueIcons.length]; return <Icon className="w-5 h-5 text-primary group-hover:text-white transition-colors" />; })()}
                 </div>
-                <h3 className="font-semibold text-primary mb-2">{value.title}</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-primary mb-2">{value.title}</h3>
                 <p className="text-sm text-muted leading-relaxed">
                   {value.description}
                 </p>

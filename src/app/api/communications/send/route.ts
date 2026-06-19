@@ -125,9 +125,9 @@ export async function POST(request: NextRequest) {
         try {
           if (r.email) {
             const { error: sendError } = await resend.emails.send({
-              from: "Cadet Academy <onboarding@resend.dev>",
+              from: "Special Academy <onboarding@resend.dev>",
               to: r.email,
-              subject: subject || "Message from Cadet Academy",
+              subject: subject || "Message from Special Academy",
               html: replaceVariables(finalBody, { name: r.name }),
             });
 

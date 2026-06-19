@@ -49,6 +49,15 @@ export default function StudentLayout({
     else if (user.role !== "student") router.replace("/");
   }, [user, isLoading, router]);
 
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [sidebarOpen]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-accent flex">
@@ -175,7 +184,7 @@ export default function StudentLayout({
 
         <div className="p-3 border-t border-primary/5">
           <Link
-            href="/"
+            href="/?back=1"
             onClick={() => setSidebarOpen(false)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-accent hover:text-primary transition-all"
           >

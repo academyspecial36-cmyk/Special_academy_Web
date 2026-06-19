@@ -61,6 +61,15 @@ export function Navbar() {
   }, []);
 
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
+  useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
 
@@ -86,7 +95,7 @@ export function Navbar() {
       {/* Navbar */}
       <header
         className={cn(
-          "header transition-all duration-300",
+          "sticky top-0 z-50 transition-all duration-300",
           scrolled
             ? "bg-white/90 backdrop-blur-lg shadow-soft border-b border-primary/5"
             : "bg-white",
