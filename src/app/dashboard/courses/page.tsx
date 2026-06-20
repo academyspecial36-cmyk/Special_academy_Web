@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Search, Plus, Pencil, Trash2, Star, ChevronRight } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Star, ChevronRight, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { AssetPicker } from "@/components/shared/asset-picker";
 import { useAppContext } from "@/lib/app-context";
 import type { Course } from "@/types";
 import { QUALIFICATIONS } from "@/constants";
@@ -30,7 +31,7 @@ const fields: FieldConfig[] = [
     { label: "Leadership", value: "Leadership" },
   ]},
   { name: "price", label: "Price", type: "text", placeholder: "e.g. NPR 15,000" },
-  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://...", browseMedia: true },
 ];
 
 export default function DashboardCoursesPage() {
@@ -40,6 +41,9 @@ export default function DashboardCoursesPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Course | null>(null);
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+  const [assetPickerField, setAssetPickerField] = useState<string | null>(null);
+  const [externalFieldValues, setExternalFieldValues] = useState<Record<string, string> | undefined>(undefined);
 
   const filtered = courses.filter((c) =>
     c.title.toLowerCase().includes(search.toLowerCase())
@@ -197,6 +201,8 @@ export default function DashboardCoursesPage() {
         fields={fields}
         onSubmit={handleAdd}
         submitLabel="Add Course"
+        externalFieldValues={externalFieldValues}
+        onBrowseMedia={(fieldName) => { setAssetPickerField(fieldName); setAssetPickerOpen(true); }}
       />
 
       <FormModal
@@ -216,6 +222,22 @@ export default function DashboardCoursesPage() {
         } : undefined}
         onSubmit={handleEdit}
         submitLabel="Update Course"
+        externalFieldValues={externalFieldValues}
+        onBrowseMedia={(fieldName) => { setAssetPickerField(fieldName); setAssetPickerOpen(true); }}
+      />
+
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => { setAssetPickerOpen(false); setAssetPickerField(null); setExternalFieldValues(undefined); }}
+        onSelect={(file) => {
+          if (assetPickerField) {
+            setExternalFieldValues({ [assetPickerField]: file.url });
+          }
+          setAssetPickerOpen(false);
+          setAssetPickerField(null);
+          setTimeout(() => setExternalFieldValues(undefined), 100);
+        }}
+        filterMime="image/"
       />
 
       <DeleteModal

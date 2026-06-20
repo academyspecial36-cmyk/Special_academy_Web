@@ -183,14 +183,13 @@ export default function StudentLayout({
         </nav>
 
         <div className="p-3 border-t border-primary/5">
-          <Link
-            href="/?back=1"
-            onClick={() => setSidebarOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-accent hover:text-primary transition-all"
+          <button
+            onClick={() => { setSidebarOpen(false); logout(); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
           >
             <LogOut className="w-4 h-4" />
-            Back to Website
-          </Link>
+            Sign Out
+          </button>
         </div>
       </aside>
 

@@ -273,18 +273,17 @@ export default function DashboardLayout({
               </>
             )}
           </button>
-          <Link
-            href="/?back=1"
-            onClick={() => setSidebarOpen(false)}
+          <button
+            onClick={() => logout()}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all",
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white transition-all w-full",
               sidebarCollapsed ? "justify-center px-0" : ""
             )}
-            title={sidebarCollapsed ? "Back to Website" : undefined}
+            title={sidebarCollapsed ? "Sign Out" : undefined}
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            {!sidebarCollapsed && <span>Back to Website</span>}
-          </Link>
+            {!sidebarCollapsed && <span>Sign Out</span>}
+          </button>
         </div>
       </aside>
 
