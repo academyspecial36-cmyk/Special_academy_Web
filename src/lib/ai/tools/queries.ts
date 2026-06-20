@@ -137,3 +137,66 @@ export const getBlogsTool = define(
     return data ?? [];
   }
 );
+
+export const getExamResultsTool = define(
+  "getExamResults",
+  "Call this when the user asks to see/list/show results for a specific exam, or wants exam performance data. Returns student name, email, score, total marks, percentage, and pass/fail status.",
+  z.object({
+    examId: z.string().describe("The exam/category ID to get results for"),
+    limit: z.number().optional().default(50),
+  }),
+  async ({ examId, limit }) => {
+    const { data, error } = await svc()
+      .from("exam_results")
+      .select("*, students(name, email)")
+      .eq("exam_id", examId)
+      .limit(limit)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r: Record<string, unknown>) => ({
+      studentName: (r.students as Record<string, unknown> | null)?.name ?? "Unknown",
+      email: (r.students as Record<string, unknown> | null)?.email ?? "",
+      score: r.score,
+      totalMarks: r.total_marks,
+      percentage: r.total_marks ? Math.round(((r.score as number) / (r.total_marks as number)) * 1000) / 10 : undefined,
+      status: r.status,
+    }));
+  }
+);
+
+export const getStatsTool = define(
+  "getStats",
+  "Call this when the user asks for statistics, analytics, dashboard summary, counts, or 'how many' students/courses/etc. Returns counts of students, courses, enrollments, notices, FAQs, and blog posts.",
+  z.object({
+    period: z.string().optional().describe("Time period: 'all' or 'this_month'"),
+  }),
+  async ({ period }) => {
+    const svc = createServiceRoleSupabase();
+
+    const tables = ["students", "courses", "enrollments", "notices", "faqs", "blog_posts"] as const;
+    const counts: Record<string, number> = {};
+
+    for (const table of tables) {
+      let query = svc.from(table).select("*", { count: "exact", head: true });
+      if (period === "this_month") {
+        const firstOfMonth = new Date();
+        firstOfMonth.setDate(1);
+        firstOfMonth.setHours(0, 0, 0, 0);
+        query = query.gte("created_at", firstOfMonth.toISOString());
+      }
+      const { count } = await query;
+      counts[table] = count ?? 0;
+    }
+
+    return {
+      metrics: [
+        { label: "Students", value: counts.students },
+        { label: "Courses", value: counts.courses },
+        { label: "Enrollments", value: counts.enrollments },
+        { label: "Notices", value: counts.notices },
+        { label: "FAQs", value: counts.faqs },
+        { label: "Blog Posts", value: counts.blog_posts },
+      ],
+    };
+  }
+);

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
 
 export default function StudentExamsPage() {
-  const { examCategories, questions, attempts, dataLoading } = useAppContext();
+  const { examCategories, questions, attempts, examSubcategories, dataLoading, } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredCategories = useMemo(() => {
@@ -85,14 +85,16 @@ export default function StudentExamsPage() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredCategories.map((cat, i) => {
-            const count = questions.filter((q) => q.categoryId === cat.id).length;
+            const subCount = examSubcategories.filter((s) => s.categoryId === cat.id).length;
+            const attemptedSetIds = new Set(attempts.filter((a) => a.categoryId === cat.id).map((a) => a.subcategoryId).filter(Boolean));
+            const totalQ = questions.filter((q) => q.categoryId === cat.id).length;
             const allAttempts = getAttempts(cat.id);
             const lastAttempt = getLastAttempt(cat.id);
             const mcqCount = questions.filter((q) => q.categoryId === cat.id && q.type === "mcq").length;
             const attempted = allAttempts.length > 0;
             return (
               <motion.div key={cat.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Link href={attempted ? `/student/exams/${cat.id}/result` : `/student/exams/${cat.id}`} className="block group">
+                <Link href={`/student/exams/${cat.id}`} className="block group">
                   <Card className={`overflow-hidden hover:shadow-elevated transition-all h-full ${attempted ? "hover:border-emerald-200" : "hover:border-secondary/20"}`}>
                     <div className="p-5 flex flex-col h-full">
                       <div className="flex items-start justify-between mb-4">
@@ -103,7 +105,7 @@ export default function StudentExamsPage() {
                           {attempted && (
                             <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200">
                               <RotateCcw className="w-3 h-3 mr-1" />
-                              {allAttempts.length} attempt{allAttempts.length > 1 ? "s" : ""}
+                              {attemptedSetIds.size}/{subCount} sets
                             </Badge>
                           )}
                           {lastAttempt && (
@@ -122,18 +124,13 @@ export default function StudentExamsPage() {
                       <div className="flex items-center justify-between text-xs pt-3 border-t border-primary/5">
                         <span className="text-muted flex items-center gap-1">
                           <FileQuestion className="w-3.5 h-3.5" />
-                          {count} questions
+                          {subCount} sets · {totalQ} questions
                         </span>
                         <span className="text-muted flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
-                          {mcqCount} MCQ · {count - mcqCount} Subjective
+                          {mcqCount} MCQ · {totalQ - mcqCount} Subjective
                         </span>
                       </div>
-                      {attempted && (
-                        <div className="mt-3">
-                          <span className="text-xs font-medium text-emerald-600">View Results →</span>
-                        </div>
-                      )}
                     </div>
                   </Card>
                 </Link>

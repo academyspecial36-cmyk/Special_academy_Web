@@ -8,11 +8,13 @@ import {
   Upload, Plus, Search, Trash2, Pencil,
   Grid3X3, List, ChevronRight, X, ImageIcon,
   Download, Crop, Check, Loader2, Home, Play,
+  HardDrive,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
 import { WindowsFolderIcon } from "@/components/shared/windows-folder-icon";
 import type { MediaFile, MediaFolder } from "@/types/media";
@@ -50,6 +52,11 @@ export default function MediaManagerPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState(false);
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const [storageStats, setStorageStats] = useState<{ totalBytes: number; totalFiles: number; limit: number; usedPercent: number } | null>(null);
+  const [cleaningOrphans, setCleaningOrphans] = useState(false);
+  const [orphanData, setOrphanData] = useState<{ orphans: { name: string; path: string }[]; count: number } | null>(null);
+  const [orphanDeleting, setOrphanDeleting] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingFolder, setEditingFolder] = useState<MediaFolder | null>(null);
   const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
@@ -62,18 +69,20 @@ export default function MediaManagerPage() {
   const [optimizing, setOptimizing] = useState(false);
   const [deletingFolder, setDeletingFolder] = useState<MediaFolder | null>(null);
   const [deletingFiles, setDeletingFiles] = useState(false);
+  const [deletingLoading, setDeletingLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [folderRes, mediaRes] = await Promise.all([
+      const [folderRes, mediaRes, statsRes] = await Promise.all([
         fetch("/api/media/folders"),
         fetch(`/api/media?${new URLSearchParams({
           ...(currentFolderId ? { folder_id: currentFolderId } : { folder_id: "root" }),
           ...(search ? { search } : {}),
         })}`),
+        fetch("/api/media/stats"),
       ]);
 
       if (!folderRes.ok) throw new Error("Failed to load folders");
@@ -82,9 +91,10 @@ export default function MediaManagerPage() {
         throw new Error(err.error || "Failed to load media");
       }
 
-      const [foldersData, mediaData] = await Promise.all([
+      const [foldersData, mediaData, statsData] = await Promise.all([
         folderRes.json(),
         mediaRes.json(),
+        statsRes.json(),
       ]);
 
       if (!Array.isArray(foldersData)) throw new Error("Invalid folders response");
@@ -92,6 +102,9 @@ export default function MediaManagerPage() {
 
       setFolders(foldersData);
       setMedia(mediaData);
+      if (statsData && typeof statsData.totalBytes === "number") {
+        setStorageStats(statsData);
+      }
     } catch (e) {
       toast.error((e as Error).message);
       setMedia([]);
@@ -216,18 +229,22 @@ export default function MediaManagerPage() {
 
   async function confirmDeleteFiles() {
     if (!selected.size) return;
-    setDeletingFiles(true);
+    setDeletingLoading(true);
     try {
-      for (const id of selected) {
-        await fetch(`/api/media/${id}`, { method: "DELETE" });
-      }
+      const res = await fetch("/api/media/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error("Failed to delete files");
       setSelected(new Set());
       setDeletingFiles(false);
       toast.success("Deleted");
       fetchData();
     } catch (e) {
       toast.error((e as Error).message);
-      setDeletingFiles(false);
+    } finally {
+      setDeletingLoading(false);
     }
   }
 
@@ -264,6 +281,63 @@ export default function MediaManagerPage() {
       fetchData();
     } catch (e) {
       toast.error((e as Error).message);
+    }
+  }
+
+  async function handleCleanupOrphans() {
+    setCleaningOrphans(true);
+    try {
+      const res = await fetch("/api/media/cleanup", { method: "POST" });
+      if (!res.ok) throw new Error("Failed to scan orphans");
+      const data = await res.json();
+      setOrphanData(data);
+      if (data.count === 0) toast.success("No orphaned files found");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setCleaningOrphans(false);
+    }
+  }
+
+  async function confirmDeleteOrphans() {
+    if (!orphanData || orphanData.count === 0) return;
+    setOrphanDeleting(true);
+    try {
+      const res = await fetch("/api/media/cleanup", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: orphanData.orphans.map((o) => o.path) }),
+      });
+      if (!res.ok) throw new Error("Failed to delete orphans");
+      toast.success(`Cleaned up ${orphanData.count} orphaned file${orphanData.count > 1 ? "s" : ""}`);
+      setOrphanData(null);
+      fetchData();
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setOrphanDeleting(false);
+    }
+  }
+
+  async function handleBackup() {
+    setBackingUp(true);
+    try {
+      const res = await fetch("/api/media/backup");
+      if (!res.ok) throw new Error("Failed to create backup");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `media-backup-${new Date().toISOString().split("T")[0]}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Backup downloaded");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBackingUp(false);
     }
   }
 
@@ -343,6 +417,41 @@ export default function MediaManagerPage() {
 
   return (
     <div ref={dropRef}>
+      {/* Storage Info */}
+      <div className="mb-4 p-3 rounded-xl border border-primary/5 bg-gradient-to-r from-primary/[0.02] to-transparent">
+        <div className="flex items-center gap-3 mb-2">
+          <HardDrive className="w-4 h-4 text-primary shrink-0" />
+          <span className="text-xs text-muted">
+            {storageStats
+              ? `${formatSize(storageStats.totalBytes)} used across ${storageStats.totalFiles} file${storageStats.totalFiles !== 1 ? "s" : ""}`
+              : "Loading storage stats..."}
+          </span>
+          <div className="flex-1" />
+          <Button size="sm" variant="outline" className="text-[11px] h-7 px-2" onClick={handleBackup} disabled={backingUp}>
+            {backingUp ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
+            Backup
+          </Button>
+          <Button size="sm" variant="outline" className="text-[11px] h-7 px-2" onClick={handleCleanupOrphans} disabled={cleaningOrphans}>
+            {cleaningOrphans ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Trash2 className="w-3 h-3 mr-1" />}
+            Cleanup
+          </Button>
+        </div>
+        {storageStats && storageStats.limit > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-all",
+                  storageStats.usedPercent > 90 ? "bg-red-500" : storageStats.usedPercent > 70 ? "bg-yellow-500" : "bg-primary"
+                )}
+                style={{ width: `${Math.min(storageStats.usedPercent, 100)}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-muted whitespace-nowrap">{storageStats.usedPercent}% of {formatSize(storageStats.limit)}</span>
+          </div>
+        )}
+      </div>
+
       {/* Header */}
       <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -771,8 +880,39 @@ export default function MediaManagerPage() {
         title="Delete Files"
         message={`Delete ${selected.size} file${selected.size > 1 ? "s" : ""}?`}
         onConfirm={confirmDeleteFiles}
-        loading={deletingFiles}
+        loading={deletingLoading}
       />
+      <Modal
+        open={!!orphanData && orphanData.count > 0}
+        onClose={() => !orphanDeleting && setOrphanData(null)}
+        title="Orphaned Files Found"
+        maxWidth="max-w-2xl"
+      >
+        {orphanData && (
+          <>
+            <p className="text-sm text-muted mb-3">
+              {orphanData.count} file{orphanData.count > 1 ? "s" : ""} in storage {orphanData.count > 1 ? "are" : "is"} not tracked in the database.
+              {orphanData.count > 0 && " These can be safely deleted."}
+            </p>
+            <div className="max-h-60 overflow-y-auto border border-primary/5 rounded-lg divide-y divide-primary/5 mb-4">
+              {orphanData.orphans.map((o) => (
+                <div key={o.path} className="flex items-center gap-2 px-3 py-1.5 text-xs text-muted">
+                  <Trash2 className="w-3 h-3 shrink-0 text-red-400" />
+                  <span className="truncate flex-1">{o.path}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setOrphanData(null)} disabled={orphanDeleting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteOrphans} disabled={orphanDeleting}>
+                {orphanDeleting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Deleting...</> : `Delete ${orphanData.count} file${orphanData.count > 1 ? "s" : ""}`}
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

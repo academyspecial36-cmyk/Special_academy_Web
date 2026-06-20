@@ -4,6 +4,16 @@ import type { AIToolDefinition } from "@/types/ai";
 
 const svc = () => createServiceRoleSupabase();
 
+export const logoutTool: AIToolDefinition = {
+  name: "logout",
+  description: "Log the current admin out of the system. Call this when the user says 'logout', 'sign out', or 'log me out'.",
+  parameters: { type: "object", properties: {}, required: [] },
+  requiresConfirmation: false,
+  handler: async (_args, _userId) => {
+    return { success: true, data: { logout: true, redirectTo: "/login" } };
+  },
+};
+
 export const enableMaintenanceTool: AIToolDefinition = {
   name: "enableMaintenance",
   description: "Enable maintenance mode. Shows maintenance page to visitors.",

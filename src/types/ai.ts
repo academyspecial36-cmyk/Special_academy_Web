@@ -42,7 +42,9 @@ export type ResponseType =
   | "confirmation_card"
   | "action_result"
   | "error_card"
-  | "analytics_card";
+  | "analytics_card"
+  | "course_table"
+  | "exam_results_table";
 
 export interface AIResponseBlock {
   type: ResponseType;
@@ -240,6 +242,34 @@ export interface AnalyticsCardData {
   }>;
 }
 
+export interface CourseTableData {
+  title?: string;
+  courses: Array<{
+    id?: string;
+    title?: string;
+    description?: string;
+    duration?: string;
+    category?: string;
+    price?: string;
+    features?: string[];
+    image?: string;
+    is_popular?: boolean;
+  }>;
+}
+
+export interface ExamResultsTableData {
+  title?: string;
+  examTitle?: string;
+  results: Array<{
+    studentName?: string;
+    email?: string;
+    score?: number;
+    totalMarks?: number;
+    percentage?: number;
+    status?: string;
+  }>;
+}
+
 export type BlockDataMap = {
   notice_draft: NoticeDraftData;
   course_draft: CourseDraftData;
@@ -255,4 +285,6 @@ export type BlockDataMap = {
   knowledge_answer: KnowledgeAnswerData;
   faq_draft: FAQDraftData;
   blog_draft: BlogDraftData;
+  course_table: CourseTableData;
+  exam_results_table: ExamResultsTableData;
 };

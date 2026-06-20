@@ -28,14 +28,13 @@ export const sections: GuideSection[] = [
     title: "Logging In (Admin Portal)",
     icon: LogIn,
     steps: [
-      { step: "1", title: "Open the Admin Login Screen", desc: 'Go to your public website. There are two ways to open the hidden admin login modal: (A) Press Ctrl + Shift + K on your keyboard at the same time. OR (B) Click the academy logo in the top-left corner 5 times quickly. A passcode screen will appear.' },
-      { step: "2", title: "Enter the Admin Passcode", desc: 'Type the admin passcode into the input field. The default passcode is admin@123 (your academy may have changed this during setup). Click the "Verify Passcode" button to proceed to the login form.' },
-      { step: "3", title: "Sign In with Email & Password", desc: 'Enter your admin email address and password that were created during initial setup. Click the "Sign In" button.' },
-      { step: "4", title: "You Are Now Logged In", desc: "On successful login, you will be redirected to the Admin Dashboard at /dashboard. Note: For security, admin sessions do not persist across browser restarts. You will need to log in again if you close your browser." },
+      { step: "1", title: "Open the Admin Login Screen", desc: 'Go to your public website and navigate to /login, or press Ctrl + Shift + A on your keyboard to open the admin login modal directly.' },
+      { step: "2", title: "Enter Admin Credentials", desc: 'Enter your admin email and password, then click "Sign In". You will be redirected to the admin dashboard.' },
+      { step: "3", title: "You Are Now Logged In", desc: "On successful login, you will be redirected to the Admin Dashboard at /dashboard." },
     ],
     tips: [
-      "If the passcode does not work, contact your system administrator — it may have been changed via the ADMIN_PASSCODE environment variable.",
-      "Do NOT use the public login page at /login — that is for students only. The admin login is a hidden modal only accessible via the methods above.",
+      "If you cannot log in, contact your system administrator to verify your admin account credentials.",
+      "Admin accounts are created via the /api/setup/admin endpoint (requires SETUP_SECRET) or directly through the Supabase dashboard.",
     ],
   },
   {

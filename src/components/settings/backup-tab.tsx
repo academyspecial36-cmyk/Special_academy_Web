@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, Upload, Cloud, Clock, AlertTriangle, Save, Loader2, History, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
+import { Download, Upload, Cloud, Clock, AlertTriangle, Save, Loader2, History, CheckCircle2, XCircle, RefreshCw, HardDrive, Archive } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 interface BackupConfig {
   autoBackup: { enabled: boolean; frequency: string; lastBackup: string | null };
@@ -27,10 +33,29 @@ interface BackupTabProps {
 }
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+// Only notify once per session per 24h window
+let upcomingNotified = false;
 
 export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBackupHistory, savingSettings, handleSave }: BackupTabProps) {
   const [backingUp, setBackingUp] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [storageStats, setStorageStats] = useState<{ totalBytes: number; totalFiles: number; limit: number; usedPercent: number } | null>(null);
+  const [mediaBackingUp, setMediaBackingUp] = useState(false);
+
+  // Fetch stats, history, and DB-backed config on mount
+  useEffect(() => {
+    fetch("/api/media/stats").then(r => r.ok && r.json()).then(d => setStorageStats(d)).catch(() => {});
+    fetch("/api/backup?action=history").then(r => r.ok && r.json()).then(h => { if (Array.isArray(h)) setBackupHistory(() => h); }).catch(() => {});
+    fetch("/api/backup?action=check-auto").then(r => r.ok && r.json()).then(c => {
+      if (c?.lastBackup) {
+        setBackupConfig((p) => ({
+          ...p,
+          autoBackup: { ...p.autoBackup, lastBackup: c.lastBackup, enabled: c.enabled },
+        }));
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Weekly auto-backup check
   useEffect(() => {
@@ -46,22 +71,39 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [backupConfig.autoBackup.enabled, backupConfig.autoBackup.lastBackup]);
+  }, [backupConfig.autoBackup.enabled, backupConfig.autoBackup.lastBackup]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Periodic check every hour for weekly backup
+  // Periodic check every hour for weekly backup + 1-day-before notification
   useEffect(() => {
     if (!backupConfig.autoBackup.enabled) return;
 
-    const interval = setInterval(() => {
+    const check = () => {
       const lastBackup = backupConfig.autoBackup.lastBackup;
-      const needsBackup = !lastBackup || (Date.now() - new Date(lastBackup).getTime() >= ONE_WEEK_MS);
-      if (needsBackup) {
+      if (!lastBackup) return;
+
+      const last = new Date(lastBackup).getTime();
+      const nextDue = last + ONE_WEEK_MS;
+      const msUntilDue = nextDue - Date.now();
+
+      // 1-day-before notification (once per session)
+      if (msUntilDue > 0 && msUntilDue <= ONE_DAY_MS && !upcomingNotified) {
+        upcomingNotified = true;
+        toast.warning("Auto-backup due within 24 hours", {
+          description: "The weekly auto-backup will run soon. Ensure you are online.",
+        });
+        fetch("/api/backup?action=notify-upcoming", { method: "POST" }).catch(() => {});
+      }
+
+      // Run if due
+      if (Date.now() - last >= ONE_WEEK_MS) {
         performCloudBackup("automatic");
       }
-    }, 60 * 60 * 1000);
+    };
 
+    check();
+    const interval = setInterval(check, 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [backupConfig.autoBackup.enabled, backupConfig.autoBackup.lastBackup]);
+  }, [backupConfig.autoBackup.enabled, backupConfig.autoBackup.lastBackup]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function performCloudBackup(type: string) {
     try {
@@ -104,6 +146,29 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
     setBackingUp(true);
     await performCloudBackup("manual");
     setBackingUp(false);
+  }
+
+  async function handleToggleAutoBackup() {
+    const newEnabled = !backupConfig.autoBackup.enabled;
+    setBackupConfig((p) => ({ ...p, autoBackup: { ...p.autoBackup, enabled: newEnabled } }));
+    try {
+      const res = await fetch("/api/backup?action=save-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          autoBackup: {
+            enabled: newEnabled,
+            frequency: backupConfig.autoBackup.frequency,
+            lastBackup: backupConfig.autoBackup.lastBackup,
+          },
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      toast.success(newEnabled ? "Auto-backup enabled" : "Auto-backup disabled");
+    } catch {
+      setBackupConfig((p) => ({ ...p, autoBackup: { ...p.autoBackup, enabled: !newEnabled } }));
+      toast.error("Failed to save backup setting");
+    }
   }
 
   return (
@@ -181,6 +246,50 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
       </Card>
 
       <Card>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><HardDrive className="w-4 h-4 text-secondary" /> Media Storage</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          {storageStats ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <HardDrive className="w-4 h-4 text-primary shrink-0" />
+                <span className="text-xs text-muted">{formatSize(storageStats.totalBytes)} used across {storageStats.totalFiles} files</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-2 bg-primary/10 rounded-full overflow-hidden">
+                  <div className={cn("h-full rounded-full", storageStats.usedPercent > 90 ? "bg-red-500" : storageStats.usedPercent > 70 ? "bg-yellow-500" : "bg-primary")} style={{ width: `${Math.min(storageStats.usedPercent, 100)}%` }} />
+                </div>
+                <span className="text-[10px] text-muted whitespace-nowrap">{storageStats.usedPercent}% of {formatSize(storageStats.limit)}</span>
+              </div>
+              <Button size="sm" variant="outline" onClick={async () => {
+                setMediaBackingUp(true);
+                try {
+                  const res = await fetch("/api/media/backup");
+                  if (!res.ok) throw new Error("Backup failed");
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `media-backup-${new Date().toISOString().split("T")[0]}.zip`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("Media backup downloaded");
+                } catch (e) {
+                  toast.error((e as Error).message);
+                } finally {
+                  setMediaBackingUp(false);
+                }
+              }} disabled={mediaBackingUp}>
+                {mediaBackingUp ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Archive className="w-4 h-4 mr-1" />}
+                Download All Media
+              </Button>
+            </div>
+          ) : (
+            <p className="text-xs text-muted">Loading storage stats...</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle className="text-base flex items-center gap-2"><Clock className="w-4 h-4 text-secondary" /> Automatic Backup</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -190,7 +299,7 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
             </div>
             <ToggleSwitch
               checked={backupConfig.autoBackup.enabled}
-              onChange={() => setBackupConfig((p) => ({ ...p, autoBackup: { ...p.autoBackup, enabled: !p.autoBackup.enabled } }))}
+              onChange={handleToggleAutoBackup}
             />
           </div>
           {backupConfig.autoBackup.lastBackup ? (
@@ -198,9 +307,23 @@ export function BackupTab({ backupConfig, setBackupConfig, backupHistory, setBac
               <RefreshCw className="w-3 h-3" />
               Last auto-backup: {new Date(backupConfig.autoBackup.lastBackup).toLocaleString()}
               {backupConfig.autoBackup.enabled && (
-                <span className="text-emerald-600 font-medium">
-                  · Next: {new Date(new Date(backupConfig.autoBackup.lastBackup).getTime() + ONE_WEEK_MS).toLocaleDateString()}
-                </span>
+                <>
+                  <span className="text-emerald-600 font-medium">
+                    · Next: {new Date(new Date(backupConfig.autoBackup.lastBackup).getTime() + ONE_WEEK_MS).toLocaleDateString()}
+                  </span>
+                  {(() => {
+                    const msUntilDue = new Date(backupConfig.autoBackup.lastBackup).getTime() + ONE_WEEK_MS - Date.now();
+                    if (msUntilDue > 0 && msUntilDue <= ONE_DAY_MS) {
+                      const hours = Math.ceil(msUntilDue / (60 * 60 * 1000));
+                      return (
+                        <span className="text-amber-600 font-medium">
+                          · Due in {hours}h
+                        </span>
+                      );
+                    }
+                    return null;
+                  })()}
+                </>
               )}
             </div>
           ) : (

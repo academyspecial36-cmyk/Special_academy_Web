@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Lock, KeyRound, LogIn, X, Mail, Eye, EyeOff } from "lucide-react";
+import { Shield, LogIn, X, Mail, Eye, EyeOff, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
@@ -13,74 +13,37 @@ export function AdminAuthModal() {
   const router = useRouter();
   const { login } = useAuth();
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"passcode" | "login">("passcode");
-  const [passcode, setPasscode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPasscode, setShowPasscode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const shortcutKey = (process.env.NEXT_PUBLIC_ADMIN_SHORTCUT_KEY || "").toUpperCase();
-
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === shortcutKey) {
+    if (e.ctrlKey && e.shiftKey && e.key.toUpperCase() === "A") {
       e.preventDefault();
       setOpen((prev) => !prev);
-      setStep("passcode");
-      setPasscode("");
       setEmail("");
       setPassword("");
       setError("");
     }
-  }, [shortcutKey]);
+  }, []);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
-    function handleCustom() { setOpen(true); setStep("passcode"); setPasscode(""); setError(""); }
-    window.addEventListener("open-admin-modal", handleCustom);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("open-admin-modal", handleCustom);
     };
   }, [handleKeyDown]);
 
   function close() {
     setOpen(false);
-    setStep("passcode");
-    setPasscode("");
     setEmail("");
     setPassword("");
     setError("");
   }
 
-  async function handlePasscodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const res = await fetch("/api/verify-passcode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passcode }),
-      });
-      const data = await res.json();
-      if (data.valid) {
-        setStep("login");
-        setPasscode("");
-      } else {
-        setError("Invalid passcode");
-      }
-    } catch {
-      setError("Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleLoginSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -122,19 +85,11 @@ export function AdminAuthModal() {
               {/* Header */}
               <div className="bg-primary p-6 text-white text-center">
                 <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3">
-                  {step === "passcode" ? (
-                    <KeyRound className="w-7 h-7" />
-                  ) : (
-                    <Shield className="w-7 h-7" />
-                  )}
+                  <Shield className="w-7 h-7" />
                 </div>
-                <h2 className="text-xl font-bold">
-                  {step === "passcode" ? "Admin Access" : "Admin Login"}
-                </h2>
+                <h2 className="text-xl font-bold">Admin Login</h2>
                 <p className="text-sm text-white/70 mt-1">
-                  {step === "passcode"
-                    ? "Enter the admin passcode to continue"
-                    : "Sign in with your admin credentials"}
+                  Sign in with your admin credentials
                 </p>
                 <button
                   onClick={close}
@@ -146,87 +101,49 @@ export function AdminAuthModal() {
 
               {/* Body */}
               <div className="p-6">
-                {step === "passcode" ? (
-                  <form onSubmit={handlePasscodeSubmit} className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-primary mb-1.5 block">Passcode</label>
-                      <div className="relative">
-                        <Input
-                          type={showPasscode ? "text" : "password"}
-                          placeholder="Enter admin passcode"
-                          value={passcode}
-                          onChange={(e) => setPasscode(e.target.value)}
-                          className="pr-10"
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPasscode(!showPasscode)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
-                        >
-                          {showPasscode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-primary mb-1.5 block">Email</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                      <Input
+                        type="email"
+                        placeholder="admin@email.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        autoFocus
+                      />
                     </div>
-                    {error && (
-                      <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
-                    )}
-                    <Button type="submit" className="w-full" disabled={loading || !passcode}>
-                      <Lock className="w-4 h-4 mr-2" />
-                      {loading ? "Verifying..." : "Verify Passcode"}
-                    </Button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleLoginSubmit} className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-primary mb-1.5 block">Email</label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                        <Input
-                          type="email"
-                          placeholder="admin@email.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          className="pl-10"
-                          autoFocus
-                        />
-                      </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-primary mb-1.5 block">Password</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Admin password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-primary mb-1.5 block">Password</label>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Admin password"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className="pr-10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-primary transition-colors"
-                        >
-                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    </div>
-                    {error && (
-                      <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
-                    )}
-                    <Button type="submit" className="w-full" disabled={loading || !email || !password}>
-                      <LogIn className="w-4 h-4 mr-2" />
-                      {loading ? "Signing in..." : "Sign In"}
-                    </Button>
-                    <button
-                      type="button"
-                      onClick={() => { setStep("passcode"); setError(""); }}
-                      className="text-xs text-muted hover:text-primary w-full text-center transition-colors"
-                    >
-                      ← Back to passcode
-                    </button>
-                  </form>
-                )}
+                  </div>
+                  {error && (
+                    <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+                  )}
+                  <Button type="submit" className="w-full" disabled={loading || !email || !password}>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
               </div>
             </motion.div>
           </motion.div>

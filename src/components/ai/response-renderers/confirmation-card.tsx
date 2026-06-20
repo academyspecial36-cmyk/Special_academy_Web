@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ResponseRenderer } from "./renderer";
+import type { AIResponseBlock } from "@/types/ai";
 
 interface ConfirmationCardData {
   title?: string;
@@ -17,6 +19,7 @@ interface ConfirmationCardData {
   _toolName?: string;
   _toolArgs?: Record<string, unknown>;
   _conversationId?: string;
+  blocks?: AIResponseBlock[];
 }
 
 export function ConfirmationCardRenderer({
@@ -24,7 +27,7 @@ export function ConfirmationCardRenderer({
   onConfirmTool,
 }: {
   data: ConfirmationCardData;
-  onConfirmTool?: (result: { success: boolean; message: string; result?: unknown }) => void;
+  onConfirmTool?: (result: { success: boolean; message: string; result?: unknown; blocks?: AIResponseBlock[] }) => void;
 }) {
   const [isConfirming, setIsConfirming] = useState(false);
   const [isDone, setIsDone] = useState(false);
@@ -62,19 +65,20 @@ export function ConfirmationCardRenderer({
         }),
       });
 
+      const body = await res.json();
       if (!res.ok) {
-        const err = await res.json().catch(() => null);
-        throw new Error(err?.error ?? "Failed to confirm action");
+        throw new Error(body?.error ?? "Failed to confirm action");
       }
 
-      const result = await res.json();
+      const followUpBlocks = body?.blocks ?? [];
       setIsDone(true);
       onConfirmTool?.({
-        success: result?.result?.success ?? true,
-        message: data.action
+        success: body?.result?.success ?? true,
+        message: body?.followUp || (data.action
           ? `${data.action} completed successfully`
-          : "Action completed",
-        result: result?.result,
+          : "Action completed"),
+        result: body?.result,
+        blocks: followUpBlocks,
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";

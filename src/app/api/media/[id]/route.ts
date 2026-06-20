@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { extractStoragePath } from "@/lib/storage-cleanup";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -46,9 +47,9 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     const { data: record } = await supabase.from("media").select("url").eq("id", id).single();
     if (record?.url) {
-      const urlPath = record.url.split("/").pop();
-      if (urlPath) {
-        await supabase.storage.from("media").remove([urlPath]);
+      const info = extractStoragePath(record.url);
+      if (info) {
+        await supabase.storage.from(info.bucket).remove([info.path]);
       }
     }
 

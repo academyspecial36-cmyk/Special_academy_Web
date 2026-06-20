@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,7 +11,6 @@ import {
   LogIn,
   LogOut,
   ChevronRight,
-  User,
   LayoutDashboard,
 } from "lucide-react";
 import { NAV_ITEMS } from "@/constants";
@@ -23,22 +22,7 @@ import { useAuth } from "@/lib/auth-context";
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const tapCount = useRef(0);
-  const tapTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const { user, isAuthenticated, logout } = useAuth();
-
-  function handleLogoTap() {
-    tapCount.current += 1;
-    if (tapTimer.current) clearTimeout(tapTimer.current);
-    if (tapCount.current >= 5) {
-      tapCount.current = 0;
-      window.dispatchEvent(new CustomEvent("open-admin-modal"));
-      return;
-    }
-    tapTimer.current = setTimeout(() => {
-      tapCount.current = 0;
-    }, 2000);
-  }
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { settings } = useAppContext();
@@ -104,31 +88,26 @@ export function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <div
-              onClick={handleLogoTap}
-              className="flex items-center gap-2.5 group cursor-pointer"
-            >
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="w-9 h-9 relative">
-                  <Image
-                    src={settings?.appIcon || "/icon-image.png"}
-                    alt="Special academy"
-                    width={36}
-                    height={36}
-                    className="object-contain"
-                    unoptimized
-                  />
-                </div>
-              </Link>
-              <Link href="/" className="flex flex-col">
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 relative">
+                <Image
+                  src={settings?.appIcon || "/icon-image.png"}
+                  alt="Special academy"
+                  width={36}
+                  height={36}
+                  className="object-contain"
+                  unoptimized
+                />
+              </div>
+              <div className="flex flex-col">
                 <span className="text-primary font-bold text-lg leading-tight tracking-tight">
                   {settings?.academyName}
                 </span>
                 <span className="text-[10px] text-muted leading-tight tracking-wide uppercase">
                   {settings?.tagline}
                 </span>
-              </Link>
-            </div>
+              </div>
+            </Link>
 
             {/* Desktop Nav */}
             <nav className="hidden lg:flex items-center gap-1">

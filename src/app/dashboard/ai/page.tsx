@@ -7,9 +7,10 @@ import { ConversationHistory } from "@/components/ai/conversation-history";
 import { ContextPanel } from "@/components/ai/context-panel";
 import { CommandPalette } from "@/components/ai/command-palette";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { UsageModal } from "@/components/ai/usage-modal";
 import { apiList, apiDelete } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
-import { Menu, X, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { Menu, X, PanelRightOpen, PanelRightClose, BarChart3 } from "lucide-react";
 import type { AIConversation, PageContext } from "@/types/ai";
 
 export default function AICommandCenterPage() {
@@ -23,6 +24,7 @@ export default function AICommandCenterPage() {
   const [loading, setLoading] = useState(true);
   const [pendingCommand, setPendingCommand] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [showUsage, setShowUsage] = useState(false);
 
   const context: PageContext = {
     route: pathname,
@@ -142,7 +144,7 @@ export default function AICommandCenterPage() {
         {/* Main Chat */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Mobile top bar */}
-          <div className="flex lg:hidden items-center gap-2 px-3 py-2 border-b border-primary/5 bg-white shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-primary/5 bg-white shrink-0">
             <button
               onClick={() => setMobileHistory(true)}
               className="p-1.5 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors"
@@ -153,6 +155,13 @@ export default function AICommandCenterPage() {
               {activeId ? "AI Command" : "New Chat"}
             </span>
             <div className="ml-auto flex items-center gap-1">
+              <button
+                onClick={() => setShowUsage(true)}
+                className="p-1.5 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors"
+                title="View usage"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setShowActions((p) => !p)}
                 className="p-1.5 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors lg:hidden"
@@ -235,7 +244,16 @@ export default function AICommandCenterPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </button>
+        <button
+          onClick={() => setShowUsage(true)}
+          className="w-9 h-9 rounded-lg bg-white border border-primary/10 shadow-sm flex items-center justify-center text-muted hover:text-primary hover:border-primary/30 transition-colors"
+          title="View usage"
+        >
+          <BarChart3 className="w-4 h-4" />
+        </button>
       </div>
+
+      <UsageModal open={showUsage} onClose={() => setShowUsage(false)} />
 
       {/* Command Palette */}
       <CommandPalette

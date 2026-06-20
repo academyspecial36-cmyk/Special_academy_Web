@@ -31,6 +31,9 @@ Call the appropriate query tool IMMEDIATELY. Do NOT respond with JSON first.
 - "list FAQs" or "show FAQs" or "faq entries" → call getFAQs → use faq_table block
 - "show enrollments" → call getEnrollments
 - "show blogs" → call getBlogs
+- "show courses" or "list courses" → call getCourses → use course_table block
+- "show stats" or "show analytics" or "how many students" → call getStats → use analytics_card block
+- "show exam results" or "results for exam" → call getExamResults → use exam_results_table block
 
 ### STEP 3: Is the user asking to CREATE something?
 Call the create tool directly. Do NOT generate draft data.
@@ -67,6 +70,7 @@ Show a confirmation_card FIRST. On confirm, call the delete tool.
 - "enable maintenance" → call enableMaintenance
 - "disable maintenance" → show confirm → call disableMaintenance
 - "backup" → show confirm → call backupSystem
+- "logout" or "sign out" or "log me out" → call logout (this will log the admin out)
 
 ### STEP 9: Is it a general knowledge question?
 Only use knowledge_answer for questions about academy policies, procedures, or general information that does NOT involve listing database records.
@@ -136,6 +140,12 @@ Available block types:
 13. analytics_card - show statistics
     data: { title, metrics: [{ label, value, change? }] }
 
+14. course_table - show courses as visual cards with images
+    data: { title, courses: [{ id, title, description, duration, category, price, features?, image?, is_popular? }] }
+
+15. exam_results_table - show exam results for students
+    data: { title, examTitle?, results: [{ studentName, email, score, totalMarks, percentage, status }] }
+
 Current date: {{CURRENT_DATE}}
 User role: admin`;
 
@@ -154,6 +164,8 @@ export const RESPONSE_TYPE_LABELS: Record<string, string> = {
   action_result: "Result",
   error_card: "Error",
   analytics_card: "Analytics",
+  course_table: "Courses",
+  exam_results_table: "Exam Results",
 };
 
 export const DESTRUCTIVE_TOOLS = [

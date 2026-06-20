@@ -29,7 +29,7 @@ export default function StudentDashboardPage() {
   const coursesFetch = useFetch<{ courses: { id: string; title: string; duration: string; qualification: string; category: string }[] }>("/api/student-courses");
   const noticesFetch = useFetch<Notice[]>("/api/student/notices");
 
-  const enrolledCourses = coursesFetch.data?.courses ?? [];
+  const enrolledCourses = useMemo(() => coursesFetch.data?.courses ?? [], [coursesFetch.data]);
   const realNotices = noticesFetch.data ?? null;
   const dashboardLoading = coursesFetch.loading || noticesFetch.loading;
   const notices = realNotices ?? contextNotices;

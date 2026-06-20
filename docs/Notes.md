@@ -1,6 +1,6 @@
 opencode -s ses_15009b119ffeBdhDf8mTrm2rV6
 
-
+ok I need another change in database table and in logic for student and admin, there will be change on exam section, the main category, as exam category inside exam category, I need subcategory I must able to create sets or like GK-Set-1, inside this I will add questions, also same logic when student take the exam select main category than sets and thye will give exam also you need change this in result process, update UI, database table and logic, also don't forgot provide the sql 
 
 export default defineConfig({
   use: {

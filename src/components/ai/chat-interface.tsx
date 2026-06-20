@@ -187,6 +187,15 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
                   case "tool_result": {
                     const tr = data.toolResult as { name: string; result: unknown } | undefined;
                     if (tr) {
+                      // Handle logout tool
+                      if (tr.name === "logout") {
+                        try {
+                          await fetch("/api/auth/logout", { method: "POST" });
+                        } catch {}
+                        window.location.href = "/login";
+                        return;
+                      }
+
                       setMessages((prev) => [
                         ...prev,
                         {
@@ -289,7 +298,7 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
     sendMessage(input.trim());
   }, [input, sendMessage]);
 
-  const handleConfirmTool = useCallback((result: { success: boolean; message: string; result?: unknown }) => {
+  const handleConfirmTool = useCallback((result: { success: boolean; message: string; result?: unknown; blocks?: AIResponseBlock[] }) => {
     setMessages((prev) => [
       ...prev,
       {
@@ -297,9 +306,11 @@ export function ChatInterface({ pathname, conversationId, onConversationChange, 
         role: "assistant",
         content: result.message,
         tool_name: result.success ? undefined : "error",
-        blocks: result.success
-          ? [{ type: "action_result", data: { success: true, title: "Action Completed", message: result.message } }]
-          : [{ type: "action_result", data: { success: false, title: "Action Failed", message: result.message } }],
+        blocks: result.blocks && result.blocks.length > 0
+          ? result.blocks
+          : result.success
+            ? [{ type: "action_result", data: { success: true, title: "Action Completed", message: result.message } }]
+            : [{ type: "action_result", data: { success: false, title: "Action Failed", message: result.message } }],
       },
     ]);
   }, []);

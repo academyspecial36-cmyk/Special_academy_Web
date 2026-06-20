@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { extractStoragePath } from "@/lib/storage-cleanup";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,12 +24,56 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
 }
 
+async function collectDescendantFolderIds(supabase: ReturnType<typeof createServiceRoleSupabase>, folderId: string): Promise<string[]> {
+  const ids = [folderId];
+  const queue = [folderId];
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    const { data: children } = await supabase
+      .from("media_folders")
+      .select("id")
+      .eq("parent_id", currentId);
+    if (children) {
+      for (const child of children) {
+        ids.push(child.id);
+        queue.push(child.id);
+      }
+    }
+  }
+  return ids;
+}
+
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const supabase = createServiceRoleSupabase();
-    const { error } = await supabase.from("media_folders").delete().eq("id", id);
+
+    const allFolderIds = await collectDescendantFolderIds(supabase, id);
+
+    const { data: files } = await supabase
+      .from("media")
+      .select("id, url")
+      .in("folder_id", allFolderIds);
+
+    if (files) {
+      for (const file of files) {
+        if (file.url) {
+          const info = extractStoragePath(file.url);
+          if (info) {
+            await supabase.storage.from(info.bucket).remove([info.path]);
+          }
+        }
+      }
+    }
+
+    if (files && files.length > 0) {
+      const fileIds = files.map((f) => f.id);
+      await supabase.from("media").delete().in("id", fileIds);
+    }
+
+    const { error } = await supabase.from("media_folders").delete().in("id", allFolderIds);
     if (error) throw error;
+
     return NextResponse.json({ success: true });
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });

@@ -30,23 +30,6 @@ export default function LoginPage() {
 
     if (result.success) {
       if (result.role === "student") {
-        try {
-          const res = await fetch("/api/enrollment-status");
-          if (res.ok) {
-            const data = await res.json();
-            if (data.status !== "approved") {
-              const { getSupabase } = await import("@/lib/supabase");
-              await getSupabase()?.auth.signOut();
-              setError("Your account is not yet approved. Please contact 986-0302036 for assistance.");
-              return;
-            }
-          }
-        } catch {
-          const { getSupabase } = await import("@/lib/supabase");
-          await getSupabase()?.auth.signOut();
-          setError("Unable to verify enrollment status. Please try again.");
-          return;
-        }
         window.location.href = "/student";
       } else {
         window.location.href = "/dashboard";
@@ -71,7 +54,7 @@ export default function LoginPage() {
               </div>
               <h1 className="text-2xl font-bold text-primary">Welcome Back</h1>
               <p className="text-sm text-muted mt-1">
-                Sign in to your student account
+                Sign in to your account
               </p>
             </div>
 

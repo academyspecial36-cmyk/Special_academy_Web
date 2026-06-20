@@ -11,15 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormModal, type FieldConfig } from "@/components/ui/form-modal";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { AssetPicker } from "@/components/shared/asset-picker";
 import { useAppContext } from "@/lib/app-context";
 import type { FacultyMember } from "@/types";
+import type { MediaFile } from "@/types/media";
 
 const fields: FieldConfig[] = [
   { name: "name", label: "Full Name", type: "text", required: true, placeholder: "e.g. John Doe" },
   { name: "role", label: "Role", type: "text", required: true, placeholder: "e.g. Head of Academics" },
   { name: "qualification", label: "Qualification", type: "text", required: true, placeholder: "e.g. M.Sc. in Mathematics" },
   { name: "experience", label: "Experience", type: "text", required: true, placeholder: "e.g. 12 Years" },
-  { name: "image", label: "Image", type: "image" as const, placeholder: "https://..." },
+  { name: "image", label: "Image", type: "image" as const, placeholder: "https://...", browseMedia: true },
   { name: "subjects", label: "Subjects (comma separated)", type: "text", placeholder: "e.g. Math, Science, English" },
 ];
 
@@ -30,6 +32,9 @@ export default function DashboardFacultyPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<FacultyMember | null>(null);
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+  const [assetPickerField, setAssetPickerField] = useState<string | null>(null);
+  const [externalFieldValues, setExternalFieldValues] = useState<Record<string, string> | undefined>(undefined);
 
   const filtered = facultyMembers.filter((m) =>
     m.name.toLowerCase().includes(search.toLowerCase())
@@ -152,6 +157,8 @@ export default function DashboardFacultyPage() {
         fields={fields}
         onSubmit={handleAdd}
         submitLabel="Add Faculty"
+        externalFieldValues={externalFieldValues}
+        onBrowseMedia={(fieldName) => { setAssetPickerField(fieldName); setAssetPickerOpen(true); }}
       />
 
       <FormModal
@@ -169,6 +176,22 @@ export default function DashboardFacultyPage() {
         } : undefined}
         onSubmit={handleEdit}
         submitLabel="Update Faculty"
+        externalFieldValues={externalFieldValues}
+        onBrowseMedia={(fieldName) => { setAssetPickerField(fieldName); setAssetPickerOpen(true); }}
+      />
+
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => { setAssetPickerOpen(false); setAssetPickerField(null); setExternalFieldValues(undefined); }}
+        onSelect={(file: MediaFile) => {
+          if (assetPickerField) {
+            setExternalFieldValues({ [assetPickerField]: file.url });
+          }
+          setAssetPickerOpen(false);
+          setAssetPickerField(null);
+          setTimeout(() => setExternalFieldValues(undefined), 100);
+        }}
+        filterMime="image/"
       />
 
       <DeleteModal

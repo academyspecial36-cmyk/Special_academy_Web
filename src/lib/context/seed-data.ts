@@ -1,4 +1,4 @@
-import type { Subcategory, Item, ExamCategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
+import type { Subcategory, Item, ExamCategory, ExamSubcategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
 
 export interface FAQ {
   id: string;
@@ -265,29 +265,39 @@ export function createSeedExamCategories(): ExamCategory[] {
   ];
 }
 
+export function createSeedExamSubcategories(): ExamSubcategory[] {
+  const now = new Date().toISOString();
+  return [
+    { id: "exam-sub-1", categoryId: "exam-cat-1", name: "GK Set 1", description: "General Knowledge - Set 1 covering history, geography, and science.", color: "bg-emerald-100 text-emerald-800", createdAt: now },
+    { id: "exam-sub-2", categoryId: "exam-cat-1", name: "GK Set 2", description: "General Knowledge - Set 2 covering current affairs and civics.", color: "bg-emerald-100 text-emerald-800", createdAt: now },
+    { id: "exam-sub-3", categoryId: "exam-cat-2", name: "Math Set 1", description: "Mathematics - Set 1 covering arithmetic and algebra.", color: "bg-blue-100 text-blue-800", createdAt: now },
+    { id: "exam-sub-4", categoryId: "exam-cat-3", name: "English Set 1", description: "English - Set 1 covering grammar and vocabulary.", color: "bg-amber-100 text-amber-800", createdAt: now },
+  ];
+}
+
 export function createSeedQuestions(): Question[] {
   const now = new Date().toISOString();
   return [
-    { id: "q-1", categoryId: "exam-cat-1", type: "mcq", question: "What is the capital of Nepal?", options: ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur"], answer: "Kathmandu", explanation: "Kathmandu is the capital and largest city of Nepal.", createdAt: now },
-    { id: "q-2", categoryId: "exam-cat-1", type: "mcq", question: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: "Mars", explanation: "Mars appears reddish due to iron oxide on its surface.", createdAt: now },
-    { id: "q-3", categoryId: "exam-cat-1", type: "subjective", question: "Explain the importance of discipline in a cadet's life.", options: [], answer: "Discipline is crucial for cadets as it builds character, instills punctuality, and develops leadership qualities necessary for military service.", explanation: "Discipline forms the foundation of cadet training.", createdAt: now },
-    { id: "q-4", categoryId: "exam-cat-2", type: "mcq", question: "What is 15% of 200?", options: ["25", "30", "35", "40"], answer: "30", explanation: "15% of 200 = (15/100) × 200 = 30.", createdAt: now },
-    { id: "q-5", categoryId: "exam-cat-2", type: "mcq", question: "What is the square root of 144?", options: ["10", "11", "12", "13"], answer: "12", explanation: "12 × 12 = 144.", createdAt: now },
-    { id: "q-6", categoryId: "exam-cat-2", type: "subjective", question: "Solve: 5x + 3 = 18. Find x.", options: [], answer: "x = 3", explanation: "5x + 3 = 18 -> 5x = 15 -> x = 3.", createdAt: now },
-    { id: "q-7", categoryId: "exam-cat-3", type: "mcq", question: "What is the synonym of 'Brave'?", options: ["Cowardly", "Courageous", "Timid", "Weak"], answer: "Courageous", explanation: "Brave and courageous are synonyms.", createdAt: now },
-    { id: "q-8", categoryId: "exam-cat-3", type: "mcq", question: "Which of the following is a noun?", options: ["Run", "Beautiful", "Happiness", "Quickly"], answer: "Happiness", explanation: "Happiness is a noun representing a state of being.", createdAt: now },
-    { id: "q-9", categoryId: "exam-cat-3", type: "subjective", question: "Write a short paragraph about your aspirations to join the cadet academy.", options: [], answer: "Model answer: I aspire to join the cadet academy to develop leadership skills, build character, and serve my nation with honor and discipline.", explanation: "Answers should reflect genuine motivation and understanding of cadet life.", createdAt: now },
+    { id: "q-1", categoryId: "exam-cat-1", subcategoryId: "exam-sub-1", type: "mcq", question: "What is the capital of Nepal?", options: ["Kathmandu", "Pokhara", "Lalitpur", "Bhaktapur"], answer: "Kathmandu", explanation: "Kathmandu is the capital and largest city of Nepal.", createdAt: now },
+    { id: "q-2", categoryId: "exam-cat-1", subcategoryId: "exam-sub-1", type: "mcq", question: "Which planet is known as the Red Planet?", options: ["Venus", "Mars", "Jupiter", "Saturn"], answer: "Mars", explanation: "Mars appears reddish due to iron oxide on its surface.", createdAt: now },
+    { id: "q-3", categoryId: "exam-cat-1", subcategoryId: "exam-sub-2", type: "subjective", question: "Explain the importance of discipline in a cadet's life.", options: [], answer: "Discipline is crucial for cadets as it builds character, instills punctuality, and develops leadership qualities necessary for military service.", explanation: "Discipline forms the foundation of cadet training.", createdAt: now },
+    { id: "q-4", categoryId: "exam-cat-2", subcategoryId: "exam-sub-3", type: "mcq", question: "What is 15% of 200?", options: ["25", "30", "35", "40"], answer: "30", explanation: "15% of 200 = (15/100) × 200 = 30.", createdAt: now },
+    { id: "q-5", categoryId: "exam-cat-2", subcategoryId: "exam-sub-3", type: "mcq", question: "What is the square root of 144?", options: ["10", "11", "12", "13"], answer: "12", explanation: "12 × 12 = 144.", createdAt: now },
+    { id: "q-6", categoryId: "exam-cat-2", subcategoryId: "exam-sub-3", type: "subjective", question: "Solve: 5x + 3 = 18. Find x.", options: [], answer: "x = 3", explanation: "5x + 3 = 18 -> 5x = 15 -> x = 3.", createdAt: now },
+    { id: "q-7", categoryId: "exam-cat-3", subcategoryId: "exam-sub-4", type: "mcq", question: "What is the synonym of 'Brave'?", options: ["Cowardly", "Courageous", "Timid", "Weak"], answer: "Courageous", explanation: "Brave and courageous are synonyms.", createdAt: now },
+    { id: "q-8", categoryId: "exam-cat-3", subcategoryId: "exam-sub-4", type: "mcq", question: "Which of the following is a noun?", options: ["Run", "Beautiful", "Happiness", "Quickly"], answer: "Happiness", explanation: "Happiness is a noun representing a state of being.", createdAt: now },
+    { id: "q-9", categoryId: "exam-cat-3", subcategoryId: "exam-sub-4", type: "subjective", question: "Write a short paragraph about your aspirations to join the cadet academy.", options: [], answer: "Model answer: I aspire to join the cadet academy to develop leadership skills, build character, and serve my nation with honor and discipline.", explanation: "Answers should reflect genuine motivation and understanding of cadet life.", createdAt: now },
   ];
 }
 
 export function createSeedAttempts(): ExamAttempt[] {
   const now = new Date();
   return [
-    { id: "att-1", categoryId: "exam-cat-1", studentName: "Arafat Hossain", answers: [{ questionId: "q-1", answer: "Kathmandu", correct: true }, { questionId: "q-2", answer: "Mars", correct: true }, { questionId: "q-3", answer: "Discipline helps cadets build character and leadership.", correct: false }], score: 2, total: 3, completedAt: new Date(now.getTime() - 86400000).toISOString() },
-    { id: "att-2", categoryId: "exam-cat-1", studentName: "Rahul Sharma", answers: [{ questionId: "q-1", answer: "Pokhara", correct: false }, { questionId: "q-2", answer: "Mars", correct: true }, { questionId: "q-3", answer: "Discipline is important for cadets to be successful in life and to follow rules and regulations properly.", correct: true }], score: 2, total: 3, completedAt: new Date(now.getTime() - 172800000).toISOString() },
-    { id: "att-3", categoryId: "exam-cat-1", studentName: "Priya Thapa", answers: [{ questionId: "q-1", answer: "Kathmandu", correct: true }, { questionId: "q-2", answer: "Venus", correct: false }, { questionId: "q-3", answer: "", correct: false }], score: 1, total: 3, completedAt: new Date(now.getTime() - 259200000).toISOString() },
-    { id: "att-4", categoryId: "exam-cat-2", studentName: "Arafat Hossain", answers: [{ questionId: "q-4", answer: "30", correct: true }, { questionId: "q-5", answer: "12", correct: true }, { questionId: "q-6", answer: "x = 3", correct: true }], score: 3, total: 3, completedAt: new Date(now.getTime() - 43200000).toISOString() },
-    { id: "att-5", categoryId: "exam-cat-2", studentName: "Sneha KC", answers: [{ questionId: "q-4", answer: "25", correct: false }, { questionId: "q-5", answer: "12", correct: true }, { questionId: "q-6", answer: "x = 5", correct: false }], score: 1, total: 3, completedAt: new Date(now.getTime() - 86400000).toISOString() },
-    { id: "att-6", categoryId: "exam-cat-3", studentName: "Bikram Adhikari", answers: [{ questionId: "q-7", answer: "Courageous", correct: true }, { questionId: "q-8", answer: "Happiness", correct: true }, { questionId: "q-9", answer: "I want to join cadet academy to become a strong leader and serve my country with pride and dedication.", correct: true }], score: 3, total: 3, completedAt: new Date(now.getTime() - 7200000).toISOString() },
+    { id: "att-1", categoryId: "exam-cat-1", subcategoryId: "exam-sub-1", studentName: "Arafat Hossain", answers: [{ questionId: "q-1", answer: "Kathmandu", correct: true }, { questionId: "q-2", answer: "Mars", correct: true }], score: 2, total: 2, completedAt: new Date(now.getTime() - 86400000).toISOString() },
+    { id: "att-2", categoryId: "exam-cat-1", subcategoryId: "exam-sub-1", studentName: "Rahul Sharma", answers: [{ questionId: "q-1", answer: "Pokhara", correct: false }, { questionId: "q-2", answer: "Mars", correct: true }], score: 1, total: 2, completedAt: new Date(now.getTime() - 172800000).toISOString() },
+    { id: "att-3", categoryId: "exam-cat-1", subcategoryId: "exam-sub-2", studentName: "Priya Thapa", answers: [{ questionId: "q-3", answer: "", correct: false }], score: 0, total: 1, completedAt: new Date(now.getTime() - 259200000).toISOString() },
+    { id: "att-4", categoryId: "exam-cat-2", subcategoryId: "exam-sub-3", studentName: "Arafat Hossain", answers: [{ questionId: "q-4", answer: "30", correct: true }, { questionId: "q-5", answer: "12", correct: true }, { questionId: "q-6", answer: "x = 3", correct: true }], score: 3, total: 3, completedAt: new Date(now.getTime() - 43200000).toISOString() },
+    { id: "att-5", categoryId: "exam-cat-2", subcategoryId: "exam-sub-3", studentName: "Sneha KC", answers: [{ questionId: "q-4", answer: "25", correct: false }, { questionId: "q-5", answer: "12", correct: true }, { questionId: "q-6", answer: "x = 5", correct: false }], score: 1, total: 3, completedAt: new Date(now.getTime() - 86400000).toISOString() },
+    { id: "att-6", categoryId: "exam-cat-3", subcategoryId: "exam-sub-4", studentName: "Bikram Adhikari", answers: [{ questionId: "q-7", answer: "Courageous", correct: true }, { questionId: "q-8", answer: "Happiness", correct: true }, { questionId: "q-9", answer: "I want to join cadet academy to become a strong leader and serve my country with pride and dedication.", correct: true }], score: 3, total: 3, completedAt: new Date(now.getTime() - 7200000).toISOString() },
   ];
 }

@@ -63,6 +63,8 @@ function SubcategoryModal({ open, onClose, onSubmit, initialValues }: {
   const [status, setStatus] = useState<"paid" | "free">("free");
   const [hidden, setHidden] = useState(false);
   const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+  const [thumbUploading, setThumbUploading] = useState(false);
+  const thumbFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -82,9 +84,25 @@ function SubcategoryModal({ open, onClose, onSubmit, initialValues }: {
     onSubmit({ title: title.trim(), shortDescription: shortDescription.trim(), thumbnail, status, hidden });
   }
 
+  async function handleThumbUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setThumbUploading(true);
+    try {
+      const { url } = await apiUpload(file, "images");
+      setThumbnail(url);
+    } catch {
+      toast.error("Failed to upload thumbnail");
+    } finally {
+      setThumbUploading(false);
+      if (thumbFileRef.current) thumbFileRef.current.value = "";
+    }
+  }
+
   return (
     <Modal open={open} onClose={onClose} title={initialValues ? "Edit Subcategory" : "Add Subcategory"} maxWidth="max-w-lg">
       <form onSubmit={handleSubmit} className="space-y-4">
+        <input ref={thumbFileRef} type="file" accept="image/*" className="hidden" onChange={handleThumbUpload} />
         <div>
           <label className="text-sm font-medium text-primary mb-1 block">Title <span className="text-red-500">*</span></label>
           <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. General Knowledge" />
@@ -95,10 +113,13 @@ function SubcategoryModal({ open, onClose, onSubmit, initialValues }: {
         </div>
         <div>
           <label className="text-sm font-medium text-primary mb-1 block">Thumbnail</label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Input value={thumbnail} onChange={(e) => setThumbnail(e.target.value)} placeholder="https://..." className="flex-1" />
+            <Button type="button" variant="outline" size="sm" onClick={() => thumbFileRef.current?.click()} disabled={thumbUploading}>
+              <Upload className="w-3.5 h-3.5 mr-1.5" /> {thumbUploading ? "Uploading..." : "Upload"}
+            </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => setAssetPickerOpen(true)}>
-              <ImageIcon className="w-3.5 h-3.5 mr-1.5" /> Browse
+              <ImageIcon className="w-3.5 h-3.5 mr-1.5" /> Media
             </Button>
           </div>
           {thumbnail && (
@@ -678,6 +699,10 @@ export default function CourseDetailPage() {
                 </div>
               </div>
               <input ref={imageFilesRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} />
+              <div className="mt-2">
+                <label className="text-sm font-medium text-primary mb-1 block">Or paste image URL</label>
+                <Input value={itemForm.url} onChange={(e) => setItemForm((prev) => ({ ...prev, url: e.target.value }))} placeholder="https://..." />
+              </div>
 
               {pendingImagePreviews.length > 0 && (
                 <div className="mb-3">

@@ -138,9 +138,19 @@ export interface ExamCategory {
   createdAt: string;
 }
 
+export interface ExamSubcategory {
+  id: string;
+  categoryId: string;
+  name: string;
+  description: string;
+  color: string;
+  createdAt: string;
+}
+
 export interface Question {
   id: string;
   categoryId: string;
+  subcategoryId?: string;
   type: "mcq" | "subjective";
   question: string;
   options: string[];
@@ -167,6 +177,7 @@ export interface BlogPost {
 export interface ExamAttempt {
   id: string;
   categoryId: string;
+  subcategoryId?: string;
   studentName: string;
   answers: { questionId: string; answer: string; correct: boolean }[];
   score: number;

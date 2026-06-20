@@ -4,10 +4,10 @@ import { createExamTool, updateExamTool, deleteExamTool } from "./exams";
 import { approveEnrollmentTool, rejectEnrollmentTool } from "./enrollments";
 import { createFAQTool, updateFAQTool, deleteFAQTool } from "./faqs";
 import { createBlogTool, publishBlogTool } from "./blogs";
-import { enableMaintenanceTool, disableMaintenanceTool, backupSystemTool } from "./system";
+import { enableMaintenanceTool, disableMaintenanceTool, backupSystemTool, logoutTool } from "./system";
 import { createStudentTool, updateStudentTool, deleteStudentTool } from "./students";
 import { searchKnowledgeTool } from "./knowledge";
-import { getStudentsTool, getCoursesTool, getNoticesTool, getEnrollmentsTool, getFAQsTool, getBlogsTool } from "./queries";
+import { getStudentsTool, getCoursesTool, getNoticesTool, getEnrollmentsTool, getFAQsTool, getBlogsTool, getExamResultsTool, getStatsTool } from "./queries";
 import type { AIToolDefinition } from "@/types/ai";
 
 const toolRegistry: Map<string, AIToolDefinition> = new Map();
@@ -46,6 +46,9 @@ register(getNoticesTool);
 register(getEnrollmentsTool);
 register(getFAQsTool);
 register(getBlogsTool);
+register(logoutTool);
+register(getExamResultsTool);
+register(getStatsTool);
 
 export function getAllTools(): AIToolDefinition[] {
   return Array.from(toolRegistry.values());

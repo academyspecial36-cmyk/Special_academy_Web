@@ -4,7 +4,7 @@ A full-featured Next.js website for **Special academy**, a cadet college prepara
 
 ## Tech Stack
 
-- **Framework:** Next.js 15.1 (App Router)
+- **Framework:** Next.js 15 (App Router)
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS 4
 - **Animation:** Framer Motion
@@ -28,10 +28,8 @@ A full-featured Next.js website for **Special academy**, a cadet college prepara
 - WhatsApp floating chat button
 - Responsive navbar with mobile drawer
 
-### Admin Dashboard (`Ctrl+Shift+S+B`)
-- Protected behind a two-step auth modal:
-  1. Enter admin passcode (verified server-side from `ADMIN_PASSCODE` env)
-  2. Admin username/password (verified server-side from `ADMIN_USERNAME`/`ADMIN_PASSWORD` env)
+### Admin Dashboard (`Ctrl+Shift+A`)
+- Route protected at middleware level — only authenticated users with `admin` role can access `/dashboard`
 - Dashboard overview
 - Students management
 - Courses management
@@ -45,7 +43,7 @@ A full-featured Next.js website for **Special academy**, a cadet college prepara
 - Settings (academy info, contact info, social links, app icon upload)
 
 ### Student Portal
-- Accessible after login (`/login`) with credentials from `STUDENT_EMAIL`/`STUDENT_PASSWORD` env vars
+- Route protected at middleware level — only authenticated users with `student` role can access `/student`
 - Student dashboard overview
 - My courses
 - Notice board
@@ -81,17 +79,16 @@ npm install
 Create `.env.local` in the project root:
 
 ```env
-# Admin (for dashboard access via Ctrl+Shift+S+B)
-ADMIN_PASSCODE=your-passcode
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=your-admin-password
-
-# Student login
-STUDENT_EMAIL=student@example.com
-STUDENT_PASSWORD=student-password
-
-# Shortcut key for admin modal (default: B)
-NEXT_PUBLIC_ADMIN_SHORTCUT_KEY=S
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_BUCKET_NAME=my-bucket-name
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+EMAIL_FROM=noreply@cadetacademy.edu
+SETUP_SECRET=setup-change-me
 ```
 
 ### Development
@@ -115,66 +112,50 @@ npm start
 src/
 ├── app/
 │   ├── api/                       # API routes
-│   │   ├── admin-login/           # POST - admin credential verification
-│   │   ├── student-login/         # POST - student credential verification
-│   │   └── verify-passcode/       # POST - admin passcode verification
+│   │   ├── auth/                  # Auth endpoints (login, logout, session, register)
+│   │   ├── bootstrap/             # Bootstrap data cache
+│   │   ├── data/                  # Generic CRUD for allowed tables
+│   │   ├── media/                 # Media upload/stats
+│   │   └── setup/                 # One-time admin creation
 │   ├── (public)/                  # Public-facing pages
-│   │   ├── about/
-│   │   ├── contact/
-│   │   ├── courses/
-│   │   ├── enrollment/            # Multi-step registration/signup
-│   │   ├── forgot-password/
-│   │   ├── gallery/
-│   │   ├── login/
-│   │   ├── notices/
-│   │   ├── team/
-│   │   ├── testimonials/
-│   │   ├── layout.tsx             # Public layout (navbar, footer, WhatsApp, admin modal)
-│   │   └── page.tsx               # Landing page
 │   ├── dashboard/                 # Admin dashboard pages
-│   │   ├── categories/
-│   │   ├── courses/
-│   │   ├── enrollments/
-│   │   ├── faculty/
-│   │   ├── faqs/
-│   │   ├── gallery/
-│   │   ├── notices/
-│   │   ├── settings/
-│   │   ├── students/
-│   │   ├── testimonials/
-│   │   ├── layout.tsx             # Dashboard layout with sidebar
-│   │   └── page.tsx               # Dashboard overview
 │   ├── student/                   # Student portal pages
-│   │   ├── courses/
-│   │   ├── notices/
-│   │   ├── profile/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── layout.tsx                 # Root layout (font, globals, AppProvider)
+│   ├── middleware.ts              # Route protection (admin/student)
+│   └── layout.tsx                 # Root layout
 ├── components/
-│   ├── landing/                   # Landing page sections
-│   ├── providers/                 # React context providers
-│   ├── shared/                    # Shared components (navbar, footer, modals)
-│   └── ui/                        # Reusable UI primitives
-├── constants/                     # Navigation, categories, configurations
-├── lib/                           # App context, utility functions
-├── mock/                          # Initial mock data
-├── styles/                        # Global CSS
-└── types/                         # TypeScript interfaces
+│   ├── landing/
+│   ├── providers/
+│   ├── shared/                    # Navbar, footer, admin-auth-modal
+│   └── ui/
+├── constants/
+├── lib/
+│   ├── admin/actions.ts           # Server-only admin server actions
+│   ├── api/admin-guard.ts         # API route admin guard
+│   ├── auth-context.tsx           # Client auth context
+│   ├── auth-utils.ts              # Server-side auth helpers
+│   └── supabase-server.ts         # Server-side Supabase clients
+├── styles/
+└── types/
 ```
 
 ## Auth Flows
 
 ### Admin Access
-1. Press `Ctrl+Shift+S+B` (configurable via `NEXT_PUBLIC_ADMIN_SHORTCUT_KEY`)
-2. Enter the passcode (from `ADMIN_PASSCODE` env var)
-3. Enter admin username/password (from `ADMIN_USERNAME`/`ADMIN_PASSWORD`)
-4. Redirected to `/dashboard`
+1. Navigate to `/login` or press `Ctrl+Shift+A` to open the admin login modal
+2. Enter admin email and password
+3. Redirected to `/dashboard`
 
 ### Student Access
 1. Navigate to `/login`
-2. Enter email and password (from `STUDENT_EMAIL`/`STUDENT_PASSWORD`)
+2. Enter email and password
 3. Redirected to `/student`
+
+## Security
+
+- **Middleware** blocks `/dashboard` and `/student` routes for unauthorized users at the edge
+- **`server-only`** import prevents admin server actions from bundling into client code
+- **Supabase RLS** restricts row-level access: admins can read/write all rows, students can only access their own data
+- **Service role client** used for admin-only operations (bypasses RLS safeguards, used only server-side)
 
 ## Color Scheme
 

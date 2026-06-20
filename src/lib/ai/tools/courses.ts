@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import type { AIToolDefinition } from "@/types/ai";
+import { deleteStorageFile, deleteStorageFiles } from "@/lib/storage-cleanup";
 
 const svc = () => createServiceRoleSupabase();
 
@@ -109,6 +110,22 @@ export const deleteCourseTool: AIToolDefinition = {
   handler: async (args, _userId) => {
     try {
       const { id } = z.object({ id: z.string() }).parse(args);
+
+      // Clean up course image
+      const { data: course } = await svc().from("courses").select("image").eq("id", id).maybeSingle();
+      if (course?.image) await deleteStorageFile(course.image as string);
+
+      // Clean up subcategory thumbnails and item files
+      const { data: subs } = await svc().from("subcategories").select("id, thumbnail").eq("course_id", id);
+      for (const sub of subs ?? []) {
+        if (sub.thumbnail) await deleteStorageFile(sub.thumbnail as string);
+      }
+      const subIds = (subs ?? []).map((s) => s.id);
+      if (subIds.length > 0) {
+        const { data: itemRows } = await svc().from("items").select("url").in("subcategory_id", subIds);
+        await deleteStorageFiles((itemRows ?? []).map((r) => r.url as string | null | undefined));
+      }
+
       const { error } = await svc().from("courses").delete().eq("id", id);
       if (error) throw new Error(error.message);
       return { success: true, data: { id, deleted: true } };
