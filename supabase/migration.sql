@@ -97,7 +97,7 @@ create table courses (
   slug text unique not null,
   description text,
   duration text,
-  class_level text,
+  qualification text,
   features jsonb default '[]',
   image text,
   category text,
@@ -462,7 +462,7 @@ insert into notice_categories (value, label, color) values
 
 -- Courses (using UUIDs from mock data mapping)
 -- We use fixed IDs to match the mock data references
-INSERT INTO courses (id, title, slug, description, duration, class_level, features, image, category, price, is_popular)
+INSERT INTO courses (id, title, slug, description, duration, qualification, features, image, category, price, is_popular)
 VALUES
   ('c0000000-0000-0000-0000-000000000001', 'Cadet College Preparation', 'cadet-college-preparation', 'Comprehensive preparation program for cadet college entrance exams including mathematics, English, GK, and IQ tests.', '6 Months', 'Class 8-12', '["Expert faculty with military background","Weekly mock tests","Physical fitness training","Personality development sessions","Study materials included","Previous year papers"]', 'https://images.unsplash.com/photo-1526470608268-f674ce90ebd4?w=400&q=80', 'Cadet Preparation', 'Rs. 25,000', true),
   ('c0000000-0000-0000-0000-000000000002', 'Scholarship Exam Preparation', 'scholarship-exam-preparation', 'Intensive coaching for scholarship examinations with advanced curriculum and personalized attention.', '4 Months', 'Class 8-12', '["Advanced curriculum","Personalized mentoring","Scholarship application guidance","Interview preparation","Previous year papers","Weekly assessments"]', 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&q=80', 'Scholarship', 'Rs. 20,000', true),

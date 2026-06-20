@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Star, BookOpen, School, Sun, FileText, Quote, Save, Loader2, Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { ImageInput } from "@/components/shared/image-input";
+import { AssetPicker } from "@/components/shared/asset-picker";
 
 interface ContentForm {
   whyChoose: { icon: string; title: string; description: string }[];
@@ -33,6 +36,8 @@ const NAV_ITEMS = [
 ];
 
 export function ContentTab({ contentForm, setContentForm, savingSettings, handleSave }: ContentTabProps) {
+  const [assetPickerField, setAssetPickerField] = useState<{ section: string; index?: number } | null>(null);
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-1.5">
@@ -86,12 +91,19 @@ export function ContentTab({ contentForm, setContentForm, savingSettings, handle
             </div>
           </div>
           <div>
-            <label className="text-sm font-medium text-primary mb-1.5 block">Images (URLs)</label>
-            <div className="space-y-2">
+            <label className="text-sm font-medium text-primary mb-1.5 block">Images</label>
+            <div className="space-y-4">
               {contentForm.cadetOverview.images.map((img, i) => (
-                <div key={i} className="flex gap-2">
-                  <Input value={img} onChange={(e) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: p.cadetOverview.images.map((s, idx) => idx === i ? e.target.value : s) } }))} placeholder={`Image ${i + 1} URL`} />
-                  <Button variant="ghost" size="sm" className="text-red-500 h-9 text-xs shrink-0" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: p.cadetOverview.images.filter((_, idx) => idx !== i) } }))}>X</Button>
+                <div key={i} className="p-3 border border-primary/10 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted">Image {i + 1}</span>
+                    <Button variant="ghost" size="sm" className="text-red-500 h-6 text-xs" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: p.cadetOverview.images.filter((_, idx) => idx !== i) } }))}>Remove</Button>
+                  </div>
+                  <ImageInput
+                    value={img}
+                    onChange={(url) => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: p.cadetOverview.images.map((s, idx) => idx === i ? url : s) } }))}
+                    onBrowseMedia={() => { setAssetPickerField({ section: "cadetOverview", index: i }); setAssetPickerOpen(true); }}
+                  />
                 </div>
               ))}
               <Button variant="outline" size="sm" onClick={() => setContentForm((p) => ({ ...p, cadetOverview: { ...p.cadetOverview, images: [...p.cadetOverview.images, ""] } }))}><Plus className="w-3 h-3 mr-1" /> Add Image</Button>
@@ -227,6 +239,26 @@ export function ContentTab({ contentForm, setContentForm, savingSettings, handle
         </CardContent>
       </Card>
 
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => { setAssetPickerOpen(false); setAssetPickerField(null); }}
+        onSelect={(file) => {
+          if (assetPickerField) {
+            if (assetPickerField.section === "cadetOverview" && assetPickerField.index !== undefined) {
+              setContentForm((p) => ({
+                ...p,
+                cadetOverview: {
+                  ...p.cadetOverview,
+                  images: p.cadetOverview.images.map((s, idx) => idx === assetPickerField.index ? file.url : s),
+                },
+              }));
+            }
+          }
+          setAssetPickerOpen(false);
+          setAssetPickerField(null);
+        }}
+        filterMime="image/"
+      />
       <div className="flex justify-end">
         <Button size="lg" onClick={handleSave} disabled={savingSettings}>
           {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}

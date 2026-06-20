@@ -23,12 +23,38 @@ export async function handleGet(table: string, id?: string) {
     svc = authError ? supabase : createServiceRoleSupabase();
   }
 
-  const { data, error } = id
-    ? await svc.from(table).select("*").eq("id", id).maybeSingle()
-    : await svc.from(table).select("*");
+  let data, error;
+  if (table === "courses") {
+    const query = (svc.from("courses") as any).select("*, qualification:qualifications(name)");
+    if (id) {
+      ({ data, error } = await query.eq("id", id).maybeSingle());
+    } else {
+      ({ data, error } = await query);
+    }
+  } else {
+    ({ data, error } = id
+      ? await svc.from(table).select("*").eq("id", id).maybeSingle()
+      : await svc.from(table).select("*"));
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const result = Array.isArray(data) ? data.map((d: Record<string, unknown>) => transformKeys(d, table, false)) : data ? transformKeys(data as Record<string, unknown>, table, false) : null;
+  let result: unknown = Array.isArray(data) ? data.map((d: Record<string, unknown>) => transformKeys(d, table, false)) : data ? transformKeys(data as Record<string, unknown>, table, false) : null;
+
+  if (table === "courses" && result) {
+    const flattenQual = (item: Record<string, unknown>) => {
+      if (typeof item.qualification === "object" && item.qualification) {
+        item.qualification = (item.qualification as Record<string, unknown>).name as string ?? "";
+      }
+      delete (item as Record<string, unknown>).qualificationId;
+      return item;
+    };
+    if (Array.isArray(result)) {
+      result = result.map(flattenQual);
+    } else {
+      flattenQual(result as Record<string, unknown>);
+    }
+  }
+
   return NextResponse.json(result);
 }
 
@@ -48,7 +74,17 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
   const dbBody = transformKeys(body, table, true);
   const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
 
-  const { data, error } = await svc.from(table).insert(dbBody).select().single();
+  if (table === "courses" && dbBody.qualification_id && typeof dbBody.qualification_id === "string") {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!isUUID.test(dbBody.qualification_id as string)) {
+      const { data: qual } = await svc.from("qualifications").select("id").eq("name", dbBody.qualification_id).maybeSingle();
+      dbBody.qualification_id = qual?.id ?? null;
+    }
+  }
+
+  const { data, error } = table === "courses"
+    ? await (svc.from("courses") as any).insert(dbBody).select("*, qualification:qualifications(name)").single()
+    : await svc.from(table).insert(dbBody).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (table === "notices" && data) {
@@ -73,7 +109,12 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
     );
   }
 
-  return NextResponse.json(transformKeys(data as Record<string, unknown>, table, false), { status: 201 });
+  const postResult = transformKeys(data as Record<string, unknown>, table, false);
+  if (table === "courses" && postResult && typeof postResult.qualification === "object" && postResult.qualification) {
+    postResult.qualification = (postResult.qualification as Record<string, unknown>).name as string ?? "";
+    delete (postResult as Record<string, unknown>).qualificationId;
+  }
+  return NextResponse.json(postResult, { status: 201 });
 }
 
 export async function handlePut(table: string, id: string, body: Record<string, unknown>) {
@@ -92,10 +133,25 @@ export async function handlePut(table: string, id: string, body: Record<string, 
   const dbBody = transformKeys(body, table, true);
   const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
 
-  const { data, error } = await svc.from(table).update(dbBody).eq("id", id).select().single();
+  if (table === "courses" && dbBody.qualification_id && typeof dbBody.qualification_id === "string") {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!isUUID.test(dbBody.qualification_id as string)) {
+      const { data: qual } = await svc.from("qualifications").select("id").eq("name", dbBody.qualification_id).maybeSingle();
+      dbBody.qualification_id = qual?.id ?? null;
+    }
+  }
+
+  const { data, error } = table === "courses"
+    ? await (svc.from("courses") as any).update(dbBody).eq("id", id).select("*, qualification:qualifications(name)").single()
+    : await svc.from(table).update(dbBody).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json(transformKeys(data as Record<string, unknown>, table, false));
+  const putResult = transformKeys(data as Record<string, unknown>, table, false);
+  if (table === "courses" && putResult && typeof putResult.qualification === "object" && putResult.qualification) {
+    putResult.qualification = (putResult.qualification as Record<string, unknown>).name as string ?? "";
+    delete (putResult as Record<string, unknown>).qualificationId;
+  }
+  return NextResponse.json(putResult);
 }
 
 export async function handleDelete(table: string, id: string) {

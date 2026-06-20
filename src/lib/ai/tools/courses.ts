@@ -36,6 +36,12 @@ export const createCourseTool: AIToolDefinition = {
         isPopular: z.boolean().optional().default(false),
       }).parse(args);
 
+      let qualificationId: string | null = null;
+      if (parsed.qualification) {
+        const { data: qual } = await svc().from("qualifications").select("id").eq("name", parsed.qualification).maybeSingle();
+        qualificationId = qual?.id ?? null;
+      }
+
       const { data, error } = await svc().from("courses").insert({
         title: parsed.title,
         slug: parsed.title.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""),
@@ -43,11 +49,11 @@ export const createCourseTool: AIToolDefinition = {
         duration: parsed.duration,
         category: parsed.category,
         price: parsed.price,
-        class_level: parsed.qualification || null,
+        qualification_id: qualificationId,
         features: parsed.features,
         is_popular: parsed.isPopular,
         image: "",
-      }).select().single();
+      }).select("*, qualification:qualifications(name)").single();
 
       if (error) throw new Error(error.message);
       return { success: true, data };

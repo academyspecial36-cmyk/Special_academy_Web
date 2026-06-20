@@ -18,12 +18,12 @@ export const RESTRICTED_TABLES: Entity[] = [
 ];
 
 const COLUMN_MAP: Record<string, Record<string, string>> = {
-  courses: { qualification: "class_level", isPopular: "is_popular" },
+  courses: { qualification: "qualification_id", isPopular: "is_popular" },
   subcategories: { courseId: "course_id", shortDescription: "short_description", createdAt: "created_at" },
   items: { subcategoryId: "subcategory_id", createdAt: "created_at" },
   faculty_members: {},
   faqs: { sortOrder: "sort_order" },
-  notices: { isPinned: "is_pinned", qualification: "class_level" },
+  notices: { isPinned: "is_pinned" },
   testimonials: {},
   gallery_images: {},
   students: { enrolledCourses: "enrolled_courses", joinDate: "join_date", qualificationId: "qualification_id", qualification: "class" },

@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, Loader2, Plus, X } from "lucide-react";
+import { ImageInput } from "@/components/shared/image-input";
+import { AssetPicker } from "@/components/shared/asset-picker";
 
 interface LandingForm {
   hero: { title: string; subtitle: string; badge: string; image: string };
@@ -22,6 +25,14 @@ interface LandingTabProps {
 }
 
 export function LandingTab({ landingForm, setLandingForm, savingSettings, handleSave }: LandingTabProps) {
+  const [assetPickerField, setAssetPickerField] = useState<string | null>(null);
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
+
+  function openAssetPicker(field: string) {
+    setAssetPickerField(field);
+    setAssetPickerOpen(true);
+  }
+
   return (
     <div>
       <div className="grid lg:grid-cols-2 gap-6">
@@ -31,7 +42,14 @@ export function LandingTab({ landingForm, setLandingForm, savingSettings, handle
             <div><label className="text-sm font-medium text-primary mb-1.5 block">Badge Text</label><Input value={landingForm.hero?.badge} onChange={(e) => setLandingForm((p) => ({ ...p, hero: { ...p.hero, badge: e.target.value } }))} /></div>
             <div><label className="text-sm font-medium text-primary mb-1.5 block">Title</label><Textarea rows={2} value={landingForm.hero?.title} onChange={(e) => setLandingForm((p) => ({ ...p, hero: { ...p.hero, title: e.target.value } }))} /></div>
             <div><label className="text-sm font-medium text-primary mb-1.5 block">Subtitle</label><Textarea rows={3} value={landingForm.hero?.subtitle} onChange={(e) => setLandingForm((p) => ({ ...p, hero: { ...p.hero, subtitle: e.target.value } }))} /></div>
-            <div><label className="text-sm font-medium text-primary mb-1.5 block">Hero Image URL</label><Input value={landingForm.hero?.image} onChange={(e) => setLandingForm((p) => ({ ...p, hero: { ...p.hero, image: e.target.value } }))} /></div>
+            <div>
+              <label className="text-sm font-medium text-primary mb-1.5 block">Hero Image</label>
+              <ImageInput
+                value={landingForm.hero?.image}
+                onChange={(url) => setLandingForm((p) => ({ ...p, hero: { ...p.hero, image: url } }))}
+                onBrowseMedia={() => openAssetPicker("hero.image")}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -40,7 +58,14 @@ export function LandingTab({ landingForm, setLandingForm, savingSettings, handle
           <CardContent className="space-y-4">
             <div><label className="text-sm font-medium text-primary mb-1.5 block">Title</label><Input value={landingForm.about.title} onChange={(e) => setLandingForm((p) => ({ ...p, about: { ...p.about, title: e.target.value } }))} /></div>
             <div><label className="text-sm font-medium text-primary mb-1.5 block">Description</label><Textarea rows={3} value={landingForm.about.description} onChange={(e) => setLandingForm((p) => ({ ...p, about: { ...p.about, description: e.target.value } }))} /></div>
-            <div><label className="text-sm font-medium text-primary mb-1.5 block">About Image URL</label><Input value={landingForm.about.image} onChange={(e) => setLandingForm((p) => ({ ...p, about: { ...p.about, image: e.target.value } }))} /></div>
+            <div>
+              <label className="text-sm font-medium text-primary mb-1.5 block">About Image</label>
+              <ImageInput
+                value={landingForm.about.image}
+                onChange={(url) => setLandingForm((p) => ({ ...p, about: { ...p.about, image: url } }))}
+                onBrowseMedia={() => openAssetPicker("about.image")}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -101,6 +126,23 @@ export function LandingTab({ landingForm, setLandingForm, savingSettings, handle
           </CardContent>
         </Card>
       </div>
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => { setAssetPickerOpen(false); setAssetPickerField(null); }}
+        onSelect={(file) => {
+          if (assetPickerField) {
+            const [section, field] = assetPickerField.split(".");
+            if (section === "hero" && field === "image") {
+              setLandingForm((p) => ({ ...p, hero: { ...p.hero, image: file.url } }));
+            } else if (section === "about" && field === "image") {
+              setLandingForm((p) => ({ ...p, about: { ...p.about, image: file.url } }));
+            }
+          }
+          setAssetPickerOpen(false);
+          setAssetPickerField(null);
+        }}
+        filterMime="image/"
+      />
       <div className="flex justify-end mt-6">
         <Button size="lg" onClick={handleSave} disabled={savingSettings}>
           {savingSettings ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
