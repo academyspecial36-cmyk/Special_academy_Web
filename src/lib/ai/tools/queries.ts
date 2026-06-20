@@ -55,12 +55,17 @@ export const getCoursesTool = define(
     limit: z.number().optional().default(50),
   }),
   async ({ category, search, limit }) => {
-    let query = svc().from("courses").select("*").limit(limit);
+    let query = svc().from("courses").select("*, qualification:qualifications(name)").limit(limit);
     if (category) query = query.eq("category", category);
     if (search) query = query.ilike("title", `%${search}%`);
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    return data ?? [];
+    return (data ?? []).map((c: Record<string, unknown>) => ({
+      ...c,
+      qualification: typeof c.qualification === "object" && c.qualification
+        ? (c.qualification as Record<string, unknown>).name ?? ""
+        : "",
+    }));
   }
 );
 

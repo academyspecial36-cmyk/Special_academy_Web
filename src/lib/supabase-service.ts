@@ -50,18 +50,21 @@ export async function fetchNoticeCategories() {
 
 // ==================== Courses ====================
 export async function fetchCourses(): Promise<Course[]> {
-  const { data } = await sb().from("courses").select("*");
+  const { data } = await sb().from("courses").select("*, qualification:qualifications(name)");
   return (data ?? []).map(mapCourse);
 }
 
 function mapCourse(c: Record<string, unknown>): Course {
+  const qualName = typeof c.qualification === "object" && c.qualification
+    ? (c.qualification as Record<string, unknown>).name as string ?? ""
+    : "";
   return {
     id: String(c.id),
     title: String(c.title),
     slug: String(c.slug),
     description: String(c.description ?? ""),
     duration: String(c.duration ?? ""),
-    qualification: String(c.class_level ?? ""),
+    qualification: qualName,
     features: (c.features as string[]) ?? [],
     image: String(c.image ?? ""),
     category: String(c.category ?? ""),

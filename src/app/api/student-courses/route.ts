@@ -51,9 +51,9 @@ export async function GET() {
       return NextResponse.json({ courses: [] });
     }
 
-    const { data: allCourses } = await svc
-      .from("courses")
-      .select("*");
+    const { data: allCourses } = await (svc
+      .from("courses") as any)
+      .select("*, qualification:qualifications(name)");
 
     const filtered = (allCourses ?? []).filter((c: Record<string, unknown>) => {
       const title = (c.title ?? "") as string;
@@ -61,7 +61,13 @@ export async function GET() {
       return enrolled.includes(id) || enrolled.includes(title);
     });
 
-    const courses = filtered.map((c: Record<string, unknown>) => transformKeys(c));
+    const courses = filtered.map((c: Record<string, unknown>) => {
+      const flat = transformKeys(c);
+      if (typeof flat.qualification === "object" && flat.qualification) {
+        flat.qualification = (flat.qualification as Record<string, unknown>).name as string ?? "";
+      }
+      return flat;
+    });
 
     return NextResponse.json({ courses });
   } catch {
