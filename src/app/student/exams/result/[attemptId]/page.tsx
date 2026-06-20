@@ -9,49 +9,39 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
 
-export default function StudentExamResultPage() {
+export default function StudentAttemptResultPage() {
   const params = useParams();
-  const categoryId = params.id as string;
-  const { examCategories, questions, attempts, dataLoading } = useAppContext();
+  const attemptId = params.attemptId as string;
+  const { examCategories, examSubcategories, questions, attempts, dataLoading } = useAppContext();
 
-  const category = examCategories.find((c) => c.id === categoryId);
-  const categoryQuestions = questions.filter((q) => q.categoryId === categoryId);
-  const latestAttempt = [...attempts]
-    .filter((a) => a.categoryId === categoryId)
-    .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())[0];
+  const attempt = attempts.find((a) => a.id === attemptId);
+  const category = attempt ? examCategories.find((c) => c.id === attempt.categoryId) : null;
+  const subcategory = attempt?.subcategoryId ? examSubcategories.find((s) => s.id === attempt.subcategoryId) : null;
+  const categoryQuestions = attempt ? questions.filter((q) => q.categoryId === attempt.categoryId) : [];
 
   if (dataLoading) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-primary/10 rounded-lg animate-pulse" />
-          <div>
-            <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
-            <div className="h-4 w-32 bg-primary/10 rounded-md animate-pulse mt-1" />
-          </div>
+          <div><div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" /><div className="h-4 w-32 bg-primary/10 rounded-md animate-pulse mt-1" /></div>
         </div>
         <div className="h-64 bg-primary/5 rounded-xl animate-pulse" />
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-28 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
-          ))}
-        </div>
+        <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />)}</div>
       </div>
     );
   }
 
-  if (!category || !latestAttempt) {
+  if (!attempt || !category) {
     return (
       <div className="text-center py-20">
         <h2 className="text-xl font-bold text-primary mb-2">Result not found</h2>
-        <Button variant="outline" asChild>
-          <Link href="/student/exams">Back to Exams</Link>
-        </Button>
+        <Button variant="outline" asChild><Link href="/student/exams">Back to Exams</Link></Button>
       </div>
     );
   }
 
-  const { score, total, answers } = latestAttempt;
+  const { score, total, answers } = attempt;
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
   const passed = percentage >= 40;
 
@@ -59,46 +49,31 @@ export default function StudentExamResultPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/student/exams">
+          <Link href={`/student/exams/${category.id}`}>
             <ArrowLeft className="w-5 h-5" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold text-primary">{category.name} - Result</h1>
-          <p className="text-sm text-muted">Completed {new Date(latestAttempt.completedAt).toLocaleDateString()}</p>
+          <h1 className="text-2xl font-bold text-primary">
+            {category.name}{subcategory ? ` - ${subcategory.name}` : ""} - Result
+          </h1>
+          <p className="text-sm text-muted">Completed {new Date(attempt.completedAt).toLocaleDateString()}</p>
         </div>
       </div>
 
       <Card className={`border-2 ${passed ? "border-emerald-200" : "border-red-200"}`}>
         <CardContent className="p-8 text-center">
           <div className={`w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center ${passed ? "bg-emerald-50" : "bg-red-50"}`}>
-            {passed ? (
-              <CheckCircle className="w-10 h-10 text-emerald-500" />
-            ) : (
-              <XCircle className="w-10 h-10 text-red-500" />
-            )}
+            {passed ? <CheckCircle className="w-10 h-10 text-emerald-500" /> : <XCircle className="w-10 h-10 text-red-500" />}
           </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">
-            {passed ? "Congratulations!" : "Keep Practicing!"}
-          </h2>
-          <p className="text-muted mb-6">
-            {passed ? "You passed the exam." : "You need 40% to pass. Review the answers below."}
-          </p>
+          <h2 className="text-2xl font-bold text-primary mb-2">{passed ? "Congratulations!" : "Keep Practicing!"}</h2>
+          <p className="text-muted mb-6">{passed ? "You passed the exam." : "You need 40% to pass. Review the answers below."}</p>
           <div className="flex items-center justify-center gap-6 sm:gap-8 mb-8 flex-wrap">
-            <div>
-              <p className="text-2xl sm:text-4xl font-bold text-primary">{score}</p>
-              <p className="text-sm text-muted">Correct</p>
-            </div>
+            <div><p className="text-2xl sm:text-4xl font-bold text-primary">{score}</p><p className="text-sm text-muted">Correct</p></div>
             <div className="w-px h-12 bg-primary/10" />
-            <div>
-              <p className="text-2xl sm:text-4xl font-bold text-muted">{total - score}</p>
-              <p className="text-sm text-muted">Incorrect</p>
-            </div>
+            <div><p className="text-2xl sm:text-4xl font-bold text-muted">{total - score}</p><p className="text-sm text-muted">Incorrect</p></div>
             <div className="w-px h-12 bg-primary/10" />
-            <div>
-              <p className="text-2xl sm:text-4xl font-bold text-secondary">{percentage}%</p>
-              <p className="text-sm text-muted">Score</p>
-            </div>
+            <div><p className="text-2xl sm:text-4xl font-bold text-secondary">{percentage}%</p><p className="text-sm text-muted">Score</p></div>
           </div>
         </CardContent>
       </Card>
@@ -109,6 +84,7 @@ export default function StudentExamResultPage() {
           const isCorrect = detail?.correct ?? false;
           const userAnswer = detail?.answer || "";
           const isUnanswered = !userAnswer.trim();
+          if (!detail) return null;
 
           return (
             <motion.div key={q.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
@@ -181,7 +157,7 @@ export default function StudentExamResultPage() {
 
       <div className="flex justify-center">
         <Button size="lg" asChild>
-          <Link href="/student/exams">Back to Exam List</Link>
+          <Link href={`/student/exams/${category.id}`}>Back to Sets</Link>
         </Button>
       </div>
     </div>

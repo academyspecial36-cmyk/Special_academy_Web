@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Send, Mail, MessageSquare, Plus, Pencil, Trash2, Copy, Clock,
+  Send, Mail, Plus, Pencil, Trash2, Copy, Clock,
   CheckCircle, XCircle, AlertCircle, Loader2, Eye, EyeOff, Archive,
   Download, Users, BookOpen, ChevronDown, Info,
 } from "lucide-react";
@@ -22,7 +22,7 @@ type Tab = "compose" | "templates" | "history";
 interface Template {
   id: string;
   name: string;
-  type: "email" | "sms";
+  type: "email";
   subject: string;
   body: string;
   variables: string[];
@@ -32,7 +32,7 @@ interface Template {
 
 interface Communication {
   id: string;
-  type: "email" | "sms";
+  type: "email";
   template_id: string | null;
   subject: string | null;
   body: string;
@@ -67,7 +67,6 @@ const defaultVars = ["name", "email", "phone", "academyName"];
 const sampleTemplates: Partial<Template>[] = [
   { name: "Welcome to Special Academy", type: "email", subject: "Welcome to Special Academy, {{name}}!", body: "<h2>Dear {{name}},</h2><p>Welcome to Special Academy! We are excited to have you on board.</p><p>Your journey to excellence starts here.</p><p>Best regards,<br/><strong>{{academyName}}</strong></p>", variables: ["name", "academyName"] },
   { name: "Enrollment Confirmation", type: "email", subject: "Enrollment Confirmed - {{name}}", body: "<h2>Enrollment Confirmed</h2><p>Dear {{name}},</p><p>Your enrollment at {{academyName}} has been confirmed.</p><p>We look forward to seeing you.</p>", variables: ["name", "academyName"] },
-  { name: "Exam Reminder", type: "sms", subject: "", body: "Dear {{name}}, this is a reminder about your upcoming exam at {{academyName}}. Please be prepared. - Academy", variables: ["name", "academyName"] },
   { name: "Notice Broadcast", type: "email", subject: "Important Notice from {{academyName}}", body: "<h2>Important Notice</h2><p>Dear {{name}},</p><p>Please find below an important notice from {{academyName}}:</p><hr/><p>{{message}}</p>", variables: ["name", "academyName", "message"] },
 ];
 
@@ -79,7 +78,7 @@ export default function CommunicationsPage() {
   const [classes, setClasses] = useState<string[]>([]);
   const [templateFilter, setTemplateFilter] = useState<string>("");
 
-  const [type, setType] = useState<"email" | "sms">("email");
+  const [type, setType] = useState<"email">("email");
   const [recipientType, setRecipientType] = useState("all");
   const [classFilter, setClassFilter] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
@@ -90,7 +89,7 @@ export default function CommunicationsPage() {
   const [showGuide, setShowGuide] = useState(false);
 
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
-  const [templateForm, setTemplateForm] = useState({ name: "", type: "email" as "email" | "sms", subject: "", body: "" });
+  const [templateForm, setTemplateForm] = useState({ name: "", type: "email" as "email", subject: "", body: "" });
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [showSamplePicker, setShowSamplePicker] = useState(false);
   const [deletingTemplate, setDeletingTemplate] = useState<string | null>(null);
@@ -115,7 +114,7 @@ export default function CommunicationsPage() {
 
   async function handleSend() {
     if (!body.trim()) { toast.error("Message body is required"); return; }
-    if (type === "email" && !subject.trim()) { toast.error("Subject is required for emails"); return; }
+    if (!subject.trim()) { toast.error("Subject is required"); return; }
     setSending(true);
     try {
       const res = await fetch("/api/communications/send", {
@@ -202,7 +201,7 @@ export default function CommunicationsPage() {
   }
 
   function loadSampleTemplate(sample: Partial<Template>) {
-    setType(sample.type as "email" | "sms");
+    setType("email");
     if (sample.subject) setSubject(sample.subject);
     setBody(sample.body ?? "");
     setSelectedTemplate("");
@@ -235,8 +234,7 @@ export default function CommunicationsPage() {
     for (const [key, val] of Object.entries(sampleData)) {
       rendered = rendered.replace(new RegExp(`\\\{\\\{${key}\\\}\\\}`, "g"), val);
     }
-    if (type === "email") return rendered;
-    return rendered.replace(/\n/g, "<br/>");
+    return rendered;
   }
 
   function renderVariableChips() {
@@ -267,7 +265,7 @@ export default function CommunicationsPage() {
       <div className="mb-4 lg:mb-6">
         <h1 className="text-2xl font-bold text-primary">Communications</h1>
         <p className="text-sm text-muted">
-          {activeTab === "compose" && "Send bulk emails or SMS to students and parents."}
+          {activeTab === "compose" && "Send bulk emails to students and parents."}
           {activeTab === "templates" && "Create and manage message templates."}
           {activeTab === "history" && "Track delivery status of sent communications."}
         </p>
@@ -349,26 +347,9 @@ export default function CommunicationsPage() {
                   </div>
                 )}
               </div>
-              {/* Type Selector */}
-              <div>
-                <label className="text-sm font-medium text-primary mb-2 block">Channel</label>
-                <div className="flex gap-2">
-                  {(["email", "sms"] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => { setType(t); if (t === "sms") setSubject(""); }}
-                      className={cn(
-                        "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border",
-                        type === t
-                          ? "bg-primary text-white border-primary"
-                          : "bg-white text-muted border-primary/10 hover:border-primary/30"
-                      )}
-                    >
-                      {t === "email" ? <Mail className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
-                      {t === "email" ? "Email" : "SMS"}
-                    </button>
-                  ))}
-                </div>
+              {/* Type */}
+              <div className="hidden">
+                <input type="hidden" value={type} />
               </div>
 
               {/* Recipients */}
@@ -479,7 +460,7 @@ export default function CommunicationsPage() {
                   <Textarea
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
-                    placeholder={type === "email" ? "Write your email HTML or plain text here..." : "Write your SMS message here..."}
+                    placeholder="Write your email HTML or plain text here..."
                     rows={8}
                     className="font-mono text-sm"
                   />
@@ -489,7 +470,7 @@ export default function CommunicationsPage() {
               <div className="flex justify-end pt-2 border-t border-primary/5">
                 <Button size="lg" onClick={handleSend} disabled={sending}>
                   {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                  {sending ? "Sending..." : `Send ${type === "email" ? "Email" : "SMS"}`}
+                  {sending ? "Sending..." : "Send Email"}
                 </Button>
               </div>
             </CardContent>
@@ -513,38 +494,20 @@ export default function CommunicationsPage() {
                 <label className="text-sm font-medium text-primary mb-1.5 block">Template Name</label>
                 <Input value={templateForm.name} onChange={(e) => setTemplateForm((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. Welcome Email" />
               </div>
-              <div>
-                <label className="text-sm font-medium text-primary mb-1.5 block">Type</label>
-                <div className="flex gap-2">
-                  {(["email", "sms"] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setTemplateForm((p) => ({ ...p, type: t, subject: t === "sms" ? "" : p.subject }))}
-                      className={cn(
-                        "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
-                        templateForm.type === t
-                          ? "bg-primary text-white border-primary"
-                          : "bg-white text-muted border-primary/10"
-                      )}
-                    >
-                      {t === "email" ? "Email" : "SMS"}
-                    </button>
-                  ))}
-                </div>
+              <div className="hidden">
+                <input type="hidden" value={templateForm.type} />
               </div>
-              {templateForm.type === "email" && (
-                <div>
-                  <label className="text-sm font-medium text-primary mb-1.5 block">Subject</label>
-                  <Input value={templateForm.subject} onChange={(e) => setTemplateForm((p) => ({ ...p, subject: e.target.value }))} placeholder="Email subject line" />
-                </div>
-              )}
+              <div>
+                <label className="text-sm font-medium text-primary mb-1.5 block">Subject</label>
+                <Input value={templateForm.subject} onChange={(e) => setTemplateForm((p) => ({ ...p, subject: e.target.value }))} placeholder="Email subject line" />
+              </div>
               <div>
                 <label className="text-sm font-medium text-primary mb-1.5 block">Body</label>
                 {renderVariableChips()}
                 <Textarea
                   value={templateForm.body}
                   onChange={(e) => setTemplateForm((p) => ({ ...p, body: e.target.value }))}
-                  placeholder={templateForm.type === "email" ? "HTML or plain text..." : "SMS message text..."}
+                  placeholder="HTML or plain text..."
                   rows={6}
                   className="font-mono text-sm"
                 />
@@ -568,12 +531,12 @@ export default function CommunicationsPage() {
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted">{templates.length} template{templates.length !== 1 ? "s" : ""}</p>
               <div className="flex gap-1">
-                {(["all", "email", "sms"] as const).map((f) => (
+                {(["all", "email"] as const).map((f) => (
                   <button key={f} onClick={() => setTemplateFilter(f === "all" ? "" : f)}
                     className={cn("px-2.5 py-1 text-xs rounded-md font-medium transition-colors",
                       (f === "all" && !templateFilter) || templateFilter === f ? "bg-primary text-white" : "text-muted hover:text-primary"
                     )}>
-                    {f === "all" ? "All" : f === "email" ? "Email" : "SMS"}
+                    {f === "all" ? "All" : "Email"}
                   </button>
                 ))}
               </div>

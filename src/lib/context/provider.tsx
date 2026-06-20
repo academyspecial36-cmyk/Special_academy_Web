@@ -12,7 +12,7 @@ import {
   type FAQ, type AppSettings, type Qualification, type NoticeCategory,
 } from "./seed-data";
 import { NOTICE_CATEGORIES as DEFAULT_NOTICE_CATEGORIES } from "@/constants";
-import type { FacultyMember, Subcategory, Item, ExamCategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
+import type { FacultyMember, Subcategory, Item, ExamCategory, ExamSubcategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
 
 export interface AppContextValue {
   loading: boolean;
@@ -67,11 +67,15 @@ export interface AppContextValue {
   updateItem: (subcategoryId: string, itemId: string, data: Partial<Item>) => void;
   deleteItem: (subcategoryId: string, itemId: string) => void;
   examCategories: ExamCategory[];
+  examSubcategories: ExamSubcategory[];
   questions: Question[];
   attempts: ExamAttempt[];
   addExamCategory: (cat: Omit<ExamCategory, "id" | "createdAt">) => void;
   updateExamCategory: (id: string, data: Partial<ExamCategory>) => void;
   deleteExamCategory: (id: string) => void;
+  addExamSubcategory: (sub: Omit<ExamSubcategory, "id" | "createdAt">) => void;
+  updateExamSubcategory: (id: string, data: Partial<ExamSubcategory>) => void;
+  deleteExamSubcategory: (id: string) => void;
   addQuestion: (q: Omit<Question, "id" | "createdAt">) => void;
   updateQuestion: (id: string, data: Partial<Question>) => void;
   deleteQuestion: (id: string) => void;
@@ -136,6 +140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             })));
           }
           if (Array.isArray(data.examCategories) && data.examCategories.length) exams.setExamCategories(data.examCategories);
+          if (Array.isArray(data.examSubcategories) && data.examSubcategories.length) exams.setExamSubcategories(data.examSubcategories);
           if (Array.isArray(data.questions) && data.questions.length) exams.setQuestions(data.questions);
           if (Array.isArray(data.qualifications) && data.qualifications.length) {
             settings.setQualifications((data.qualifications as Qualification[]).sort((a, b) => a.sortOrder - b.sortOrder));
@@ -192,8 +197,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addStudent: students.addStudent, updateStudent: students.updateStudent, deleteStudent: students.deleteStudent,
     addEnrollment: students.addEnrollment, updateEnrollment: students.updateEnrollment, deleteEnrollment: students.deleteEnrollment,
 
-    examCategories: exams.examCategories, questions: exams.questions, attempts: exams.attempts,
+    examCategories: exams.examCategories, examSubcategories: exams.examSubcategories, questions: exams.questions, attempts: exams.attempts,
     addExamCategory: exams.addExamCategory, updateExamCategory: exams.updateExamCategory, deleteExamCategory: exams.deleteExamCategory,
+    addExamSubcategory: exams.addExamSubcategory, updateExamSubcategory: exams.updateExamSubcategory, deleteExamSubcategory: exams.deleteExamSubcategory,
     addQuestion: exams.addQuestion, updateQuestion: exams.updateQuestion, deleteQuestion: exams.deleteQuestion,
     addAttempt: exams.addAttempt,
 

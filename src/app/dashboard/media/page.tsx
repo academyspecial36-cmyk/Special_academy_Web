@@ -8,6 +8,7 @@ import {
   Upload, Plus, Search, Trash2, Pencil,
   Grid3X3, List, ChevronRight, X, ImageIcon,
   Download, Crop, Check, Loader2, Home, Play,
+  HardDrive,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ export default function MediaManagerPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [uploading, setUploading] = useState(false);
   const [showNewFolder, setShowNewFolder] = useState(false);
+  const [storageStats, setStorageStats] = useState<{ totalBytes: number; totalFiles: number } | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingFolder, setEditingFolder] = useState<MediaFolder | null>(null);
   const [editingFile, setEditingFile] = useState<MediaFile | null>(null);
@@ -68,12 +70,13 @@ export default function MediaManagerPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [folderRes, mediaRes] = await Promise.all([
+      const [folderRes, mediaRes, statsRes] = await Promise.all([
         fetch("/api/media/folders"),
         fetch(`/api/media?${new URLSearchParams({
           ...(currentFolderId ? { folder_id: currentFolderId } : { folder_id: "root" }),
           ...(search ? { search } : {}),
         })}`),
+        fetch("/api/media/stats"),
       ]);
 
       if (!folderRes.ok) throw new Error("Failed to load folders");
@@ -82,9 +85,10 @@ export default function MediaManagerPage() {
         throw new Error(err.error || "Failed to load media");
       }
 
-      const [foldersData, mediaData] = await Promise.all([
+      const [foldersData, mediaData, statsData] = await Promise.all([
         folderRes.json(),
         mediaRes.json(),
+        statsRes.json(),
       ]);
 
       if (!Array.isArray(foldersData)) throw new Error("Invalid folders response");
@@ -92,6 +96,9 @@ export default function MediaManagerPage() {
 
       setFolders(foldersData);
       setMedia(mediaData);
+      if (statsData && typeof statsData.totalBytes === "number") {
+        setStorageStats(statsData);
+      }
     } catch (e) {
       toast.error((e as Error).message);
       setMedia([]);
@@ -343,6 +350,12 @@ export default function MediaManagerPage() {
 
   return (
     <div ref={dropRef}>
+      {/* Storage Info */}
+      <div className="mb-4 flex items-center gap-2 text-xs text-muted bg-primary/[0.02] px-3 py-2 rounded-lg border border-primary/5">
+        <HardDrive className="w-3.5 h-3.5 shrink-0" />
+        <span>{storageStats ? `Total: ${formatSize(storageStats.totalBytes)} across ${storageStats.totalFiles} file${storageStats.totalFiles !== 1 ? "s" : ""}` : "Loading storage stats..."}</span>
+      </div>
+
       {/* Header */}
       <div className="mb-4 lg:mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -366,6 +379,23 @@ export default function MediaManagerPage() {
           </div>
         </div>
       </div>
+
+      {/* Storage Stats */}
+      {storageStats && (
+        <div className="mb-4 p-4 rounded-xl border border-primary/5 bg-gradient-to-r from-primary/[0.02] to-transparent">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
+              <HardDrive className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-primary">Media Storage</p>
+              <p className="text-xs text-muted">
+                {formatSize(storageStats.totalBytes)} used across {storageStats.totalFiles} file{storageStats.totalFiles !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-1 text-sm mb-4 flex-wrap">

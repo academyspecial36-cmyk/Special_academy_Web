@@ -1,47 +1,73 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, HelpCircle, AlertTriangle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  FileQuestion,
+  ChevronRight,
+  Layers,
+  Clock,
+  BarChart3,
+} from "lucide-react";
+
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
-import { useAuth } from "@/lib/auth-context";
-export default function StudentTakeExamPage() {
+
+export default function StudentExamCategoryPage() {
   const params = useParams();
-  const router = useRouter();
   const categoryId = params.id as string;
-  const { user } = useAuth();
-  const { examCategories, questions, attempts, addAttempt, dataLoading } = useAppContext();
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  const {
+    examCategories,
+    examSubcategories,
+    questions,
+    attempts,
+    dataLoading,
+  } = useAppContext();
 
   const category = examCategories.find((c) => c.id === categoryId);
-  const categoryQuestions = questions.filter((q) => q.categoryId === categoryId);
-  const alreadyAttempted = attempts.some((a) => a.categoryId === categoryId);
 
-  useEffect(() => {
-    if (alreadyAttempted) {
-      router.replace(`/student/exams/${categoryId}/result`);
-    }
-  }, [alreadyAttempted, categoryId, router]);
+  const subcategories = examSubcategories.filter(
+    (s) => s.categoryId === categoryId
+  );
+
+  function getAttempts(subId: string) {
+    return attempts.filter((a) => a.subcategoryId === subId);
+  }
+
+  function getLastAttempt(subId: string) {
+    const sorted = [...getAttempts(subId)].sort(
+      (a, b) =>
+        new Date(b.completedAt).getTime() -
+        new Date(a.completedAt).getTime()
+    );
+
+    return sorted[0] || null;
+  }
 
   if (dataLoading) {
     return (
-      <div className="space-y-6 max-w-3xl mx-auto">
+      <div className="space-y-6 sm:space-y-8">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-primary/10 rounded-lg animate-pulse" />
-          <div>
-            <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
-            <div className="h-4 w-24 bg-primary/10 rounded-md animate-pulse mt-1" />
+          <div className="w-10 h-10 rounded-lg bg-primary/10 animate-pulse shrink-0" />
+
+          <div className="flex-1">
+            <div className="h-7 w-48 bg-primary/10 rounded-md animate-pulse" />
+            <div className="h-4 w-32 bg-primary/10 rounded-md animate-pulse mt-2" />
           </div>
         </div>
-        <div className="h-20 bg-primary/5 rounded-xl animate-pulse" />
-        <div className="space-y-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-32 bg-primary/5 rounded-xl animate-pulse" style={{ animationDelay: `${i * 0.05}s` }} />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-56 rounded-xl bg-primary/5 animate-pulse"
+              style={{ animationDelay: `${i * 0.05}s` }}
+            />
           ))}
         </div>
       </div>
@@ -50,8 +76,10 @@ export default function StudentTakeExamPage() {
 
   if (!category) {
     return (
-      <div className="text-center py-20">
-        <h2 className="text-xl font-bold text-primary mb-2">Exam not found</h2>
+      <div className="py-20 text-center">
+        <h2 className="text-xl font-bold text-primary mb-2">
+          Exam not found
+        </h2>
         <Button variant="outline" asChild>
           <Link href="/student/exams">Back to Exams</Link>
         </Button>
@@ -59,140 +87,170 @@ export default function StudentTakeExamPage() {
     );
   }
 
-  if (alreadyAttempted) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="h-8 w-48 bg-primary/10 rounded-md animate-pulse" />
-        <div className="h-4 w-64 bg-primary/10 rounded-md animate-pulse" />
-        <div className="h-64 bg-primary/10 rounded-xl animate-pulse" />
-        <p className="text-center text-sm text-muted">Loading your results...</p>
-      </div>
-    );
-  }
-
-  function handleSubmit() {
-    const total = categoryQuestions.length;
-    let score = 0;
-    const answerDetails = categoryQuestions.map((q) => {
-      const userAnswer = answers[q.id] || "";
-      let correct = false;
-      if (q.type === "mcq") {
-        correct = userAnswer === q.answer;
-      }
-      if (correct) score++;
-      return { questionId: q.id, answer: userAnswer, correct };
-    });
-
-    const attempt = {
-      categoryId,
-      studentId: user?.id,
-      studentName: user?.name || user?.email?.split("@")[0] || "Student",
-      answers: answerDetails,
-      score,
-      total,
-    };
-
-    addAttempt(attempt);
-
-    router.push(`/student/exams/${categoryId}/result`);
-  }
-
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href="/student/exams">
-            <ArrowLeft className="w-5 h-5" />
+    <div className="space-y-6 sm:space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className="shrink-0"
+          >
+            <Link href="/student/exams">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+          </Button>
+
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-primary break-words">
+              {category.name}
+            </h1>
+
+            <p className="text-sm text-muted mt-1 break-words max-w-3xl">
+              {category.description}
+            </p>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          size="sm"
+          asChild
+          className="w-full sm:w-auto shrink-0"
+        >
+          <Link href={`/student/exams/results?category=${categoryId}`}>
+            <BarChart3 className="w-4 h-4 mr-2" />
+            My Results
           </Link>
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-primary">{category.name}</h1>
-          <p className="text-sm text-muted">{categoryQuestions.length} questions</p>
-        </div>
       </div>
 
-      {categoryQuestions.length === 0 ? (
+      {/* Empty State */}
+      {subcategories.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <HelpCircle className="w-12 h-12 text-muted mx-auto mb-3" />
-            <h3 className="font-semibold text-primary mb-1">No questions available</h3>
-            <p className="text-sm text-muted">This exam has no questions yet.</p>
+            <Layers className="w-12 h-12 text-muted mx-auto mb-3" />
+
+            <h3 className="font-semibold text-primary mb-1">
+              No sets available
+            </h3>
+
+            <p className="text-sm text-muted">
+              No exam sets are available for this category yet.
+            </p>
           </CardContent>
         </Card>
       ) : (
-        <>
-          <Card className="bg-amber-50 border-amber-200">
-            <CardContent className="p-4 flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-amber-800">Before you start</p>
-                <p className="text-xs text-amber-700">Answer all questions then click Submit. Your result will be shown immediately. MCQ answers are auto-graded; subjective answers are compared with model answers.</p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+          {subcategories.map((sub, index) => {
+            const totalQuestions = questions.filter(
+              (q) => q.subcategoryId === sub.id
+            ).length;
 
-          <div className="space-y-4">
-            {categoryQuestions.map((q, i) => (
-              <motion.div key={q.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start gap-3">
-                      <span className="w-7 h-7 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">
-                        {i + 1}
-                      </span>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <CardTitle className="text-sm font-medium">{q.question}</CardTitle>
-                          <Badge variant="outline" className={`text-[9px] ${q.type === "mcq" ? "text-blue-600" : "text-amber-600"}`}>
-                            {q.type === "mcq" ? "MCQ" : "Subjective"}
-                          </Badge>
+            const mcqCount = questions.filter(
+              (q) =>
+                q.subcategoryId === sub.id &&
+                q.type === "mcq"
+            ).length;
+
+            const subjectiveCount = totalQuestions - mcqCount;
+
+            const attempt = getLastAttempt(sub.id);
+            const attempted = Boolean(attempt);
+
+            return (
+              <motion.div
+                key={sub.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Link
+                  href={
+                    attempted
+                      ? `/student/exams/result/${attempt!.id}`
+                      : `/student/exams/take/${sub.id}`
+                  }
+                  className="block h-full group"
+                >
+                  <Card
+                    className={`h-full overflow-hidden transition-all hover:shadow-elevated ${
+                      attempted
+                        ? "hover:border-emerald-200"
+                        : "hover:border-secondary/20"
+                    }`}
+                  >
+                    <div className="p-4 sm:p-5 lg:p-6 flex flex-col h-full">
+                      {/* Top */}
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+                        <div
+                          className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${sub.color}`}
+                        >
+                          <FileQuestion className="w-6 h-6" />
                         </div>
 
-                        {q.type === "mcq" ? (
-                          <div className="grid sm:grid-cols-2 gap-2 mt-2">
-                            {q.options.map((opt, oi) => (
-                              <label
-                                key={oi}
-                                className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
-                                  answers[q.id] === opt
-                                    ? "border-secondary bg-secondary/5"
-                                    : "border-primary/10 hover:border-primary/20 bg-accent"
-                                }`}
-                              >
-                                <input
-                                  type="radio"
-                                  name={`q-${q.id}`}
-                                  value={opt}
-                                  checked={answers[q.id] === opt}
-                                  onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
-                                  className="accent-secondary shrink-0"
-                                />
-                                <span className="break-words">{opt}</span>
-                              </label>
-                            ))}
+                        {attempted && (
+                          <div className="flex flex-wrap gap-1.5">
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px]"
+                            >
+                              {attempt!.score}/{attempt!.total}
+                            </Badge>
                           </div>
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="font-semibold text-primary mb-1 break-words group-hover:text-secondary transition-colors inline-flex items-center gap-1">
+                        {sub.name}
+
+                        <ChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                      </h3>
+
+                      {/* Description */}
+                      <p className="text-xs sm:text-sm text-muted line-clamp-3 mb-4 flex-1">
+                        {sub.description}
+                      </p>
+
+                      {/* Stats */}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs pt-3 border-t border-primary/5">
+                        <span className="text-muted flex items-center gap-1 flex-wrap">
+                          <FileQuestion className="w-3.5 h-3.5 shrink-0" />
+                          {totalQuestions} questions
+                        </span>
+
+                        <span className="text-muted flex items-center gap-1 flex-wrap">
+                          <Clock className="w-3.5 h-3.5 shrink-0" />
+                          {mcqCount} MCQ · {subjectiveCount} Subjective
+                        </span>
+                      </div>
+
+                      {/* CTA */}
+                      <div className="mt-3">
+                        {attempted ? (
+                          <span className="text-xs font-medium text-emerald-600">
+                            View Results →
+                          </span>
+                        ) : totalQuestions > 0 ? (
+                          <span className="text-xs font-medium text-secondary">
+                            Take Exam →
+                          </span>
                         ) : (
-                          <textarea
-                            value={answers[q.id] || ""}
-                            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
-                            placeholder="Write your answer here..."
-                            className="w-full mt-2 p-3 bg-accent rounded-lg border border-primary/10 text-sm outline-none focus:border-secondary/50 resize-none min-h-[80px]"
-                          />
+                          <span className="text-xs text-muted">
+                            No questions yet
+                          </span>
                         )}
                       </div>
                     </div>
-                  </CardHeader>
-                </Card>
+                  </Card>
+                </Link>
               </motion.div>
-            ))}
-          </div>
-
-          <div className="flex justify-center pt-4 no-print">
-            <Button size="lg" onClick={handleSubmit}>
-              Submit Exam
-            </Button>
-          </div>
-        </>
+            );
+          })}
+        </div>
       )}
     </div>
   );

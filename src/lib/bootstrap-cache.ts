@@ -32,6 +32,7 @@ export async function getBootstrapData() {
     subRes,
     itemsRes,
     examCatRes,
+    examSubRes,
     qRes,
     qualificationRes,
   ] = await Promise.all([
@@ -47,6 +48,7 @@ export async function getBootstrapData() {
     handleGet("subcategories").then((r) => r.json()),
     handleGet("items").then((r) => r.json()),
     handleGet("exam_categories").then((r) => r.json()),
+    handleGet("exam_subcategories").then((r) => r.json()),
     handleGet("questions").then((r) => r.json()),
     handleGet("qualifications").then((r) => r.json()),
   ]);
@@ -64,6 +66,7 @@ export async function getBootstrapData() {
     subcategories: subRes,
     items: itemsRes,
     examCategories: examCatRes,
+    examSubcategories: examSubRes,
     questions: qRes,
     qualifications: qualificationRes,
   };

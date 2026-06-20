@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import {
   Save, Loader2, ArrowLeft, Upload,
-  Eye, EyeOff,
+  Eye, EyeOff, Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import dynamic from "next/dynamic";
 import { apiGet, apiCreate, apiUpdate, apiUpload } from "@/lib/api-client";
+import { AssetPicker } from "@/components/shared/asset-picker";
 import type { BlogPost } from "@/types";
+import type { MediaFile } from "@/types/media";
 
 const RichEditor = dynamic(
   () => import("@/components/ui/rich-editor").then((m) => m.RichEditor),
@@ -55,6 +57,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
+  const [assetPickerOpen, setAssetPickerOpen] = useState(false);
 
   useEffect(() => {
     if (isNew) return;
@@ -310,7 +313,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
                   id="featured-image"
                   onChange={handleImageUpload}
                 />
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <Button
                     variant="outline"
                     size="sm"
@@ -322,6 +325,13 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
                     ) : (
                       <><Upload className="w-3.5 h-3.5 mr-2" /> {image ? "Change" : "Upload"}</>
                     )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setAssetPickerOpen(true)}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5 mr-1.5" /> Browse Media
                   </Button>
                   {(imagePreview || image) && (
                     <Button
@@ -349,6 +359,18 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
           </motion.div>
         </div>
       </div>
+
+      <AssetPicker
+        open={assetPickerOpen}
+        onClose={() => setAssetPickerOpen(false)}
+        onSelect={(file: MediaFile) => {
+          setImage(file.url);
+          setImageFile(null);
+          setImagePreview(null);
+          setAssetPickerOpen(false);
+        }}
+        filterMime="image/"
+      />
     </div>
   );
 }

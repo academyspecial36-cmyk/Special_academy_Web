@@ -6,7 +6,7 @@ import { Modal } from "./modal";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
 import { Button } from "./button";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, ImageIcon } from "lucide-react";
 import { apiUpload } from "@/lib/api-client";
 
 export interface FieldConfig {
@@ -16,6 +16,7 @@ export interface FieldConfig {
   required?: boolean;
   options?: { label: string; value: string }[];
   placeholder?: string;
+  browseMedia?: boolean;
 }
 
 interface FormModalProps {
@@ -27,6 +28,8 @@ interface FormModalProps {
   onSubmit: (data: Record<string, string>) => void;
   submitLabel?: string;
   loading?: boolean;
+  onBrowseMedia?: (fieldName: string) => void;
+  externalFieldValues?: Record<string, string>;
 }
 
 export function FormModal({
@@ -38,6 +41,8 @@ export function FormModal({
   onSubmit,
   submitLabel = "Save",
   loading,
+  onBrowseMedia,
+  externalFieldValues,
 }: FormModalProps) {
   const [form, setForm] = useState<Record<string, string>>({});
   const [uploadingImg, setUploadingImg] = useState<Record<string, boolean>>({});
@@ -62,6 +67,12 @@ export function FormModal({
       setUploadingImg({});
     }
   }, [open, initialValues, fields]);
+
+  useEffect(() => {
+    if (externalFieldValues) {
+      setForm((prev) => ({ ...prev, ...externalFieldValues }));
+    }
+  }, [externalFieldValues]);
 
   function updateField(name: string, value: string) {
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -197,7 +208,7 @@ export function FormModal({
                     if (e.target) e.target.value = "";
                   }}
                 />
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button
                     type="button"
                     variant="outline"
@@ -208,10 +219,20 @@ export function FormModal({
                     {uploadingImg[field.name] ? (
                       <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Uploading...</>
                     ) : (
-                      <><Upload className="w-3.5 h-3.5 mr-2" /> Upload Image</>
+                      <><Upload className="w-3.5 h-3.5 mr-2" /> Upload</>
                     )}
                   </Button>
-                  <span className="text-xs text-muted">or paste a URL</span>
+                  {field.browseMedia && onBrowseMedia && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onBrowseMedia(field.name)}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 mr-1.5" /> Browse Media
+                    </Button>
+                  )}
+                  <span className="text-xs text-muted">or paste URL</span>
                 </div>
                 <Input
                   type="url"
