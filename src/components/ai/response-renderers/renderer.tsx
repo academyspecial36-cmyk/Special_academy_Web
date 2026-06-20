@@ -25,6 +25,8 @@ const ConfirmationCardRenderer = dynamic(() => import("./confirmation-card").the
 const ActionResultRenderer = dynamic(() => import("./action-result").then(m => m.ActionResultRenderer), { loading: Loading });
 const ErrorCardRenderer = dynamic(() => import("./error-card").then(m => m.ErrorCardRenderer), { loading: Loading });
 const AnalyticsCardRenderer = dynamic(() => import("./analytics-card").then(m => m.AnalyticsCardRenderer), { loading: Loading });
+const CourseTableRenderer = dynamic(() => import("./course-table").then(m => m.CourseTableRenderer), { loading: Loading });
+const ExamResultsTableRenderer = dynamic(() => import("./exam-results-table").then(m => m.ExamResultsTableRenderer), { loading: Loading });
 
 interface RendererProps {
   block: AIResponseBlock;
@@ -55,6 +57,10 @@ export function ResponseRenderer({ block, onConfirmTool }: RendererProps) {
       return <ErrorCardRenderer data={block.data as unknown as BlockDataMap["error_card"]} />;
     case "analytics_card":
       return <AnalyticsCardRenderer data={block.data as unknown as BlockDataMap["analytics_card"]} />;
+    case "course_table":
+      return <CourseTableRenderer data={block.data as unknown as BlockDataMap["course_table"]} />;
+    case "exam_results_table":
+      return <ExamResultsTableRenderer data={block.data as unknown as BlockDataMap["exam_results_table"]} />;
     case "knowledge_answer":
       return <KnowledgeAnswerRenderer data={block.data as unknown as BlockDataMap["knowledge_answer"]} />;
     case "faq_draft":

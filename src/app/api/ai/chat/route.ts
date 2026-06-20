@@ -269,7 +269,9 @@ export async function POST(req: NextRequest) {
           const allBlocks: AIResponseBlock[] = [...responseBlocks];
 
           // If tools were executed, get AI's follow-up response with actual results
-          if (result.toolCalls.length > 0) {
+          // Skip follow-up if ALL tool calls are pending confirmation — AI should not see placeholders
+          const allPending = toolResults.length > 0 && toolResults.every((tr) => (tr.result as Record<string, unknown>)?.__pending);
+          if (result.toolCalls.length > 0 && !allPending) {
             const followUpMessages = [
               ...openRouterMessages,
               { role: "assistant" as const, content: result.content, tool_calls: result.toolCalls },

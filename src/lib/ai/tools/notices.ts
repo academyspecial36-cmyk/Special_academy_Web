@@ -106,7 +106,7 @@ export const deleteNoticeTool: AIToolDefinition = {
 
 export const pinNoticeTool: AIToolDefinition = {
   name: "pinNotice",
-  description: "Toggle pin status of a notice.",
+  description: "Toggle pin status of a notice. When pinning a notice, all other notices are automatically unpinned.",
   parameters: {
     type: "object",
     properties: {
@@ -119,6 +119,11 @@ export const pinNoticeTool: AIToolDefinition = {
   handler: async (args, _userId) => {
     try {
       const { id, pinned } = z.object({ id: z.string(), pinned: z.boolean() }).parse(args);
+
+      if (pinned) {
+        await svc().from("notices").update({ is_pinned: false }).neq("id", id);
+      }
+
       const { data, error } = await svc().from("notices").update({ is_pinned: pinned }).eq("id", id).select().single();
       if (error) throw new Error(error.message);
       return { success: true, data };
