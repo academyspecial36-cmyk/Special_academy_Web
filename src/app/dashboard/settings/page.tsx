@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAppContext } from "@/lib/app-context";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import { apiList } from "@/lib/api-client";
 import type { AppSettings } from "@/lib/app-context";
 
 const ProfileTab = dynamic(() => import("@/components/settings/profile-tab").then(m => ({ default: m.ProfileTab })), { ssr: false }) as ComponentType<{ user: import("@/lib/auth-context").AuthUser | null }>;
@@ -171,7 +172,18 @@ export default function SettingsPage() {
       }
       if (activeTab === "backup") {
         mergedConfig.backup = backupConfig;
-        mergedConfig.backupHistory = backupHistory;
+      }
+      // Preserve backup history from DB (managed by backup API, not context)
+      const all = await apiList("settings");
+      const sorted = (all as { id: string }[]).sort((a, b) => a.id.localeCompare(b.id));
+      if (sorted.length) {
+        const res = await fetch(`/api/data/settings/${sorted[0].id}`);
+        if (res.ok) {
+          const current = await res.json() as Record<string, unknown>;
+          const curConfig = current?.config as Record<string, unknown> | undefined;
+          const bh = curConfig?.backupHistory;
+          if (bh) (mergedConfig as Record<string, unknown>).backupHistory = bh;
+        }
       }
       payload.config = mergedConfig;
       await updateSettings(payload as Partial<AppSettings>);

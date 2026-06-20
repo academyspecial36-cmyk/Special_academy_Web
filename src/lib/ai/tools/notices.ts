@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import type { AIToolDefinition } from "@/types/ai";
+import { deleteStorageFile } from "@/lib/storage-cleanup";
 
 const svc = () => createServiceRoleSupabase();
 
@@ -95,6 +96,8 @@ export const deleteNoticeTool: AIToolDefinition = {
   handler: async (args, _userId) => {
     try {
       const { id } = z.object({ id: z.string() }).parse(args);
+      const { data: record } = await svc().from("notices").select("image").eq("id", id).maybeSingle();
+      if (record?.image) await deleteStorageFile(record.image as string);
       const { error } = await svc().from("notices").delete().eq("id", id);
       if (error) throw new Error(error.message);
       return { success: true, data: { id, deleted: true } };

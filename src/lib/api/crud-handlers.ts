@@ -4,6 +4,7 @@ import { createNotificationForRole } from "../notifications";
 import { clearBootstrapCache } from "../bootstrap-cache";
 import { ALLOWED_TABLES, RESTRICTED_TABLES, transformKeys } from "./table-config";
 import { requireAdmin } from "./admin-guard";
+import { cleanupTableRecordMedia } from "../storage-cleanup";
 
 export async function handleGet(table: string, id?: string) {
   if (!ALLOWED_TABLES.includes(table)) {
@@ -111,6 +112,12 @@ export async function handleDelete(table: string, id: string) {
   }
 
   const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
+
+  // Fetch record first to clean up associated media files
+  const { data: record } = await svc.from(table).select("*").eq("id", id).maybeSingle();
+  if (record) {
+    await cleanupTableRecordMedia(table, record as Record<string, unknown>);
+  }
 
   const { error } = await svc.from(table).delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

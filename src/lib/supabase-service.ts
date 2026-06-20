@@ -1,5 +1,6 @@
 import { getSupabase } from "./supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { deleteStorageFile } from "./storage-cleanup";
 
 let _client: SupabaseClient | null = null;
 function sb(): SupabaseClient {
@@ -111,6 +112,8 @@ export async function updateSubcategory(id: string, data: Partial<Subcategory>) 
 }
 
 export async function deleteSubcategory(id: string) {
+  const { data: sub } = await sb().from("subcategories").select("thumbnail").eq("id", id).maybeSingle();
+  if (sub?.thumbnail) await deleteStorageFile(sub.thumbnail);
   return sb().from("subcategories").delete().eq("id", id);
 }
 
@@ -161,6 +164,8 @@ export async function updateItem(id: string, data: Partial<Item>) {
 }
 
 export async function deleteItem(id: string) {
+  const { data: item } = await sb().from("items").select("url").eq("id", id).maybeSingle();
+  if (item?.url) await deleteStorageFile(item.url);
   return sb().from("items").delete().eq("id", id);
 }
 

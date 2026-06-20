@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import sharp from "sharp";
+import { PDFDocument } from "pdf-lib";
 
 export async function GET(request: Request) {
   try {
@@ -36,6 +37,46 @@ export async function GET(request: Request) {
   }
 }
 
+async function optimizeBuffer(buffer: Buffer, mime: string): Promise<Buffer> {
+  if (mime.startsWith("image/")) {
+    const pipeline = sharp(buffer);
+    if (mime === "image/jpeg" || mime === "image/jpg") {
+      return pipeline.jpeg({ quality: 100, mozjpeg: true }).toBuffer() as Promise<Buffer>;
+    }
+    if (mime === "image/png") {
+      return pipeline.png({ compressionLevel: 9, palette: true }).toBuffer() as Promise<Buffer>;
+    }
+    if (mime === "image/webp") {
+      return pipeline.webp({ lossless: true }).toBuffer() as Promise<Buffer>;
+    }
+    if (mime === "image/avif") {
+      return pipeline.avif({ lossless: true }).toBuffer() as Promise<Buffer>;
+    }
+    if (mime === "image/gif") {
+      return pipeline.gif().toBuffer() as Promise<Buffer>;
+    }
+    if (mime === "image/tiff") {
+      return pipeline.tiff({ compression: "lzw" }).toBuffer() as Promise<Buffer>;
+    }
+  }
+  if (mime === "application/pdf") {
+    try {
+      const doc = await PDFDocument.load(buffer, { ignoreEncryption: true });
+      doc.setTitle("");
+      doc.setAuthor("");
+      doc.setSubject("");
+      doc.setKeywords([]);
+      doc.setProducer("");
+      doc.setCreator("");
+      const saved = await doc.save({ useObjectStreams: true });
+      if (saved.length < buffer.length) return Buffer.from(saved);
+    } catch {
+      // If PDF optimization fails, return original
+    }
+  }
+  return buffer;
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createServiceRoleSupabase();
@@ -51,11 +92,18 @@ export async function POST(request: Request) {
     const ext = file.name.split(".").pop()?.toLowerCase() || "bin";
     const uniqueName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const raw = await file.arrayBuffer();
+    let buffer = Buffer.from(raw);
+    let mimeType = file.type;
+
+    if (file.type.startsWith("image/") || file.type === "application/pdf") {
+      buffer = Buffer.from(await optimizeBuffer(buffer, file.type));
+    }
+
     const { error: uploadError } = await supabase.storage
       .from("media")
       .upload(uniqueName, buffer, {
-        contentType: file.type,
+        contentType: mimeType,
         upsert: false,
       });
     if (uploadError) throw uploadError;
@@ -63,7 +111,7 @@ export async function POST(request: Request) {
     const { data: urlData } = supabase.storage.from("media").getPublicUrl(uniqueName);
     const publicUrl = urlData.publicUrl;
 
-    const isImage = file.type.startsWith("image/");
+    const isImage = mimeType.startsWith("image/");
     let width: number | null = null;
     let height: number | null = null;
 
@@ -82,8 +130,8 @@ export async function POST(request: Request) {
       .insert({
         name: file.name.replace(/\.[^/.]+$/, ""),
         file_name: file.name,
-        file_size: file.size,
-        mime_type: file.type,
+        file_size: buffer.length,
+        mime_type: mimeType,
         url: publicUrl,
         thumbnail_url: null,
         folder_id: folder_id || null,

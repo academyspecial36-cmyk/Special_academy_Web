@@ -144,7 +144,7 @@ export default function AICommandCenterPage() {
         {/* Main Chat */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Mobile top bar */}
-          <div className="flex lg:hidden items-center gap-2 px-3 py-2 border-b border-primary/5 bg-white shrink-0">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-primary/5 bg-white shrink-0">
             <button
               onClick={() => setMobileHistory(true)}
               className="p-1.5 rounded-lg hover:bg-accent text-muted hover:text-primary transition-colors"

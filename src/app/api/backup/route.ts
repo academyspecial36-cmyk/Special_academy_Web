@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { exportAllData, importAllData, uploadToSupabaseStorage, generateBackupId, isBackupDue, type BackupEntry } from "@/lib/backup";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { seedSettings } from "@/lib/settings-server";
+import { createNotificationForRole } from "@/lib/notifications";
 
 async function ensureSettingsRow(svc: ReturnType<typeof createServiceRoleSupabase>) {
   const { data } = await svc.from("settings").select("id").maybeSingle();
@@ -101,6 +102,17 @@ export async function POST(request: Request) {
       const existingBackup = (config.backup as Record<string, unknown>) || {};
       config.backup = { ...existingBackup, autoBackup: { ...(existingBackup.autoBackup as Record<string, unknown> || {}), lastBackup: new Date().toISOString() } };
       await svc.from("settings").update({ config } as never).eq("id", row.id);
+      return NextResponse.json({ success: true });
+    }
+
+    if (action === "notify-upcoming") {
+      await createNotificationForRole(
+        "admin",
+        "notice",
+        "Auto-backup due within 24 hours",
+        "The weekly automatic backup is scheduled to run soon. Ensure your Supabase storage is available.",
+        "/dashboard/settings?tab=backup",
+      );
       return NextResponse.json({ success: true });
     }
 
