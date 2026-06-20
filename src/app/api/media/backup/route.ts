@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { PassThrough } from "stream";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { ZipArchive } = require("archiver");
 
 export async function GET() {
+  const { ZipArchive } = await import("archiver");
   try {
     const supabase = createServiceRoleSupabase();
 

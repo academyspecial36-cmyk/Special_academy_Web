@@ -159,7 +159,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     loadBootstrap();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadAdminData = useCallback(async () => {
     try {
@@ -177,7 +177,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     } catch {
       // admin data unavailable
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value: AppContextValue = {
     loading, dataLoading, loadAdminData,

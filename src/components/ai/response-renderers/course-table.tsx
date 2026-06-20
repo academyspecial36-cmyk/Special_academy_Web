@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, BookOpen, Clock } from "lucide-react";
@@ -46,11 +47,13 @@ export function CourseTableRenderer({ data }: { data: CourseTableData }) {
               className="rounded-xl border border-primary/5 bg-white overflow-hidden hover:shadow-md transition-shadow"
             >
               {course.image && (
-                <div className="aspect-video w-full overflow-hidden bg-accent/30">
-                  <img
+                <div className="aspect-video w-full overflow-hidden bg-accent/30 relative">
+                  <Image
                     src={course.image}
                     alt={course.title ?? ""}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
                   />
                 </div>
               )}
