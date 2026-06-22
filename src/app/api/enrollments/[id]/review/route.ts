@@ -76,25 +76,64 @@ export async function POST(
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
-      let qualificationName: string | null = enrollment.current_class ?? null;
-      if (enrollment.qualification_id) {
+      let qualificationName: string | null = null;
+      let qualificationId: string | null = enrollment.qualification_id ?? null;
+      if (qualificationId) {
         const { data: qual } = await svc
           .from("qualifications")
           .select("name")
-          .eq("id", enrollment.qualification_id)
+          .eq("id", qualificationId)
           .maybeSingle();
         qualificationName = qual?.name ?? null;
+      } else {
+        const { data: qual } = await svc
+          .from("qualifications")
+          .select("id, name")
+          .maybeSingle();
+        if (qual) {
+          qualificationId = qual.id;
+          qualificationName = qual.name;
+        }
       }
 
-      await svc.from("students").insert({
+      let enrolledCourseIds: string[] = [];
+      if (enrollment.interested_course) {
+        const { data: course } = await svc
+          .from("courses")
+          .select("id")
+          .eq("title", enrollment.interested_course)
+          .maybeSingle();
+        enrolledCourseIds = course ? [course.id] : [enrollment.interested_course];
+      }
+
+      const { error: studentError } = await svc.from("students").insert({
         name: enrollment.full_name,
         email: enrollment.email,
         phone: enrollment.phone,
-        class: qualificationName,
-        enrolled_courses: enrollment.interested_course
-          ? [enrollment.interested_course]
-          : [],
+        qualification_id: qualificationId,
+        enrolled_courses: enrolledCourseIds,
       });
+
+      if (studentError) {
+        return NextResponse.json({ error: studentError.message }, { status: 500 });
+      }
+
+      // Update the profile with latest enrollment data
+      if (enrollment.auth_user_id) {
+        const { error: profileError } = await svc
+          .from("profiles")
+          .update({
+            name: enrollment.full_name,
+            email: enrollment.email,
+            phone: enrollment.phone,
+            role: "student",
+          })
+          .eq("id", enrollment.auth_user_id);
+
+        if (profileError) {
+          console.error("Failed to update profile for", enrollment.auth_user_id, profileError);
+        }
+      }
 
       try {
         await sendApprovalEmail(enrollment.email, enrollment.full_name);

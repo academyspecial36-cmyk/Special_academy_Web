@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { Search, Filter, Plus, Pencil, Trash2, Copy } from "lucide-react";
+import { Search, Filter, Plus, Pencil, Trash2, Copy, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -45,15 +45,36 @@ export default function StudentsPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<Student | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((s) => s.id)));
+    }
+  }
 
   const filtered = useMemo(() => {
-    return students.filter((s) => {
-      const matchesSearch =
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.email.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === "all" || s.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
+    return [...students]
+      .filter((s) => {
+        const matchesSearch =
+          s.name.toLowerCase().includes(search.toLowerCase()) ||
+          s.email.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus = statusFilter === "all" || s.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime());
   }, [search, statusFilter, students]);
 
   function resolveCourseIds(raw: string[]): string[] {
@@ -100,6 +121,30 @@ export default function StudentsPage() {
     toast.success("Student deleted successfully");
   }
 
+  async function confirmBulkDelete() {
+    setBulkDeleting(true);
+    setShowBulkConfirm(false);
+    try {
+      const ids = Array.from(selectedIds);
+      const res = await fetch("/api/bulk-delete-students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Bulk delete failed");
+      }
+      await loadAdminData();
+      setSelectedIds(new Set());
+      toast.success(`${ids.length} student(s) deleted`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete students");
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -144,12 +189,34 @@ export default function StudentsPage() {
       </Card>
 
       <Card>
+        <CardHeader className="px-6 py-4 flex flex-row items-center justify-between gap-4">
+          <CardTitle className="text-base sm:text-lg">All Students</CardTitle>
+          {selectedIds.size > 0 && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setShowBulkConfirm(true)}
+              disabled={bulkDeleting}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              Delete ({selectedIds.size})
+            </Button>
+          )}
+        </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-primary/5 bg-accent/50">
-                  <th className="text-left text-xs font-medium text-muted py-3 px-6">Student</th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4 w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === filtered.length && filtered.length > 0}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-primary/30 accent-primary"
+                    />
+                  </th>
+                  <th className="text-left text-xs font-medium text-muted py-3 px-4">Student</th>
                   <th className="text-left text-xs font-medium text-muted py-3 px-4">Phone</th>
                   <th className="text-left text-xs font-medium text-muted py-3 px-4">Qualification</th>
                   <th className="text-left text-xs font-medium text-muted py-3 px-4">Courses</th>
@@ -166,7 +233,15 @@ export default function StudentsPage() {
                     animate={{ opacity: 1 }}
                     className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
                   >
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(student.id)}
+                        onChange={() => toggleSelect(student.id)}
+                        className="w-4 h-4 rounded border-primary/30 accent-primary"
+                      />
+                    </td>
+                    <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
                           {student.image ? (
@@ -283,6 +358,15 @@ export default function StudentsPage() {
         onConfirm={handleDelete}
         title="Delete Student?"
         message={`Are you sure you want to delete "${selected?.name}"? This action cannot be undone.`}
+      />
+
+      <DeleteModal
+        open={showBulkConfirm}
+        onClose={() => setShowBulkConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title={`Delete ${selectedIds.size} student(s)?`}
+        message={`Are you sure you want to delete ${selectedIds.size} student(s)? This action cannot be undone.`}
+        loading={bulkDeleting}
       />
     </div>
   );

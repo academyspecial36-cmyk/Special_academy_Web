@@ -38,12 +38,12 @@ export async function POST() {
 export async function DELETE(request: Request) {
   try {
     const body = await request.json();
-    const { paths } = body;
+    const { paths, bucket } = body;
     if (!Array.isArray(paths) || paths.length === 0) {
       return NextResponse.json({ error: "No paths provided" }, { status: 400 });
     }
 
-    const BUCKET = process.env.NEXT_PUBLIC_BUCKET_NAME || "my-bucket";
+    const BUCKET = bucket || process.env.NEXT_PUBLIC_BUCKET_NAME || "my-bucket";
     const supabase = createServiceRoleSupabase();
 
     const { error } = await supabase.storage.from(BUCKET).remove(paths);

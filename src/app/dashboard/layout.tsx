@@ -28,6 +28,7 @@ import {
   PanelLeftOpen,
   PanelLeftClose,
   Sparkles,
+  HardDrive,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,7 @@ const iconMap: Record<string, React.ElementType> = {
   Megaphone,
   StickyNote,
   Sparkles,
+  HardDrive,
 };
 
 export default function DashboardLayout({

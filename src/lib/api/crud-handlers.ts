@@ -133,6 +133,15 @@ export async function handlePut(table: string, id: string, body: Record<string, 
   const dbBody = transformKeys(body, table, true);
   const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;
 
+  // Fetch old course data before update for cascade
+  let oldTitle: string | undefined;
+  let newTitle: string | undefined;
+  if (table === "courses" && dbBody.title) {
+    const { data: old } = await svc.from("courses").select("title").eq("id", id).maybeSingle();
+    if (old) oldTitle = old.title as string;
+    newTitle = dbBody.title as string;
+  }
+
   if (table === "courses" && dbBody.qualification_id && typeof dbBody.qualification_id === "string") {
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!isUUID.test(dbBody.qualification_id as string)) {
@@ -145,6 +154,20 @@ export async function handlePut(table: string, id: string, body: Record<string, 
     ? await (svc.from("courses") as any).update(dbBody).eq("id", id).select("*, qualification:qualifications(name)").single()
     : await svc.from(table).update(dbBody).eq("id", id).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Cascade title changes to related tables
+  if (table === "courses" && oldTitle && newTitle && oldTitle !== newTitle) {
+    const { data: students } = await svc.from("students").select("id, enrolled_courses");
+    for (const student of students ?? []) {
+      const enrolled = student.enrolled_courses as string[] | null;
+      if (enrolled?.includes(oldTitle)) {
+        await svc.from("students").update({
+          enrolled_courses: enrolled.map((e: string) => (e === oldTitle ? id : e)),
+        }).eq("id", (student as Record<string, unknown>).id as string);
+      }
+    }
+    await svc.from("enrollments").update({ interested_course: newTitle }).eq("interested_course", oldTitle);
+  }
 
   const putResult = transformKeys(data as Record<string, unknown>, table, false);
   if (table === "courses" && putResult && typeof putResult.qualification === "object" && putResult.qualification) {

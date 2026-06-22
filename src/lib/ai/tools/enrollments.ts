@@ -27,19 +27,26 @@ export const approveEnrollmentTool: AIToolDefinition = {
         .from("enrollments").update({ status: "approved" }).eq("id", id);
       if (updateError) throw new Error(updateError.message);
 
-      let qualificationName: string | null = enrollment.current_class ?? null;
-      if (enrollment.qualification_id) {
+      let qualificationId: string | null = enrollment.qualification_id ?? null;
+      if (!qualificationId) {
         const { data: qual } = await svc()
-          .from("qualifications").select("name").eq("id", enrollment.qualification_id).maybeSingle();
-        qualificationName = qual?.name ?? null;
+          .from("qualifications").select("id").maybeSingle();
+        if (qual) qualificationId = qual.id;
+      }
+
+      let enrolledCourseIds: string[] = [];
+      if (enrollment.interested_course) {
+        const { data: course } = await svc()
+          .from("courses").select("id").eq("title", enrollment.interested_course).maybeSingle();
+        enrolledCourseIds = course ? [course.id] : [enrollment.interested_course];
       }
 
       await svc().from("students").insert({
         name: enrollment.full_name,
         email: enrollment.email,
         phone: enrollment.phone,
-        class: qualificationName,
-        enrolled_courses: enrollment.interested_course ? [enrollment.interested_course] : [],
+        qualification_id: qualificationId,
+        enrolled_courses: enrolledCourseIds,
         status: "active",
         join_date: new Date().toISOString(),
       });
