@@ -111,6 +111,11 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
         href: "/dashboard/media",
         icon: "ImageIcon",
       },
+      {
+        label: "My Storage",
+        href: "/dashboard/media/storage",
+        icon: "HardDrive",
+      },
     ],
   },
 
