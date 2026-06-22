@@ -121,11 +121,15 @@ export async function POST(request: NextRequest) {
 
       const resend = new Resend(resendKey);
 
+      const fromAddress = process.env.EMAIL_FROM
+        ? `Special Academy <${process.env.EMAIL_FROM}>`
+        : "onboarding@resend.dev";
+
       for (const r of validRecipients) {
         try {
           if (r.email) {
             const { error: sendError } = await resend.emails.send({
-              from: "Special Academy <onboarding@resend.dev>",
+              from: fromAddress,
               to: r.email,
               subject: subject || "Message from Special Academy",
               html: replaceVariables(finalBody, { name: r.name }),
