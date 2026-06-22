@@ -96,7 +96,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+                <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg [&_a]:text-red-700 [&_a]:font-medium" dangerouslySetInnerHTML={{ __html: error }} />
               )}
 
               <div className="flex items-center justify-between text-sm">

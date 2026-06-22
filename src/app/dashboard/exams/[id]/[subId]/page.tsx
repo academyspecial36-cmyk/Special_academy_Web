@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { ArrowLeft, Plus, Pencil, Trash2, Printer, HelpCircle, FileQuestion } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuestionEditor } from "@/components/exam/question-editor";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext } from "@/lib/app-context";
-import type { Question } from "@/types";
+import type { Question, QuestionOption } from "@/types";
 import { toast } from "sonner";
 
 export default function AdminSubcategoryQuestionsPage() {
@@ -28,13 +29,13 @@ export default function AdminSubcategoryQuestionsPage() {
   const subcategory = examSubcategories.find((s) => s.id === subId);
   const subQuestions = questions.filter((q) => q.subcategoryId === subId);
 
-  function handleAdd(data: { type: "mcq" | "subjective"; question: string; options: string[]; answer: string; explanation: string }) {
+  function handleAdd(data: { type: "mcq" | "subjective"; question: string; options: QuestionOption[]; answer: string; explanation: string }) {
     addQuestion({ categoryId, subcategoryId: subId, ...data });
     setShowAdd(false);
     toast.success("Question added");
   }
 
-  function handleEdit(data: { type: "mcq" | "subjective"; question: string; options: string[]; answer: string; explanation: string }) {
+  function handleEdit(data: { type: "mcq" | "subjective"; question: string; options: QuestionOption[]; answer: string; explanation: string }) {
     if (!editing) return;
     updateQuestion(editing.id, data);
     setEditing(null);
@@ -151,13 +152,16 @@ export default function AdminSubcategoryQuestionsPage() {
                     {q.type === "mcq" && q.options.length > 0 && (
                       <div className="grid sm:grid-cols-2 gap-2 mb-3">
                         {q.options.map((opt, oi) => {
-                          const isCorrect = opt === q.answer;
+                          const optText = typeof opt === "string" ? opt : opt.text;
+                          const optImage = typeof opt === "string" ? undefined : opt.image;
+                          const isCorrect = optText === q.answer;
                           return (
                             <div key={oi} className={`flex items-center gap-2 p-2 rounded-lg text-xs ${isCorrect ? "bg-emerald-50 text-emerald-700 font-medium" : "bg-accent text-primary"}`}>
                               <span className="w-5 h-5 rounded-full bg-white border border-primary/10 flex items-center justify-center text-[10px] font-medium shrink-0">
                                 {String.fromCharCode(65 + oi)}
                               </span>
-                              <span className="break-words">{opt}</span>
+                              <span className="break-words">{optText}</span>
+                              {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
                               {isCorrect && <Badge className="ml-auto text-[8px] bg-emerald-500 text-white border-0 shrink-0">Correct</Badge>}
                             </div>
                           );

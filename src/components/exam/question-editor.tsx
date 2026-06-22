@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
-import type { Question } from "@/types";
+import type { Question, QuestionOption } from "@/types";
 
 interface QuestionEditorProps {
   open: boolean;
@@ -14,7 +14,7 @@ interface QuestionEditorProps {
   onSubmit: (data: {
     type: "mcq" | "subjective";
     question: string;
-    options: string[];
+    options: QuestionOption[];
     answer: string;
     explanation: string;
   }) => void;
@@ -63,7 +63,9 @@ export function QuestionEditor({
         setType(initialValues.type);
         setQuestion(initialValues.question);
         setOptions(
-          initialValues.options.length > 0 ? initialValues.options : ["", ""]
+          initialValues.options.length > 0
+            ? initialValues.options.map((o) => typeof o === "string" ? o : o.text)
+            : ["", ""]
         );
         setAnswer(initialValues.answer);
         setExplanation(initialValues.explanation);
@@ -134,7 +136,7 @@ export function QuestionEditor({
     e.preventDefault();
     if (!question.trim()) return;
 
-    const filteredOptions =
+    const filteredOptions: QuestionOption[] =
       type === "mcq" ? options.filter((o) => o.trim()) : [];
 
     onSubmit({

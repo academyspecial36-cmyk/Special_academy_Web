@@ -147,13 +147,15 @@ export interface ExamSubcategory {
   createdAt: string;
 }
 
+export type QuestionOption = string | { text: string; image?: string };
+
 export interface Question {
   id: string;
   categoryId: string;
   subcategoryId?: string;
   type: "mcq" | "subjective";
   question: string;
-  options: string[];
+  options: QuestionOption[];
   answer: string;
   explanation: string;
   createdAt: string;

@@ -23,14 +23,33 @@ export async function GET() {
 
     const svc = createServiceRoleSupabase();
 
-    const { data: studentRows } = await svc
+    // Look up student by email, with enrollment auth_user_id fallback
+    let studentRows = await svc
       .from("students")
-      .select("enrolled_courses")
+      .select("id, enrolled_courses")
       .eq("email", user.email)
       .order("created_at", { ascending: false })
       .limit(1);
 
-    const student = studentRows?.[0];
+    let student = studentRows.data?.[0];
+
+    if (!student) {
+      const { data: enrollment } = await svc
+        .from("enrollments")
+        .select("email")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (enrollment?.email) {
+        const fallback = await svc
+          .from("students")
+          .select("id, enrolled_courses")
+          .eq("email", enrollment.email)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        student = fallback.data?.[0];
+      }
+    }
+
     if (!student) {
       return NextResponse.json({ courses: [] });
     }
@@ -55,13 +74,35 @@ export async function GET() {
       .from("courses") as any)
       .select("*, qualification:qualifications(name)");
 
-    const filtered = (allCourses ?? []).filter((c: Record<string, unknown>) => {
-      const title = (c.title ?? "") as string;
-      const id = (c.id ?? "") as string;
-      return enrolled.includes(id) || enrolled.includes(title);
-    });
+    // Build lookup: course id → course, and course title → course
+    const coursesById = new Map<string, Record<string, unknown>>();
+    const coursesByTitle = new Map<string, Record<string, unknown>>();
+    for (const c of (allCourses ?? []) as Record<string, unknown>[]) {
+      coursesById.set(c.id as string, c);
+      coursesByTitle.set((c.title as string ?? "").toLowerCase(), c);
+    }
 
-    const courses = filtered.map((c: Record<string, unknown>) => {
+    // Resolve each enrolled entry to a course, converting titles to IDs on the fly
+    const resolved: string[] = [];
+    const matchedCourses: Record<string, unknown>[] = [];
+    let changed = false;
+
+    for (const entry of enrolled) {
+      let course = coursesById.get(entry);
+      if (!course) course = coursesByTitle.get(entry.toLowerCase());
+      if (course) {
+        resolved.push(course.id as string);
+        matchedCourses.push(course);
+        if (entry !== course.id) changed = true;
+      }
+    }
+
+    // Save resolved IDs back to student record if any titles were converted
+    if (changed) {
+      await svc.from("students").update({ enrolled_courses: resolved }).eq("id", (student as Record<string, unknown>).id as string);
+    }
+
+    const courses = matchedCourses.map((c: Record<string, unknown>) => {
       const flat = transformKeys(c);
       if (typeof flat.qualification === "object" && flat.qualification) {
         flat.qualification = (flat.qualification as Record<string, unknown>).name as string ?? "";
@@ -70,7 +111,8 @@ export async function GET() {
     });
 
     return NextResponse.json({ courses });
-  } catch {
+  } catch (err) {
+    console.error("student-courses error:", err);
     return NextResponse.json({ error: "Failed to fetch courses" }, { status: 500 });
   }
 }

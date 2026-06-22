@@ -64,6 +64,9 @@ export default function EnrollmentPage() {
   const [verifying, setVerifying] = useState(false);
   const [verified, setVerified] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [formError, setFormError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [courses, setCourses] = useState<string[]>([]);
@@ -111,6 +114,7 @@ export default function EnrollmentPage() {
 
   async function handleCreateAccount() {
     setCreating(true);
+    setFormError("");
     try {
       const res = await fetch("/api/enroll", {
         method: "POST",
@@ -121,7 +125,7 @@ export default function EnrollmentPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Failed to create account");
+        setFormError(data.error || "Failed to create account");
         setCreating(false);
         return;
       }
@@ -129,9 +133,10 @@ export default function EnrollmentPage() {
       setAccountCreated(true);
       setCodeSent(true);
       setStep(3);
+      setFormError("");
       toast.success("Verification code sent to your email!");
     } catch {
-      toast.error("Network error. Please try again.");
+      setFormError("Network error. Please try again.");
       setCreating(false);
     }
   }
@@ -171,8 +176,38 @@ export default function EnrollmentPage() {
       toast.error("Please verify your email first");
       return;
     }
+    setFormError("");
     setStep((s) => s + 1);
   };
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  async function handleResendCode() {
+    if (resending || resendCooldown > 0) return;
+    setResending(true);
+    try {
+      const res = await fetch("/api/enroll/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to resend code");
+      } else {
+        toast.success("Verification code resent!");
+        setResendCooldown(60);
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setResending(false);
+    }
+  }
 
   const handleVerify = async () => {
     if (verificationCode.length < 6) {
@@ -191,15 +226,14 @@ export default function EnrollmentPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Verification failed");
+        setFormError(data.error || "Verification failed");
         setVerifying(false);
         return;
       }
 
       setVerified(true);
-      toast.success("Email verified successfully!");
     } catch {
-      toast.error("Network error. Please try again.");
+      setFormError("Network error. Please try again.");
       setVerifying(false);
     }
   };
@@ -590,6 +624,10 @@ export default function EnrollmentPage() {
               </div>
             )}
 
+            {formError && (
+              <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg [&_a]:text-red-700 [&_a]:font-medium" dangerouslySetInnerHTML={{ __html: formError }} />
+            )}
+
             {step === 3 && (
               <div className="space-y-5">
                 <div className="flex items-center gap-3 mb-4">
@@ -719,6 +757,7 @@ export default function EnrollmentPage() {
               <Button
                 variant="outline"
                 onClick={() => {
+                  setFormError("");
                   if (step === 3 && verified) {
                     setStep((s) => s - 1);
                   } else {
@@ -765,12 +804,23 @@ export default function EnrollmentPage() {
               )}
 
               {step === 3 && !verified && (
-                <Button
-                  onClick={handleVerify}
-                  disabled={verifying || verificationCode.length < 6}
-                >
-                  {verifying ? "Verifying..." : "Verify Email"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={handleResendCode}
+                    variant="ghost"
+                    size="sm"
+                    disabled={resending || resendCooldown > 0}
+                    className="text-xs"
+                  >
+                    {resending ? "Sending..." : resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
+                  </Button>
+                  <Button
+                    onClick={handleVerify}
+                    disabled={verifying || verificationCode.length < 6}
+                  >
+                    {verifying ? "Verifying..." : "Verify Email"}
+                  </Button>
+                </div>
               )}
 
               {step === 3 && verified && (

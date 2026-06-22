@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/lib/app-context";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 
@@ -192,7 +193,6 @@ export default function StudentTakeSubcategoryExamPage() {
     const attempt = {
       categoryId: category.id,
       subcategoryId: subId,
-      studentId: user?.id,
       studentName: user?.name || user?.email?.split("@")[0] || "Student",
       answers: answerDetails,
       score,
@@ -449,23 +449,27 @@ export default function StudentTakeSubcategoryExamPage() {
                   <CardContent className="px-5 sm:px-6 pb-6 pt-0">
                     {q.type === "mcq" && q.options ? (
                       <div className="grid sm:grid-cols-2 gap-2.5 ml-11 sm:ml-12">
-                        {q.options.map((opt, oi) => (
+                        {q.options.map((opt, oi) => {
+                          const optText = typeof opt === "string" ? opt : opt.text;
+                          const optImage = typeof opt === "string" ? undefined : opt.image;
+                          const optValue = optText || optImage || "";
+                          return (
                           <label
                             key={oi}
                             className={`group relative flex items-center gap-3 p-2.5 rounded-lg border-2 text-sm cursor-pointer transition-all duration-200 ${
-                              answers[q.id] === opt
+                              answers[q.id] === optValue
                                 ? "border-primary bg-primary/5 shadow-sm"
                                 : "border-primary/10 hover:border-primary/20 bg-accent"
                             }`}
                           >
                             <div
                               className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                                answers[q.id] === opt
+                                answers[q.id] === optValue
                                   ? "border-primary bg-primary"
                                   : "border-primary/30 group-hover:border-primary/50"
                               }`}
                             >
-                              {answers[q.id] === opt && (
+                              {answers[q.id] === optValue && (
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
@@ -482,14 +486,16 @@ export default function StudentTakeSubcategoryExamPage() {
                             <input
                               type="radio"
                               name={`q-${q.id}`}
-                              value={opt}
-                              checked={answers[q.id] === opt}
-                              onChange={() => handleAnswerChange(q.id, opt)}
+                              value={optValue}
+                              checked={answers[q.id] === optValue}
+                              onChange={() => handleAnswerChange(q.id, optValue)}
                               className="sr-only"
                             />
-                            <span className="break-words text-primary">{opt}</span>
+                            <span className="break-words text-primary">{optText}</span>
+                            {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
                           </label>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="ml-11 sm:ml-12">

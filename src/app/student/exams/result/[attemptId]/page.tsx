@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -105,8 +106,11 @@ export default function StudentAttemptResultPage() {
                       {q.type === "mcq" && (
                         <div className="grid sm:grid-cols-2 gap-2 mt-2">
                           {q.options.map((opt, oi) => {
-                            const isSelected = userAnswer === opt;
-                            const isRight = opt === q.answer;
+                            const optText = typeof opt === "string" ? opt : opt.text;
+                            const optImage = typeof opt === "string" ? undefined : opt.image;
+                            const optValue = optText || optImage || "";
+                            const isSelected = userAnswer === optValue;
+                            const isRight = optValue === q.answer;
                             let borderClass = "border-primary/10";
                             if (isSelected && isRight) borderClass = "border-emerald-500 bg-emerald-50";
                             else if (isSelected && !isRight) borderClass = "border-red-500 bg-red-50";
@@ -116,7 +120,8 @@ export default function StudentAttemptResultPage() {
                                 <span className={`w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-medium shrink-0 ${isRight ? "border-emerald-500" : "border-primary/10"}`}>
                                   {String.fromCharCode(65 + oi)}
                                 </span>
-                                <span className={`break-words ${isRight ? "font-medium" : ""}`}>{opt}</span>
+                                <span className={`break-words ${isRight ? "font-medium" : ""}`}>{optText}</span>
+                                {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
                                 {isRight && <CheckCircle className="w-3.5 h-3.5 text-emerald-500 ml-auto shrink-0" />}
                                 {isSelected && !isRight && <XCircle className="w-3.5 h-3.5 text-red-500 ml-auto shrink-0" />}
                               </div>

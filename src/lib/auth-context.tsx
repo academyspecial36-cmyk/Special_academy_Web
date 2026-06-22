@@ -139,6 +139,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfileServer]);
 
   const login = useCallback(async (email: string, password: string, rememberMe = true) => {
+    // Check student status BEFORE calling Supabase auth — no session created, no race
+    if (email) {
+      try {
+        const res = await fetch(`/api/check-student-status?email=${encodeURIComponent(email)}`);
+        const status = await res.json();
+        if (status.blocked) {
+          return { success: false, error: status.error };
+        }
+      } catch {
+        return { success: false, error: "Unable to verify account status. Please try again." };
+      }
+    }
+
     const supabase = getSupabase();
     if (!supabase) return { success: false, error: "Supabase not configured" };
 
@@ -153,14 +166,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      // Clear flags on failure
       localStorage.removeItem("persist_session");
       sessionStorage.removeItem("temp_session");
       return { success: false, error: error.message };
     }
 
     if (data.user) {
-
       const profileUser = await fetchProfileServer();
       if (profileUser) {
         setUser(profileUser);
