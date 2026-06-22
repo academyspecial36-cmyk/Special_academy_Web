@@ -11,6 +11,7 @@ export const ALLOWED_TABLES: Entity[] = [
   "contact_submissions",
   "ai_conversations",
   "qualifications",
+  "live_classes",
 ];
 
 export const RESTRICTED_TABLES: Entity[] = [
@@ -39,6 +40,7 @@ const COLUMN_MAP: Record<string, Record<string, string>> = {
   blog_posts: { createdAt: "created_at", updatedAt: "updated_at", publishedAt: "published_at" },
   contact_submissions: { isRead: "is_read" },
   qualifications: { sortOrder: "sort_order" },
+  live_classes: { joinUrl: "join_url", recordingUrl: "recording_url", recordingChunks: "recording_chunks", startTime: "start_time", durationMinutes: "duration_minutes", courseId: "course_id", createdAt: "created_at", updatedAt: "updated_at" },
 };
 
 export function toDbColumn(table: string, key: string): string {

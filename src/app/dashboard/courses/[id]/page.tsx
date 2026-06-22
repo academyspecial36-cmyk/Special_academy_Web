@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -23,6 +23,7 @@ import { Modal } from "@/components/ui/modal";
 import { PreviewModal } from "@/components/ui/preview-modal";
 import { AssetPicker } from "@/components/shared/asset-picker";
 import { useAppContext } from "@/lib/app-context";
+import { useBreadcrumbs } from "@/lib/breadcrumb-context";
 import { formatShortDate } from "@/lib/utils";
 import { apiUpload, apiUploadMultiple } from "@/lib/api-client";
 
@@ -163,6 +164,15 @@ export default function CourseDetailPage() {
   const { courses, subcategories, addSubcategory, updateSubcategory, deleteSubcategory, addItem, updateItem, deleteItem } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
   const courseSubs = subcategories.filter((s) => s.courseId === courseId);
+  const { setSegments } = useBreadcrumbs();
+
+  useEffect(() => {
+    setSegments([
+      { label: "Courses", href: "/dashboard/courses" },
+      { label: course?.title ?? "Course" },
+    ]);
+    return () => setSegments([]);
+  }, [course?.title, setSegments]);
 
   const [activeSubId, setActiveSubId] = useState<string | null>(null);
   const [subAddOpen, setSubAddOpen] = useState(false);

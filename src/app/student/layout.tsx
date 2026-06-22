@@ -15,11 +15,14 @@ import {
   X,
   LogOut,
   ChevronDown,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { STUDENT_NAV } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
+import { BreadcrumbProvider, useBreadcrumbs } from "@/lib/breadcrumb-context";
+import { BreadcrumbRenderer } from "@/components/shared/breadcrumb-renderer";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
 
@@ -29,6 +32,7 @@ const iconMap: Record<string, React.ElementType> = {
   Bell,
   User,
   ClipboardCheck,
+  Video,
 };
 
 export default function StudentLayout({
@@ -55,7 +59,9 @@ export default function StudentLayout({
     } else {
       document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [sidebarOpen]);
 
   if (isLoading) {
@@ -184,7 +190,10 @@ export default function StudentLayout({
 
         <div className="p-3 border-t border-primary/5">
           <button
-            onClick={() => { setSidebarOpen(false); logout(); }}
+            onClick={() => {
+              setSidebarOpen(false);
+              logout();
+            }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-all"
           >
             <LogOut className="w-4 h-4" />
@@ -194,94 +203,90 @@ export default function StudentLayout({
       </aside>
 
       <div className="flex-1 min-w-0">
-        <NotificationsProvider>
-          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-primary/5 h-16 flex items-center px-4 lg:px-8">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-md hover:bg-accent text-primary mr-3"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+        <BreadcrumbProvider>
+          <NotificationsProvider>
+            <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-primary/5 h-16 flex items-center px-4 lg:px-8">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-md hover:bg-accent text-primary mr-3"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
 
-            <nav className="hidden md:flex items-center text-sm text-muted">
-              <span className="text-primary font-medium">Student Portal</span>
-              {pathname !== "/student" && (
-                <>
-                  <span className="mx-2 text-primary/20">/</span>
-                  <span className="capitalize">
-                    {pathname.split("/").pop()}
-                  </span>
-                </>
-              )}
-            </nav>
+              <BreadcrumbRenderer rootLabel="Student Portal" />
 
-            <div className="ml-auto flex items-center gap-3">
-              <div className="relative">
-                <button
-                  onClick={() => setProfileOpen(!profileOpen)}
-                  className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
-                    {user?.avatar_url ? (
-                      <Image
-                        src={user.avatar_url}
-                        alt=""
-                        width={32}
-                        height={32}
-                        className="w-full h-full object-cover"
-                        unoptimized
-                      />
-                    ) : (
-                      initials
+              <div className="ml-auto flex items-center gap-3">
+                <div className="relative">
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs overflow-hidden">
+                      {user?.avatar_url ? (
+                        <Image
+                          src={user.avatar_url}
+                          alt=""
+                          width={32}
+                          height={32}
+                          className="w-full h-full object-cover"
+                          unoptimized
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <ChevronDown className="w-3.5 h-3.5 text-muted hidden sm:block" />
+                  </button>
+                  <AnimatePresence>
+                    {profileOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-elevated border border-primary/5 py-1 z-50"
+                      >
+                        <div className="px-4 py-2 border-b border-primary/5">
+                          <p className="text-sm font-medium text-primary">
+                            {user?.name ?? "Student"}
+                          </p>
+                          <p className="text-xs text-muted">
+                            {user?.role ?? ""}
+                          </p>
+                        </div>
+                        <Link
+                          href="/student/profile"
+                          className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors"
+                        >
+                          Profile
+                        </Link>
+                        <Link
+                          href="/student/guide"
+                          className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors"
+                        >
+                          Guide
+                        </Link>
+                        <button
+                          onClick={logout}
+                          className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          Sign Out
+                        </button>
+                      </motion.div>
                     )}
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-muted hidden sm:block" />
-                </button>
-                <AnimatePresence>
-                  {profileOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 5 }}
-                      className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-elevated border border-primary/5 py-1 z-50"
-                    >
-                      <div className="px-4 py-2 border-b border-primary/5">
-                        <p className="text-sm font-medium text-primary">
-                          {user?.name ?? "Student"}
-                        </p>
-                        <p className="text-xs text-muted">{user?.role ?? ""}</p>
-                      </div>
-                      <Link
-                        href="/student/profile"
-                        className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors"
-                      >
-                        Profile
-                      </Link>
-                      <Link
-                        href="/student/guide"
-                        className="block px-4 py-2 text-sm text-muted hover:bg-accent hover:text-primary transition-colors"
-                      >
-                        Guide
-                      </Link>
-                      <button
-                        onClick={logout}
-                        className="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        Sign Out
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  </AnimatePresence>
+                </div>
+                <NotificationBell />
               </div>
-              <NotificationBell />
-            </div>
-          </header>
-          <main className="p-4 lg:p-8 pb-16 lg:pb-8">{children}</main>
+            </header>
+            <main className="p-4 lg:p-8 pb-16 lg:pb-8">{children}</main>
 
-          {/* Mobile Bottom Navigation */}
-          <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-primary/10 flex items-center justify-around px-2 py-1 safe-area-bottom">
-            {STUDENT_NAV.filter((item) => item.label !== "Guide").map(
-              (item) => {
+            {/* Mobile Bottom Navigation */}
+            <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-white border-t border-primary/10 flex items-center justify-around px-2 py-1 safe-area-bottom">
+              {STUDENT_NAV.filter((item) => {
+                // Add any labels you want to hide into this array
+                const excludedLabels = ["Guide", "Live Classes"];
+                return !excludedLabels.includes(item.label);
+              }).map((item) => {
                 const Icon = iconMap[item.icon || ""];
                 const isActive =
                   item.href === "/student"
@@ -315,10 +320,10 @@ export default function StudentLayout({
                     )}
                   </Link>
                 );
-              },
-            )}
-          </nav>
-        </NotificationsProvider>
+              })}
+            </nav>
+          </NotificationsProvider>
+        </BreadcrumbProvider>
       </div>
     </div>
   );

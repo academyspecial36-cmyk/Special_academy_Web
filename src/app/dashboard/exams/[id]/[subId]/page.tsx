@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuestionEditor } from "@/components/exam/question-editor";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext } from "@/lib/app-context";
+import { useBreadcrumbs } from "@/lib/breadcrumb-context";
 import type { Question, QuestionOption } from "@/types";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ export default function AdminSubcategoryQuestionsPage() {
   const categoryId = params.id as string;
   const subId = params.subId as string;
   const { examCategories, examSubcategories, questions, addQuestion, updateQuestion, deleteQuestion } = useAppContext();
+  const { setSegments } = useBreadcrumbs();
   const printRef = useRef<HTMLDivElement>(null);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Question | null>(null);
@@ -27,6 +29,15 @@ export default function AdminSubcategoryQuestionsPage() {
 
   const category = examCategories.find((c) => c.id === categoryId);
   const subcategory = examSubcategories.find((s) => s.id === subId);
+
+  useEffect(() => {
+    setSegments([
+      { label: "Exams", href: "/dashboard/exams" },
+      { label: category?.name ?? "Category", href: `/dashboard/exams/${categoryId}` },
+      { label: subcategory?.name ?? "Set" },
+    ]);
+    return () => setSegments([]);
+  }, [category?.name, categoryId, subcategory?.name, setSegments]);
   const subQuestions = questions.filter((q) => q.subcategoryId === subId);
 
   function handleAdd(data: { type: "mcq" | "subjective"; question: string; options: QuestionOption[]; answer: string; explanation: string }) {

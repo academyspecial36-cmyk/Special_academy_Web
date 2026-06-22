@@ -70,7 +70,7 @@ export async function apiDelete(table: string, id: string) {
   return res.json();
 }
 
-export async function apiUpload(file: File, folder: "images" | "pdfs" = "images") {
+export async function apiUpload(file: File, folder: "images" | "pdfs" | "recordings" = "images") {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
@@ -79,7 +79,7 @@ export async function apiUpload(file: File, folder: "images" | "pdfs" = "images"
   return res.json() as Promise<{ url: string }>;
 }
 
-export async function apiUploadMultiple(files: File[], folder: "images" | "pdfs" = "images") {
+export async function apiUploadMultiple(files: File[], folder: "images" | "pdfs" | "recordings" = "images") {
   const formData = new FormData();
   files.forEach((f) => formData.append("files", f));
   formData.append("folder", folder);

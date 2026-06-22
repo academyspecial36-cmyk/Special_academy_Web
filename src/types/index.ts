@@ -186,3 +186,28 @@ export interface ExamAttempt {
   total: number;
   completedAt: string;
 }
+
+export interface RecordingChunk {
+  url: string;
+  duration: number;
+  createdAt: string;
+  size: number;
+}
+
+export interface LiveClass {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  platform: "zoom" | "google_meet" | "youtube_live" | "other";
+  joinUrl: string;
+  recordingUrl?: string;
+  recordingChunks?: RecordingChunk[];
+  startTime: string;
+  durationMinutes: number;
+  courseId?: string;
+  status: "scheduled" | "live" | "completed" | "cancelled";
+  color?: string;
+  createdAt: string;
+  updatedAt: string;
+}

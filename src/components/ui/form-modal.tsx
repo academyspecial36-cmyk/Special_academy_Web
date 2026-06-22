@@ -12,7 +12,7 @@ import { apiUpload } from "@/lib/api-client";
 export interface FieldConfig {
   name: string;
   label: string;
-  type: "text" | "email" | "tel" | "textarea" | "select" | "multi-select" | "number" | "url" | "image";
+  type: "text" | "email" | "tel" | "textarea" | "select" | "multi-select" | "number" | "url" | "image" | "datetime";
   required?: boolean;
   options?: { label: string; value: string }[];
   placeholder?: string;
@@ -258,6 +258,14 @@ export function FormModal({
                   </div>
                 )}
               </div>
+            ) : field.type === "datetime" ? (
+              <input
+                type="datetime-local"
+                value={form[field.name] ? new Date(form[field.name]).toISOString().slice(0, 16) : ""}
+                onChange={(e) => updateField(field.name, new Date(e.target.value).toISOString())}
+                className="flex h-10 w-full rounded-lg border border-primary/10 bg-white px-3 py-2 text-sm text-primary outline-none focus:border-primary/30 focus:ring-0 placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-50"
+                required={field.required}
+              />
             ) : (
               <Input
                 type={field.type}
