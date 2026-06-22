@@ -4,7 +4,9 @@ const resend = new Resend(
   process.env.RESEND_API_KEY  || ""
 );
 
-const FROM = process.env.EMAIL_FROM || "noreply@Specialacademy.edu";
+const FROM = process.env.EMAIL_FROM 
+  ? `Special Academy <${process.env.EMAIL_FROM}>`
+  : "onboarding@resend.dev";
 
 export async function sendEnrollmentEmail(
   email: string,

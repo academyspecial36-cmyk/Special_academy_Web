@@ -73,6 +73,11 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
         href: "/dashboard/exams",
         icon: "ClipboardCheck",
       },
+      {
+        label: "Live Classes",
+        href: "/dashboard/live-classes",
+        icon: "Video",
+      },
     ],
   },
 
@@ -164,6 +169,7 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
 export const STUDENT_NAV = [
   { label: "Dashboard", href: "/student", icon: "LayoutDashboard" },
   { label: "My Courses", href: "/student/courses", icon: "BookOpen" },
+  { label: "Live Classes", href: "/student/live-classes", icon: "Video" },
   { label: "Exams", href: "/student/exams", icon: "ClipboardCheck" },
   { label: "Notices", href: "/student/notices", icon: "Bell" },
   { label: "Profile", href: "/student/profile", icon: "User" },
