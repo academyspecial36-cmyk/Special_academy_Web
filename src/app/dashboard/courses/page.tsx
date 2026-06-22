@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,27 +15,20 @@ import { DeleteModal } from "@/components/ui/delete-modal";
 import { AssetPicker } from "@/components/shared/asset-picker";
 import { useAppContext } from "@/lib/app-context";
 import type { Course } from "@/types";
-import { QUALIFICATIONS } from "@/constants";
-
-const fields: FieldConfig[] = [
-  { name: "title", label: "Course Title", type: "text", required: true, placeholder: "e.g. Cadet Entrance Preparation" },
-  { name: "slug", label: "Slug", type: "text", required: true, placeholder: "e.g. cadet-entrance-preparation" },
-  { name: "description", label: "Description", type: "textarea", required: true, placeholder: "Course description..." },
-  { name: "duration", label: "Duration", type: "text", required: true, placeholder: "e.g. 6 Months" },
-  { name: "qualification", label: "Qualification", type: "select", required: true, options: QUALIFICATIONS.map(q => ({ label: q, value: q })) },
-  { name: "category", label: "Category", type: "select", required: true, options: [
-    { label: "Entrance Preparation", value: "Entrance Preparation" },
-    { label: "Scholarship Preparation", value: "Scholarship Preparation" },
-    { label: "Foundation", value: "Foundation" },
-    { label: "Language", value: "Language" },
-    { label: "Leadership", value: "Leadership" },
-  ]},
-  { name: "price", label: "Price", type: "text", placeholder: "e.g. NPR 15,000" },
-  { name: "image", label: "Image", type: "image" as const, placeholder: "https://...", browseMedia: true },
-];
 
 export default function DashboardCoursesPage() {
-  const { courses, addCourse, updateCourse, deleteCourse } = useAppContext();
+  const { courses, courseCategories, qualifications, addCourse, updateCourse, deleteCourse } = useAppContext();
+
+  const fields: FieldConfig[] = useMemo(() => [
+    { name: "title", label: "Course Title", type: "text", required: true, placeholder: "e.g. Cadet Entrance Preparation" },
+    { name: "slug", label: "Slug", type: "text", required: true, placeholder: "e.g. cadet-entrance-preparation" },
+    { name: "description", label: "Description", type: "textarea", required: true, placeholder: "Course description..." },
+    { name: "duration", label: "Duration", type: "text", required: true, placeholder: "e.g. 6 Months" },
+    { name: "qualification", label: "Qualification", type: "select", required: true, options: qualifications.map(q => ({ label: q.name, value: q.name })) },
+    { name: "category", label: "Category", type: "select", required: true, options: courseCategories.map(c => ({ label: c, value: c })) },
+    { name: "price", label: "Price", type: "text", placeholder: "e.g. NPR 15,000" },
+    { name: "image", label: "Image", type: "image" as const, placeholder: "https://...", browseMedia: true },
+  ], [courseCategories, qualifications]);
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { useAppContext } from "@/lib/app-context";
+import { useBreadcrumbs } from "@/lib/breadcrumb-context";
 import type { ExamSubcategory } from "@/types";
 import { toast } from "sonner";
 
@@ -16,13 +17,23 @@ export default function AdminExamCategoryPage() {
   const params = useParams();
   const categoryId = params.id as string;
   const { examCategories, examSubcategories, questions, addExamSubcategory, updateExamSubcategory, deleteExamSubcategory } = useAppContext();
+  const { setSegments } = useBreadcrumbs();
+
+  const category = examCategories.find((c) => c.id === categoryId);
+
+  useEffect(() => {
+    setSegments([
+      { label: "Exams", href: "/dashboard/exams" },
+      { label: category?.name ?? "Category" },
+    ]);
+    return () => setSegments([]);
+  }, [category?.name, setSegments]);
 
   const [showAddSub, setShowAddSub] = useState(false);
   const [editingSub, setEditingSub] = useState<ExamSubcategory | null>(null);
   const [deletingSub, setDeletingSub] = useState<ExamSubcategory | null>(null);
   const [subForm, setSubForm] = useState({ name: "", description: "", color: "bg-purple-100 text-purple-800" });
 
-  const category = examCategories.find((c) => c.id === categoryId);
   const subcategories = examSubcategories.filter((s) => s.categoryId === categoryId);
 
   function getQuestionCount(subId: string) {

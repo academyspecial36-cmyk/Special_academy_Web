@@ -35,12 +35,14 @@ import { cn } from "@/lib/utils";
 import { DASHBOARD_SIDEBAR } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
+import { BreadcrumbProvider, useBreadcrumbs } from "@/lib/breadcrumb-context";
 import { LandingLoader } from "@/components/landing/landing-loader";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { CommandPalette } from "@/components/ai/command-palette";
 import { FloatingActionButton } from "@/components/ai/floating-action-button";
+import { BreadcrumbRenderer } from "@/components/shared/breadcrumb-renderer";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -291,6 +293,7 @@ export default function DashboardLayout({
 
       {/* Main Content */}
       <div className="flex-1 min-w-0">
+        <BreadcrumbProvider>
         <NotificationsProvider>
         {/* Top Bar */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-primary/5 h-16 flex items-center px-4 lg:px-8">
@@ -302,15 +305,7 @@ export default function DashboardLayout({
           </button>
 
           {/* Breadcrumb */}
-          <nav className="hidden md:flex items-center text-sm text-muted">
-            <span className="text-primary font-medium">Dashboard</span>
-            {pathname !== "/dashboard" && (
-              <>
-                <span className="mx-2 text-primary/20">/</span>
-                <span className="capitalize">{pathname.split("/").pop()}</span>
-              </>
-            )}
-          </nav>
+          <BreadcrumbRenderer />
 
           <div className="ml-auto flex items-center gap-3">
             {/* Profile */}
@@ -362,6 +357,7 @@ export default function DashboardLayout({
           {loading ? <LandingLoader /> : <ErrorBoundary>{children}</ErrorBoundary>}
         </main>
         </NotificationsProvider>
+        </BreadcrumbProvider>
       </div>
       <Toaster
         position="top-right"

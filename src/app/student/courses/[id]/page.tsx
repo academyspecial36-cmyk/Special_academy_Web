@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
+import { useBreadcrumbs } from "@/lib/breadcrumb-context";
 
 const PreviewModal = dynamic(() => import("@/components/ui/preview-modal").then(m => ({ default: m.PreviewModal })), { ssr: false }) as ComponentType<{
   open: boolean;
@@ -29,6 +30,16 @@ export default function StudentCourseDetailPage() {
   const { user } = useAuth();
   const { subcategories, completedItems, toggleItemComplete, courses, dataLoading } = useAppContext();
   const course = courses.find((c) => c.id === courseId);
+  const { setSegments } = useBreadcrumbs();
+
+  useEffect(() => {
+    setSegments([
+      { label: "Courses", href: "/student/courses" },
+      { label: course?.title ?? "Course" },
+    ]);
+    return () => setSegments([]);
+  }, [course?.title, setSegments]);
+
   const searchParams = useSearchParams();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewItem, setPreviewItem] = useState<{ type: "video" | "pdf" | "image"; title: string; url: string; images?: string[] } | null>(null);

@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { STUDENT_NAV } from "@/constants";
 import { useAuth } from "@/lib/auth-context";
 import { useAppContext } from "@/lib/app-context";
+import { BreadcrumbProvider, useBreadcrumbs } from "@/lib/breadcrumb-context";
+import { BreadcrumbRenderer } from "@/components/shared/breadcrumb-renderer";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
 
@@ -194,6 +196,7 @@ export default function StudentLayout({
       </aside>
 
       <div className="flex-1 min-w-0">
+        <BreadcrumbProvider>
         <NotificationsProvider>
           <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-primary/5 h-16 flex items-center px-4 lg:px-8">
             <button
@@ -203,17 +206,7 @@ export default function StudentLayout({
               <Menu className="w-5 h-5" />
             </button>
 
-            <nav className="hidden md:flex items-center text-sm text-muted">
-              <span className="text-primary font-medium">Student Portal</span>
-              {pathname !== "/student" && (
-                <>
-                  <span className="mx-2 text-primary/20">/</span>
-                  <span className="capitalize">
-                    {pathname.split("/").pop()}
-                  </span>
-                </>
-              )}
-            </nav>
+            <BreadcrumbRenderer rootLabel="Student Portal" />
 
             <div className="ml-auto flex items-center gap-3">
               <div className="relative">
@@ -319,6 +312,7 @@ export default function StudentLayout({
             )}
           </nav>
         </NotificationsProvider>
+        </BreadcrumbProvider>
       </div>
     </div>
   );

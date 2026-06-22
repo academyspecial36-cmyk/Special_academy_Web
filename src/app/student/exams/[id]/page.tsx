@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAppContext } from "@/lib/app-context";
+import { useBreadcrumbs } from "@/lib/breadcrumb-context";
 
 export default function StudentExamCategoryPage() {
   const params = useParams();
@@ -28,8 +30,17 @@ export default function StudentExamCategoryPage() {
     attempts,
     dataLoading,
   } = useAppContext();
+  const { setSegments } = useBreadcrumbs();
 
   const category = examCategories.find((c) => c.id === categoryId);
+
+  useEffect(() => {
+    setSegments([
+      { label: "Exams", href: "/student/exams" },
+      { label: category?.name ?? "Category" },
+    ]);
+    return () => setSegments([]);
+  }, [category?.name, setSegments]);
 
   const subcategories = examSubcategories.filter(
     (s) => s.categoryId === categoryId
