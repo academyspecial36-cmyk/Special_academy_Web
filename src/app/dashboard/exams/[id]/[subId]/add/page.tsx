@@ -15,6 +15,7 @@ import { useAppContext } from "@/lib/app-context";
 import { apiUpload } from "@/lib/api-client";
 import type { Question } from "@/types";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics/client";
 
 interface QuestionDraft {
   id: string;
@@ -122,7 +123,7 @@ function SubOptionRow({ q, opt, oi, onUpdate, onRemove, onMarkCorrect, onImageUp
       {img && (
         <div className="flex items-center gap-2 ml-7">
           <div className={`relative rounded overflow-hidden border border-[#dadce0] ${!opt.trim() ? "w-20 h-16" : "w-16 h-12"}`}>
-            <Image src={img} alt="" fill className="object-cover" unoptimized />
+            <Image src={img} alt="" fill className="object-cover" />
           </div>
           <button onClick={() => { onImageUpdate(""); setShowImagePicker(false); }} className="text-xs text-[#d93025] hover:underline">
             Remove
@@ -327,6 +328,8 @@ export default function GoogleFormAddSubcategoryQuestions() {
     }
     if (saved > 0) {
       toast.success(`${saved} question${saved > 1 ? "s" : ""} saved`);
+      const importId = `questions-${categoryId}-${Date.now()}`;
+      trackEvent("questions_saved", { importId, eventId: `questions_saved:${importId}`, metadata: { questionCount: saved } });
       clearDraft();
       router.push(`/dashboard/exams/${categoryId}/${subId}`);
     }
@@ -427,7 +430,7 @@ export default function GoogleFormAddSubcategoryQuestions() {
                   </div>
                   {q.question && q.optionImages[0] && (q.options[0]?.trim() === "") && (
                     <div className="relative w-full h-40 rounded-lg overflow-hidden mb-3 border border-[#dadce0]">
-                      <Image src={q.optionImages[0]} alt="" fill className="object-contain" unoptimized />
+                      <Image src={q.optionImages[0]} alt="" fill className="object-contain" />
                     </div>
                   )}
                   {["mcq", "checkbox"].includes(q.type) ? (
@@ -439,7 +442,7 @@ export default function GoogleFormAddSubcategoryQuestions() {
                         <label key={oi} className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#f8f9fa] cursor-pointer transition-colors">
                           <div className={`w-4 h-4 shrink-0 flex items-center justify-center ${q.type === "checkbox" ? "rounded-sm" : "rounded-full"} border-2 border-[#5f6368]`} />
                           <span className="text-sm text-[#202124]">{opt}</span>
-                          {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
+                          {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" /></div>}
                         </label>
                       );
                       })}

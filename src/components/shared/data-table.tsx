@@ -20,14 +20,14 @@ interface DataTableProps<T> {
     icon: LucideIcon;
     title: string;
     description: string;
-    action?: { label: string; href: string };
   };
   keyExtractor: (item: T) => string;
 }
 
 export function DataTable<T>({ title, columns, data, emptyState, keyExtractor }: DataTableProps<T>) {
   if (data.length === 0 && emptyState) {
-    return <EmptyState {...emptyState} />;
+    const Icon = emptyState.icon;
+    return <EmptyState icon={<Icon className="w-full h-full" />} title={emptyState.title} description={emptyState.description} />;
   }
 
   return (

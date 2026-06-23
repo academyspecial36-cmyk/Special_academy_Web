@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, memo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Search, Filter, Plus, Pencil, Trash2, Copy, CheckSquare } from "lucide-react";
@@ -227,86 +227,16 @@ export default function StudentsPage() {
               </thead>
               <tbody>
                 {filtered.map((student) => (
-                  <motion.tr
+                  <StudentTableRow
                     key={student.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
-                  >
-                    <td className="py-4 px-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(student.id)}
-                        onChange={() => toggleSelect(student.id)}
-                        className="w-4 h-4 rounded border-primary/30 accent-primary"
-                      />
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
-                          {student.image ? (
-                            <Image src={student.image} alt={student.name} width={36} height={36} className="w-full h-full object-cover" unoptimized />
-                          ) : (
-                            student.name.split(" ").map((n) => n[0]).join("")
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-primary">{student.name}</p>
-                          <p className="text-xs text-muted">{student.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm text-muted">{student.phone}</span>
-                        <button
-                          onClick={() => { navigator.clipboard.writeText(student.phone); toast.success("Phone copied"); }}
-                          className="p-0.5 rounded hover:bg-accent text-muted hover:text-primary transition-colors"
-                          title="Copy phone"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-muted">{qualifications.find((q) => q.id === student.qualificationId)?.name ?? student.qualification ?? "—"}</td>
-                    <td className="py-4 px-4">
-                      <div className="flex flex-wrap gap-1">
-                        {student.enrolledCourses.slice(0, 2).map((cid) => {
-                          const course = courses.find((c) => c.id === cid || c.title === cid);
-                          return (
-                            <Badge key={cid} variant="outline" className="text-[10px]">
-                              {course?.title || cid}
-                            </Badge>
-                          );
-                        })}
-                        {student.enrolledCourses.length > 2 && (
-                          <Badge variant="outline" className="text-[10px]">+{student.enrolledCourses.length - 2}</Badge>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-sm text-muted">{student.joinDate}</td>
-                    <td className="py-4 px-4">
-                      <Badge variant={student.status === "active" ? "success" : "destructive"} className="text-[10px] capitalize">
-                        {student.status}
-                      </Badge>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => { setSelected(student); setEditOpen(true); }}
-                          className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => { setSelected(student); setDeleteOpen(true); }}
-                          className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
+                    student={student}
+                    isSelected={selectedIds.has(student.id)}
+                    courses={courses}
+                    qualifications={qualifications}
+                    onToggle={toggleSelect}
+                    onEdit={(s) => { setSelected(s); setEditOpen(true); }}
+                    onDelete={(s) => { setSelected(s); setDeleteOpen(true); }}
+                  />
                 ))}
               </tbody>
             </table>
@@ -371,3 +301,96 @@ export default function StudentsPage() {
     </div>
   );
 }
+
+const CourseBadge = memo(function CourseBadge({ courseId, courses }: { courseId: string; courses: { id: string; title: string }[] }) {
+  const course = courses.find((c) => c.id === courseId || c.title === courseId);
+  return (
+    <Badge key={courseId} variant="outline" className="text-[10px]">
+      {course?.title || courseId}
+    </Badge>
+  );
+});
+
+const StudentTableRow = memo(function StudentTableRow({ student, isSelected, courses, qualifications, onToggle, onEdit, onDelete }: {
+  student: Student; isSelected: boolean; courses: { id: string; title: string }[];
+  qualifications: { id: string; name: string }[]; onToggle: (id: string) => void;
+  onEdit: (s: Student) => void; onDelete: (s: Student) => void;
+}) {
+  return (
+    <motion.tr
+      key={student.id}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
+    >
+      <td className="py-4 px-4">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggle(student.id)}
+          className="w-4 h-4 rounded border-primary/30 accent-primary"
+        />
+      </td>
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-xs font-bold text-primary overflow-hidden shrink-0">
+            {student.image ? (
+              <Image src={student.image} alt={student.name} width={36} height={36} className="w-full h-full object-cover" />
+            ) : (
+              student.name.split(" ").map((n) => n[0]).join("")
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-primary">{student.name}</p>
+            <p className="text-xs text-muted">{student.email}</p>
+          </div>
+        </div>
+      </td>
+      <td className="py-4 px-4">
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm text-muted">{student.phone}</span>
+          <button
+            onClick={() => { navigator.clipboard.writeText(student.phone); toast.success("Phone copied"); }}
+            className="p-0.5 rounded hover:bg-accent text-muted hover:text-primary transition-colors"
+            title="Copy phone"
+          >
+            <Copy className="w-3 h-3" />
+          </button>
+        </div>
+      </td>
+      <td className="py-4 px-4 text-sm text-muted">{qualifications.find((q) => q.id === student.qualificationId)?.name ?? student.qualification ?? "—"}</td>
+      <td className="py-4 px-4">
+        <div className="flex flex-wrap gap-1">
+          {student.enrolledCourses.slice(0, 2).map((cid) => (
+            <CourseBadge key={cid} courseId={cid} courses={courses} />
+          ))}
+          {student.enrolledCourses.length > 2 && (
+            <Badge variant="outline" className="text-[10px]">+{student.enrolledCourses.length - 2}</Badge>
+          )}
+        </div>
+      </td>
+      <td className="py-4 px-4 text-sm text-muted">{student.joinDate}</td>
+      <td className="py-4 px-4">
+        <Badge variant={student.status === "active" ? "success" : "destructive"} className="text-[10px] capitalize">
+          {student.status}
+        </Badge>
+      </td>
+      <td className="py-4 px-6 text-right">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => onEdit(student)}
+            className="p-1.5 rounded-md hover:bg-primary/5 text-muted hover:text-primary transition-colors"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(student)}
+            className="p-1.5 rounded-md hover:bg-red-50 text-muted hover:text-red-600 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </td>
+    </motion.tr>
+  );
+});

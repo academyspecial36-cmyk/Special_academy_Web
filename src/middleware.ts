@@ -2,6 +2,14 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const isAdminRoute = pathname.startsWith("/dashboard");
+  const isStudentRoute = pathname.startsWith("/student");
+
+  if (!isAdminRoute && !isStudentRoute) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -24,14 +32,6 @@ export async function middleware(request: NextRequest) {
       },
     }
   );
-
-  const { pathname } = request.nextUrl;
-  const isAdminRoute = pathname.startsWith("/dashboard");
-  const isStudentRoute = pathname.startsWith("/student");
-
-  if (!isAdminRoute && !isStudentRoute) {
-    return response;
-  }
 
   const { data: { user } } = await supabase.auth.getUser();
 

@@ -2,5 +2,5 @@
 export {
   ALLOWED_TABLES, RESTRICTED_TABLES, toDbColumn, toCamelCase, transformKeys,
 } from "./api/table-config";
-export { requireAdmin } from "./api/admin-guard";
+export { requireAdmin, requireAuth } from "./api/auth-guard";
 export { handleGet, handlePost, handlePut, handleDelete, getIdFromUrl } from "./api/crud-handlers";

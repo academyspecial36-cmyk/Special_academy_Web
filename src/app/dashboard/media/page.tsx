@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -40,6 +40,184 @@ function formatSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+function isImage(mime: string) { return mime.startsWith("image/"); }
+function isVideo(mime: string) { return mime.startsWith("video/"); }
+function isAudio(mime: string) { return mime.startsWith("audio/"); }
+function isPdf(mime: string) { return mime === "application/pdf"; }
+
+function renderThumbnail(file: MediaFile) {
+  if (isImage(file.mime_type)) {
+    return (
+      <Image src={file.url} alt={file.alt_text || file.name} width={200} height={200}
+        className="w-full h-full object-cover" />
+    );
+  }
+  if (isVideo(file.mime_type)) {
+    return (
+      <div className="relative w-full h-full flex items-center justify-center bg-black/5">
+        <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
+            <Play className="w-5 h-5 text-primary ml-0.5" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (isPdf(file.mime_type)) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-red-50">
+        <svg viewBox="0 0 40 48" className="w-10 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="2" width="36" height="44" rx="4" fill="white" stroke="#E5E7EB" strokeWidth="2" />
+          <rect x="6" y="10" width="28" height="3" rx="1.5" fill="#EF4444" />
+          <rect x="6" y="16" width="28" height="3" rx="1.5" fill="#EF4444" opacity="0.6" />
+          <rect x="6" y="22" width="20" height="3" rx="1.5" fill="#EF4444" opacity="0.4" />
+          <rect x="6" y="28" width="24" height="3" rx="1.5" fill="#EF4444" opacity="0.3" />
+          <rect x="6" y="34" width="16" height="3" rx="1.5" fill="#EF4444" opacity="0.2" />
+        </svg>
+      </div>
+    );
+  }
+  const Icon = fileIcon(file.mime_type);
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-primary/[0.02]">
+      <Icon className="w-10 h-10 text-muted" />
+    </div>
+  );
+}
+
+const FolderGridItem = memo(function FolderGridItem({ folder, onNavigate, onRename, onDelete }: {
+  folder: MediaFolder; onNavigate: (id: string) => void; onRename: (f: MediaFolder) => void; onDelete: (f: MediaFolder) => void;
+}) {
+  return (
+    <div className="group relative">
+      <button onClick={() => onNavigate(folder.id)}
+        className="w-full flex flex-col items-center gap-2 p-4 rounded-xl border border-primary/5 hover:border-primary/20 hover:bg-primary/[0.02] transition-all"
+      >
+        <WindowsFolderIcon open className="w-10 h-10" />
+        <span className="text-xs font-medium text-primary text-center truncate w-full">{folder.name}</span>
+      </button>
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+        <button onClick={() => onRename(folder)}
+          className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
+          <Pencil className="w-3 h-3" />
+        </button>
+        <button onClick={() => onDelete(folder)}
+          className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-red-600">
+          <Trash2 className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+});
+
+const FolderListItem = memo(function FolderListItem({ folder, onNavigate, onRename, onDelete }: {
+  folder: MediaFolder; onNavigate: (id: string) => void; onRename: (f: MediaFolder) => void; onDelete: (f: MediaFolder) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary/5 transition-colors group">
+      <WindowsFolderIcon open className="w-5 h-5 shrink-0" />
+      <button onClick={() => onNavigate(folder.id)} className="text-sm font-medium text-primary flex-1 text-left truncate hover:underline">
+        {folder.name}
+      </button>
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => onRename(folder)}
+          className="p-1 rounded text-muted hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={() => onDelete(folder)}
+          className="p-1 rounded text-muted hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+      </div>
+    </div>
+  );
+});
+
+const FileGridItem = memo(function FileGridItem({ file, isSelected, onToggle, onDoubleClick, onCrop, onEdit }: {
+  file: MediaFile; isSelected: boolean; onToggle: (id: string) => void;
+  onDoubleClick: (f: MediaFile) => void; onCrop: (f: MediaFile) => void; onEdit: (f: MediaFile) => void;
+}) {
+  return (
+    <motion.div layout
+      className={cn(
+        "group relative rounded-xl overflow-hidden border transition-all cursor-pointer",
+        isSelected ? "border-primary ring-2 ring-primary/20" : "border-primary/5 hover:border-primary/20"
+      )}
+      onClick={() => onToggle(file.id)}
+      onDoubleClick={() => onDoubleClick(file)}
+    >
+      <div className="aspect-square bg-primary/[0.02] flex items-center justify-center">
+        {renderThumbnail(file)}
+      </div>
+      <div className="p-2">
+        <p className="text-[11px] font-medium text-primary truncate">{file.name}</p>
+        <p className="text-[10px] text-muted">{formatSize(file.file_size)}</p>
+      </div>
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+        {isImage(file.mime_type) && (
+          <button onClick={(e) => { e.stopPropagation(); onCrop(file); }}
+            className="w-7 h-7 rounded-lg bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
+            <Crop className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <button onClick={(e) => { e.stopPropagation(); onEdit(file); }}
+          className="w-7 h-7 rounded-lg bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </motion.div>
+  );
+});
+
+const FileListItem = memo(function FileListItem({ file, isSelected, onToggle, onDoubleClick, onCrop, onEdit, onDownload }: {
+  file: MediaFile; isSelected: boolean; onToggle: (id: string) => void;
+  onDoubleClick: (f: MediaFile) => void; onCrop: (f: MediaFile) => void;
+  onEdit: (f: MediaFile) => void; onDownload: (f: MediaFile) => void;
+}) {
+  const Icon = fileIcon(file.mime_type);
+  return (
+    <div
+      className={cn("flex items-center gap-3 p-2.5 rounded-lg hover:bg-primary/5 transition-colors cursor-pointer",
+        isSelected && "bg-primary/5 ring-1 ring-primary/20")}
+      onClick={() => onToggle(file.id)}
+      onDoubleClick={() => onDoubleClick(file)}
+    >
+      {isImage(file.mime_type) ? (
+        <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-primary/[0.02]">
+          <Image src={file.url} alt={file.alt_text || file.name} width={40} height={40} className="w-full h-full object-cover" />
+        </div>
+      ) : isPdf(file.mime_type) ? (
+        <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-red-50 flex items-center justify-center">
+          <svg viewBox="0 0 40 48" className="w-5 h-6" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="2" width="36" height="44" rx="4" fill="white" stroke="#E5E7EB" strokeWidth="2" />
+            <rect x="6" y="10" width="28" height="3" rx="1.5" fill="#EF4444" />
+            <rect x="6" y="16" width="28" height="3" rx="1.5" fill="#EF4444" opacity="0.6" />
+          </svg>
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+          <Icon className="w-5 h-5 text-muted" />
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-primary truncate">{file.name}</p>
+        <p className="text-xs text-muted">
+          {formatSize(file.file_size)}
+          {file.width && file.height && ` · ${file.width}×${file.height}`}
+        </p>
+      </div>
+      <span className="text-[10px] text-muted uppercase">{file.mime_type.split("/")[1]}</span>
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100">
+        {isImage(file.mime_type) && (
+          <button onClick={(e) => { e.stopPropagation(); onCrop(file); }}
+            className="p-1.5 rounded text-muted hover:text-primary"><Crop className="w-3.5 h-3.5" /></button>
+        )}
+        <button onClick={(e) => { e.stopPropagation(); onEdit(file); }}
+          className="p-1.5 rounded text-muted hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
+        <button onClick={(e) => { e.stopPropagation(); onDownload(file); }}
+          className="p-1.5 rounded text-muted hover:text-primary"><Download className="w-3.5 h-3.5" /></button>
+      </div>
+    </div>
+  );
+});
 
 export default function MediaManagerPage() {
   const [media, setMedia] = useState<MediaFile[]>([]);
@@ -368,52 +546,7 @@ export default function MediaManagerPage() {
   }
 
   const currentFolders = folders.filter((f) => f.parent_id === currentFolderId);
-  const isImage = (mime: string) => mime.startsWith("image/");
-  const isVideo = (mime: string) => mime.startsWith("video/");
-  const isAudio = (mime: string) => mime.startsWith("audio/");
-  const isPdf = (mime: string) => mime === "application/pdf";
   const showSelectedActions = selected.size > 0;
-
-  function renderThumbnail(file: MediaFile) {
-    if (isImage(file.mime_type)) {
-      return (
-        <Image src={file.url} alt={file.alt_text || file.name} width={200} height={200}
-          className="w-full h-full object-cover" unoptimized />
-      );
-    }
-    if (isVideo(file.mime_type)) {
-      return (
-        <div className="relative w-full h-full flex items-center justify-center bg-black/5">
-          <video src={file.url} className="w-full h-full object-cover" muted preload="metadata" />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-sm">
-              <Play className="w-5 h-5 text-primary ml-0.5" />
-            </div>
-          </div>
-        </div>
-      );
-    }
-    if (isPdf(file.mime_type)) {
-      return (
-        <div className="w-full h-full flex items-center justify-center bg-red-50">
-          <svg viewBox="0 0 40 48" className="w-10 h-12" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="36" height="44" rx="4" fill="white" stroke="#E5E7EB" strokeWidth="2" />
-            <rect x="6" y="10" width="28" height="3" rx="1.5" fill="#EF4444" />
-            <rect x="6" y="16" width="28" height="3" rx="1.5" fill="#EF4444" opacity="0.6" />
-            <rect x="6" y="22" width="20" height="3" rx="1.5" fill="#EF4444" opacity="0.4" />
-            <rect x="6" y="28" width="24" height="3" rx="1.5" fill="#EF4444" opacity="0.3" />
-            <rect x="6" y="34" width="16" height="3" rx="1.5" fill="#EF4444" opacity="0.2" />
-          </svg>
-        </div>
-      );
-    }
-    const Icon = fileIcon(file.mime_type);
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-primary/[0.02]">
-        <Icon className="w-10 h-10 text-muted" />
-      </div>
-    );
-  }
 
   return (
     <div ref={dropRef}>
@@ -540,41 +673,25 @@ export default function MediaManagerPage() {
               {view === "grid" ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                   {currentFolders.map((folder) => (
-                    <div key={folder.id} className="group relative">
-                      <button onClick={() => navigateToFolder(folder.id)}
-                        className="w-full flex flex-col items-center gap-2 p-4 rounded-xl border border-primary/5 hover:border-primary/20 hover:bg-primary/[0.02] transition-all"
-                      >
-                        <WindowsFolderIcon open className="w-10 h-10" />
-                        <span className="text-xs font-medium text-primary text-center truncate w-full">{folder.name}</span>
-                      </button>
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
-                        <button onClick={() => { setEditingFolder(folder); setEditName(folder.name); }}
-                          className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
-                          <Pencil className="w-3 h-3" />
-                        </button>
-                        <button onClick={() => setDeletingFolder(folder)}
-                          className="w-6 h-6 rounded bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-red-600">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
+                    <FolderGridItem
+                      key={folder.id}
+                      folder={folder}
+                      onNavigate={navigateToFolder}
+                      onRename={(f) => { setEditingFolder(f); setEditName(f.name); }}
+                      onDelete={setDeletingFolder}
+                    />
                   ))}
                 </div>
               ) : (
                 <div className="space-y-1">
                   {currentFolders.map((folder) => (
-                    <div key={folder.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-primary/5 transition-colors group">
-                      <WindowsFolderIcon open className="w-5 h-5 shrink-0" />
-                      <button onClick={() => navigateToFolder(folder.id)} className="text-sm font-medium text-primary flex-1 text-left truncate hover:underline">
-                        {folder.name}
-                      </button>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => { setEditingFolder(folder); setEditName(folder.name); }}
-                          className="p-1 rounded text-muted hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => setDeletingFolder(folder)}
-                          className="p-1 rounded text-muted hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
-                    </div>
+                    <FolderListItem
+                      key={folder.id}
+                      folder={folder}
+                      onNavigate={navigateToFolder}
+                      onRename={(f) => { setEditingFolder(f); setEditName(f.name); }}
+                      onDelete={setDeletingFolder}
+                    />
                   ))}
                 </div>
               )}
@@ -590,101 +707,32 @@ export default function MediaManagerPage() {
               </p>
               {view === "grid" ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                  {media.map((file) => {
-                    const isSelected = selected.has(file.id);
-                    return (
-                      <motion.div key={file.id} layout
-                        className={cn(
-                          "group relative rounded-xl overflow-hidden border transition-all cursor-pointer",
-                          isSelected ? "border-primary ring-2 ring-primary/20" : "border-primary/5 hover:border-primary/20"
-                        )}
-                        onClick={() => {
-                          setSelected((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(file.id)) next.delete(file.id); else next.add(file.id);
-                            return next;
-                          });
-                        }}
-                        onDoubleClick={() => setPreviewFile(file)}
-                      >
-                        <div className="aspect-square bg-primary/[0.02] flex items-center justify-center">
-                          {renderThumbnail(file)}
-                        </div>
-                        <div className="p-2">
-                          <p className="text-[11px] font-medium text-primary truncate">{file.name}</p>
-                          <p className="text-[10px] text-muted">{formatSize(file.file_size)}</p>
-                        </div>
-                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                          {isImage(file.mime_type) && (
-                            <button onClick={(e) => { e.stopPropagation(); setCropFile(file); }}
-                              className="w-7 h-7 rounded-lg bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
-                              <Crop className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          <button onClick={(e) => { e.stopPropagation(); setEditingFile(file); setEditName(file.name); setEditAlt(file.alt_text || ""); }}
-                            className="w-7 h-7 rounded-lg bg-white shadow-sm border border-primary/5 flex items-center justify-center text-muted hover:text-primary">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                  {media.map((file) => (
+                    <FileGridItem
+                      key={file.id}
+                      file={file}
+                      isSelected={selected.has(file.id)}
+                      onToggle={(id) => setSelected((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; })}
+                      onDoubleClick={setPreviewFile}
+                      onCrop={setCropFile}
+                      onEdit={(f) => { setEditingFile(f); setEditName(f.name); setEditAlt(f.alt_text || ""); }}
+                    />
+                  ))}
                 </div>
               ) : (
                 <div className="space-y-1">
-                  {media.map((file) => {
-                    const Icon = fileIcon(file.mime_type);
-                    return (
-                      <div key={file.id}
-                        className={cn("flex items-center gap-3 p-2.5 rounded-lg hover:bg-primary/5 transition-colors cursor-pointer",
-                          selected.has(file.id) && "bg-primary/5 ring-1 ring-primary/20")}
-                        onClick={() => {
-                          setSelected((prev) => {
-                            const next = new Set(prev);
-                            if (next.has(file.id)) next.delete(file.id); else next.add(file.id);
-                            return next;
-                          });
-                        }}
-                        onDoubleClick={() => setPreviewFile(file)}
-                      >
-                        {isImage(file.mime_type) ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-primary/[0.02]">
-                            <Image src={file.url} alt={file.alt_text || file.name} width={40} height={40} className="w-full h-full object-cover" unoptimized />
-                          </div>
-                        ) : isPdf(file.mime_type) ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-red-50 flex items-center justify-center">
-                            <svg viewBox="0 0 40 48" className="w-5 h-6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <rect x="2" y="2" width="36" height="44" rx="4" fill="white" stroke="#E5E7EB" strokeWidth="2" />
-                              <rect x="6" y="10" width="28" height="3" rx="1.5" fill="#EF4444" />
-                              <rect x="6" y="16" width="28" height="3" rx="1.5" fill="#EF4444" opacity="0.6" />
-                            </svg>
-                          </div>
-                        ) : (
-                          <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                            <Icon className="w-5 h-5 text-muted" />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-primary truncate">{file.name}</p>
-                          <p className="text-xs text-muted">
-                            {formatSize(file.file_size)}
-                            {file.width && file.height && ` · ${file.width}×${file.height}`}
-                          </p>
-                        </div>
-                        <span className="text-[10px] text-muted uppercase">{file.mime_type.split("/")[1]}</span>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100">
-                          {isImage(file.mime_type) && (
-                            <button onClick={(e) => { e.stopPropagation(); setCropFile(file); }}
-                              className="p-1.5 rounded text-muted hover:text-primary"><Crop className="w-3.5 h-3.5" /></button>
-                          )}
-                          <button onClick={(e) => { e.stopPropagation(); setEditingFile(file); setEditName(file.name); setEditAlt(file.alt_text || ""); }}
-                            className="p-1.5 rounded text-muted hover:text-primary"><Pencil className="w-3.5 h-3.5" /></button>
-                          <button onClick={(e) => { e.stopPropagation(); window.open(file.url, "_blank"); }}
-                            className="p-1.5 rounded text-muted hover:text-primary"><Download className="w-3.5 h-3.5" /></button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {media.map((file) => (
+                    <FileListItem
+                      key={file.id}
+                      file={file}
+                      isSelected={selected.has(file.id)}
+                      onToggle={(id) => setSelected((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; })}
+                      onDoubleClick={setPreviewFile}
+                      onCrop={setCropFile}
+                      onEdit={(f) => { setEditingFile(f); setEditName(f.name); setEditAlt(f.alt_text || ""); }}
+                      onDownload={(f) => window.open(f.url, "_blank")}
+                    />
+                  ))}
                 </div>
               )}
             </>
@@ -726,7 +774,7 @@ export default function MediaManagerPage() {
             {isImage(previewFile.mime_type) ? (
               <div className="relative bg-black/5 flex items-center justify-center max-h-[65vh] min-h-[200px]">
                 <Image src={previewFile.url} alt={previewFile.alt_text || previewFile.name}
-                  width={800} height={600} className="max-w-full max-h-[65vh] object-contain" unoptimized />
+                  width={800} height={600} className="max-w-full max-h-[65vh] object-contain" />
               </div>
             ) : isVideo(previewFile.mime_type) ? (
               <div className="bg-black/5 max-h-[65vh]">
@@ -850,7 +898,7 @@ export default function MediaManagerPage() {
             </p>
             {cropFile.url && (
               <div className="relative h-48 rounded-lg overflow-hidden bg-primary/5 mb-4">
-                <Image src={cropFile.url} alt={cropFile.name} fill className="object-contain" unoptimized />
+                <Image src={cropFile.url} alt={cropFile.name} fill className="object-contain" />
               </div>
             )}
             <p className="text-xs text-muted mb-1">

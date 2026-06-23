@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useAppContext } from "@/lib/app-context";
 import { Shield } from "lucide-react";
 

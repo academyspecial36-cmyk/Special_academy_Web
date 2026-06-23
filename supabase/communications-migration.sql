@@ -7,6 +7,8 @@ create table if not exists communication_templates (
   subject text,
   body text not null,
   variables jsonb default '[]',
+  category text default 'custom',
+  config jsonb default '{}',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

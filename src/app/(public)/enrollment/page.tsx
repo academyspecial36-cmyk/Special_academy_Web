@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -35,6 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiList } from "@/lib/api-client";
 import { QUALIFICATIONS } from "@/constants";
 import { HowToEnrollButton } from "@/components/landing/how-to-enroll-guide";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 interface QualificationOption {
   id: string;
@@ -67,6 +68,7 @@ export default function EnrollmentPage() {
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [formError, setFormError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [courses, setCourses] = useState<string[]>([]);
@@ -108,11 +110,17 @@ export default function EnrollmentPage() {
       });
   }, []);
 
-  const updateField = (field: string, value: string) => {
+  const updateField = useCallback((field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  }, [setFormData]);
 
-  async function handleCreateAccount() {
+  const handleCreateAccount = useCallback(async () => {
     setCreating(true);
     setFormError("");
     try {
@@ -139,46 +147,58 @@ export default function EnrollmentPage() {
       setFormError("Network error. Please try again.");
       setCreating(false);
     }
-  }
+  }, [formData, setCreating, setFormError, setAccountCreated, setCodeSent, setStep]);
 
-  const handleNext = async () => {
-    if (step === 0) {
-      if (!formData.fullName) {
-        toast.error("Please enter your full name");
-        return;
-      }
-      if (!formData.email) {
-        toast.error("Please enter your email");
-        return;
-      }
-      if (!formData.qualificationId) {
-        toast.error("Please select your current qualification");
-        return;
-      }
+  const passwordsMatch = useMemo(
+    () => formData.password === formData.confirmPassword,
+    [formData.password, formData.confirmPassword]
+  );
+
+  const validateStep = useCallback((stepNum: number): Record<string, string> => {
+    const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const PHONE_RE = /^\+?[\d\s-]{7,15}$/;
+    const errs: Record<string, string> = {};
+    if (stepNum === 0) {
+      if (!formData.fullName.trim()) errs.fullName = "Please enter your full name";
+      else if (formData.fullName.trim().length < 2) errs.fullName = "Name must be at least 2 characters";
+      if (!formData.email.trim()) errs.email = "Please enter your email";
+      else if (!EMAIL_RE.test(formData.email)) errs.email = "Please enter a valid email address";
+      if (formData.phone && !PHONE_RE.test(formData.phone)) errs.phone = "Please enter a valid phone number";
+      if (!formData.qualificationId) errs.qualificationId = "Please select your current qualification";
     }
+    if (stepNum === 1) {
+      if (!formData.interestedCourse) errs.interestedCourse = "Please select a course";
+      if (formData.guardianContact && !PHONE_RE.test(formData.guardianContact)) errs.guardianContact = "Please enter a valid phone number";
+    }
+    if (stepNum === 2) {
+      if (!formData.password) errs.password = "Please enter a password";
+      else if (formData.password.length < 8) errs.password = "Password must be at least 8 characters";
+      else if (!/[A-Z]/.test(formData.password)) errs.password = "Password must include at least one uppercase letter";
+      else if (!/[a-z]/.test(formData.password)) errs.password = "Password must include at least one lowercase letter";
+      else if (!/[0-9]/.test(formData.password)) errs.password = "Password must include at least one number";
+      if (!passwordsMatch) errs.confirmPassword = "Passwords do not match";
+    }
+    return errs;
+  }, [formData, passwordsMatch]);
+
+  const handleNext = useCallback(async () => {
+    const errs = validateStep(step);
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+    setFieldErrors({});
+
     if (step === 2) {
-      if (accountCreated) {
-        setStep(3);
-        return;
-      }
-      if (!formData.password) {
-        toast.error("Please enter a password");
-        return;
-      }
-      if (!passwordsMatch) {
-        toast.error("Passwords do not match");
-        return;
-      }
       await handleCreateAccount();
       return;
     }
     if (step === 3) {
-      toast.error("Please verify your email first");
       return;
     }
     setFormError("");
     setStep((s) => s + 1);
-  };
+  }, [step, validateStep, handleCreateAccount, setFormError, setStep]);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -186,7 +206,7 @@ export default function EnrollmentPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  async function handleResendCode() {
+  const handleResendCode = useCallback(async () => {
     if (resending || resendCooldown > 0) return;
     setResending(true);
     try {
@@ -207,9 +227,9 @@ export default function EnrollmentPage() {
     } finally {
       setResending(false);
     }
-  }
+  }, [resending, resendCooldown, formData.email, setResending, setResendCooldown]);
 
-  const handleVerify = async () => {
+  const handleVerify = useCallback(async () => {
     if (verificationCode.length < 6) {
       toast.error("Please enter the full verification code");
       return;
@@ -236,13 +256,40 @@ export default function EnrollmentPage() {
       setFormError("Network error. Please try again.");
       setVerifying(false);
     }
-  };
+  }, [verificationCode, formData.email, setVerifying, setFormError, setVerified]);
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     setSubmitted(true);
-  };
+  }, [setSubmitted]);
 
-  const passwordsMatch = formData.password === formData.confirmPassword;
+  const handleBack = useCallback(() => {
+    setFormError("");
+    if (step === 3 && verified) {
+      setStep((s) => s - 1);
+    } else {
+      setStep((s) => Math.max(0, s - 1));
+    }
+  }, [step, verified, setFormError, setStep]);
+
+  const reviewEntries = useMemo(
+    () => Object.entries(formData).filter(([key, value]) => {
+      if (!value || key === "confirmPassword" || key === "password") return false;
+      return true;
+    }),
+    [formData]
+  );
+
+  const labels: Record<string, string> = useMemo(() => ({
+    fullName: "Full Name",
+    email: "Email",
+    phone: "Phone",
+    qualificationId: "Current Class",
+    interestedCourse: "Course",
+    guardianName: "Parent/Guardian Name",
+    guardianContact: "Parent/Guardian Phone",
+    address: "Address",
+    message: "Additional Message",
+  }), []);
 
   if (submitted) {
     return (
@@ -396,6 +443,7 @@ export default function EnrollmentPage() {
                     value={formData.fullName}
                     onChange={(e) => updateField("fullName", e.target.value)}
                   />
+                  {fieldErrors.fullName && <p className="text-xs text-red-500 mt-1">{fieldErrors.fullName}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">
@@ -414,6 +462,7 @@ export default function EnrollmentPage() {
                   <p className="text-xs text-muted mt-1">
                     We will send a verification code here.
                   </p>
+                  {fieldErrors.email && <p className="text-xs text-red-500 mt-1">{fieldErrors.email}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">
@@ -424,6 +473,7 @@ export default function EnrollmentPage() {
                     value={formData.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
                   />
+                  {fieldErrors.phone && <p className="text-xs text-red-500 mt-1">{fieldErrors.phone}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">
@@ -442,6 +492,7 @@ export default function EnrollmentPage() {
                       </option>
                     ))}
                   </Select>
+                  {fieldErrors.qualificationId && <p className="text-xs text-red-500 mt-1">{fieldErrors.qualificationId}</p>}
                 </div>
               </div>
             )}
@@ -478,6 +529,7 @@ export default function EnrollmentPage() {
                       </option>
                     ))}
                   </Select>
+                  {fieldErrors.interestedCourse && <p className="text-xs text-red-500 mt-1">{fieldErrors.interestedCourse}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">
@@ -509,6 +561,7 @@ export default function EnrollmentPage() {
                       }
                       className="pl-10"
                     />
+                  {fieldErrors.guardianContact && <p className="text-xs text-red-500 mt-1">{fieldErrors.guardianContact}</p>}
                   </div>
                 </div>
                 <div>
@@ -584,6 +637,7 @@ export default function EnrollmentPage() {
                       )}
                     </button>
                   </div>
+                  {fieldErrors.password && <p className="text-xs text-red-500 mt-1">{fieldErrors.password}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-medium text-primary mb-1.5 block">
@@ -614,10 +668,9 @@ export default function EnrollmentPage() {
                       )}
                     </button>
                   </div>
-                  {formData.confirmPassword && !passwordsMatch && (
+                  {fieldErrors.confirmPassword && (
                     <p className="text-xs text-red-500 mt-1">
-                      Oops! The two passwords do not match. Please type them
-                      again.
+                      {fieldErrors.confirmPassword}
                     </p>
                   )}
                 </div>
@@ -625,7 +678,7 @@ export default function EnrollmentPage() {
             )}
 
             {formError && (
-              <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg [&_a]:text-red-700 [&_a]:font-medium" dangerouslySetInnerHTML={{ __html: formError }} />
+              <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg [&_a]:text-red-700 [&_a]:font-medium" dangerouslySetInnerHTML={{ __html: sanitizeHtml(formError) }} />
             )}
 
             {step === 3 && (
@@ -662,11 +715,12 @@ export default function EnrollmentPage() {
                   <Input
                     placeholder="000000"
                     value={verificationCode}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setVerificationCode(
                         e.target.value.replace(/\D/g, "").slice(0, 6),
-                      )
-                    }
+                      );
+                      setFormError("");
+                    }}
                     className="text-center text-2xl tracking-[8px] font-mono h-14"
                     maxLength={6}
                   />
@@ -703,24 +757,7 @@ export default function EnrollmentPage() {
                   </div>
                 )}
                 <div className="space-y-3">
-                  {Object.entries(formData).map(([key, value]) => {
-                    if (
-                      !value ||
-                      key === "confirmPassword" ||
-                      key === "password"
-                    )
-                      return null;
-                    const labels: Record<string, string> = {
-                      fullName: "Full Name",
-                      email: "Email",
-                      phone: "Phone",
-                      qualificationId: "Current Class",
-                      interestedCourse: "Course",
-                      guardianName: "Parent/Guardian Name",
-                      guardianContact: "Parent/Guardian Phone",
-                      address: "Address",
-                      message: "Additional Message",
-                    };
+                  {reviewEntries.map(([key, value]) => {
                     const displayValue =
                       key === "qualificationId"
                         ? (qualificationOptions.find((q) => q.id === value)
@@ -756,14 +793,7 @@ export default function EnrollmentPage() {
             <div className="flex items-center justify-between mt-8 pt-6 border-t border-primary/5">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setFormError("");
-                  if (step === 3 && verified) {
-                    setStep((s) => s - 1);
-                  } else {
-                    setStep((s) => Math.max(0, s - 1));
-                  }
-                }}
+                onClick={handleBack}
                 disabled={step === 0 || (step === 3 && creating)}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -771,14 +801,14 @@ export default function EnrollmentPage() {
               </Button>
 
               {step === 0 && (
-                <Button onClick={() => setStep(1)}>
+                <Button onClick={handleNext}>
                   Next
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               )}
 
               {step === 1 && (
-                <Button onClick={() => setStep(2)}>
+                <Button onClick={handleNext}>
                   Next
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>

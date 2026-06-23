@@ -3,11 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
+
 
 const PageWrapper = dynamic(() => import("@/components/shared/page-wrapper").then(m => ({ default: m.PageWrapper })), { ssr: false });
 
@@ -18,10 +18,37 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function validate(): Record<string, string> {
+    const errs: Record<string, string> = {};
+    if (!email.trim()) errs.email = "Please enter your email";
+    else if (!EMAIL_RE.test(email)) errs.email = "Please enter a valid email";
+    if (!password) errs.password = "Please enter your password";
+    return errs;
+  }
+
+  function clearError(field: string) {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    if (error) setError("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+    setFieldErrors({});
     setError("");
     setLoading(true);
 
@@ -43,11 +70,7 @@ export default function LoginPage() {
     <PageWrapper>
       <section className="py-20 md:py-28 bg-accent min-h-[80vh] flex items-center">
         <div className="max-w-md mx-auto px-4 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-8 border border-primary/5 shadow-card"
-          >
+          <div className="bg-white rounded-2xl p-8 border border-primary/5 shadow-card">
             <div className="text-center mb-8">
               <div className="w-14 h-14 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
                 <LogIn className="w-6 h-6 text-primary" />
@@ -67,10 +90,10 @@ export default function LoginPage() {
                     type="email"
                     placeholder="your@email.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
                     className="pl-10"
-                    required
                   />
+                  {fieldErrors.email && <p className="text-xs text-red-500 mt-1">{fieldErrors.email}</p>}
                 </div>
               </div>
               <div>
@@ -81,9 +104,8 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => { setPassword(e.target.value); clearError("password"); }}
                     className="pl-10 pr-10"
-                    required
                   />
                   <button
                     type="button"
@@ -96,7 +118,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg [&_a]:text-red-700 [&_a]:font-medium" dangerouslySetInnerHTML={{ __html: error }} />
+                <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</div>
               )}
 
               <div className="flex items-center justify-between text-sm">
@@ -129,7 +151,7 @@ export default function LoginPage() {
                 </Link>
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </PageWrapper>

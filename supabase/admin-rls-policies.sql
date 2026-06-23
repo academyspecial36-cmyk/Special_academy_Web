@@ -98,12 +98,12 @@ create policy "Everyone can read questions"
 drop policy if exists "Admins can read all attempts" on exam_attempts;
 create policy "Admins can read all attempts"
   on exam_attempts for select
-  using (public.is_admin() or auth.uid() = user_id);
+  using (public.is_admin() or auth.uid() = student_id);
 
 drop policy if exists "Students can insert own attempts" on exam_attempts;
 create policy "Students can insert own attempts"
   on exam_attempts for insert
-  with check (auth.uid() = user_id);
+  with check (auth.uid() = student_id);
 
 -- ============================================
 -- Media: admins full access, users can read own

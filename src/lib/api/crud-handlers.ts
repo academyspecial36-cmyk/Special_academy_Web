@@ -3,7 +3,7 @@ import { createServerSupabase, createServiceRoleSupabase } from "../supabase-ser
 import { createNotificationForRole } from "../notifications";
 import { clearBootstrapCache } from "../bootstrap-cache";
 import { ALLOWED_TABLES, RESTRICTED_TABLES, transformKeys } from "./table-config";
-import { requireAdmin } from "./admin-guard";
+import { requireAdmin } from "./auth-guard";
 import { cleanupTableRecordMedia } from "../storage-cleanup";
 
 export async function handleGet(table: string, id?: string) {
@@ -15,12 +15,12 @@ export async function handleGet(table: string, id?: string) {
 
   let svc;
   if (RESTRICTED_TABLES.includes(table)) {
-    const authError = await requireAdmin(supabase);
-    if (authError) return authError;
+    const { error } = await requireAdmin();
+    if (error) return error;
     svc = createServiceRoleSupabase();
   } else {
-    const authError = await requireAdmin(supabase);
-    svc = authError ? supabase : createServiceRoleSupabase();
+    const { error } = await requireAdmin();
+    svc = error ? supabase : createServiceRoleSupabase();
   }
 
   let data, error;
@@ -67,8 +67,8 @@ export async function handlePost(table: string, body: Record<string, unknown>) {
   const supabase = await createServerSupabase();
 
   if (RESTRICTED_TABLES.includes(table)) {
-    const authError = await requireAdmin(supabase);
-    if (authError) return authError;
+    const { error } = await requireAdmin();
+    if (error) return error;
   }
 
   const dbBody = transformKeys(body, table, true);
@@ -126,8 +126,8 @@ export async function handlePut(table: string, id: string, body: Record<string, 
   const supabase = await createServerSupabase();
 
   if (RESTRICTED_TABLES.includes(table)) {
-    const authError = await requireAdmin(supabase);
-    if (authError) return authError;
+    const { error } = await requireAdmin();
+    if (error) return error;
   }
 
   const dbBody = transformKeys(body, table, true);
@@ -186,8 +186,8 @@ export async function handleDelete(table: string, id: string) {
   const supabase = await createServerSupabase();
 
   if (RESTRICTED_TABLES.includes(table)) {
-    const authError = await requireAdmin(supabase);
-    if (authError) return authError;
+    const { error } = await requireAdmin();
+    if (error) return error;
   }
 
   const svc = RESTRICTED_TABLES.includes(table) ? createServiceRoleSupabase() : supabase;

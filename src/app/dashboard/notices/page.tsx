@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+
+export const dynamic = "force-dynamic";
 import Image from "next/image";
 import { Search, Plus, Pin, Pencil, Trash2, Calendar, Copy } from "lucide-react";
 import { toast } from "sonner";
@@ -125,7 +127,7 @@ export default function DashboardNoticesPage() {
                     <div className="flex items-start justify-between gap-4">
                   {notice.image && (
                     <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-accent">
-                      <Image src={notice.image} alt="" width={64} height={64} className="w-full h-full object-cover" unoptimized />
+                      <Image src={notice.image} alt="" width={64} height={64} className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">

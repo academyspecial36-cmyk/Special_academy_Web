@@ -5,10 +5,25 @@ export interface RateLimitConfig {
   windowMs: number;
 }
 
+export const RATE_LIMITS = {
+  LOGIN: { maxRequests: 5, windowMs: 15 * 60 * 1000 },
+  PASSWORD_RESET_SEND: { maxRequests: 3, windowMs: 15 * 60 * 1000 },
+  PASSWORD_RESET_VERIFY: { maxRequests: 5, windowMs: 15 * 60 * 1000 },
+  ENROLL: { maxRequests: 3, windowMs: 60 * 60 * 1000 },
+  ENROLL_RESEND: { maxRequests: 3, windowMs: 60 * 1000 },
+  CONTACT: { maxRequests: 3, windowMs: 60 * 60 * 1000 },
+  API_GENERAL: { maxRequests: 60, windowMs: 60 * 1000 },
+};
+
 const defaults: RateLimitConfig = {
   maxRequests: 30,
   windowMs: 60000,
 };
+
+export function getRateLimitKey(request: Request, identifier: string, action: string): string {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  return `${action}:${ip}:${identifier}`;
+}
 
 export function checkRateLimit(
   key: string,

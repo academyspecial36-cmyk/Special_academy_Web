@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { sendEnrollmentEmail } from "@/lib/email";
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from "@/lib/rate-limit";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -14,6 +15,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "Email is required" },
         { status: 400 }
+      );
+    }
+
+    const rateKey = getRateLimitKey(request, email, "enroll_resend");
+    const limit = checkRateLimit(rateKey, RATE_LIMITS.ENROLL_RESEND);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
       );
     }
 

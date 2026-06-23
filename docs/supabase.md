@@ -353,6 +353,8 @@
 | `variables` | `jsonb` |  Nullable |
 | `created_at` | `timestamptz` |  Nullable |
 | `updated_at` | `timestamptz` |  Nullable |
+| `category` | `text` |  Nullable |
+| `config` | `jsonb` |  Nullable |
 
 ## Table `communications`
 
@@ -522,4 +524,72 @@
 | `description` | `text` |  Nullable |
 | `color` | `text` |  Nullable |
 | `created_at` | `timestamptz` |  Nullable |
+
+## Table `live_classes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `title` | `text` |  |
+| `description` | `text` |  Nullable |
+| `instructor` | `text` |  |
+| `platform` | `text` |  |
+| `join_url` | `text` |  |
+| `recording_url` | `text` |  Nullable |
+| `start_time` | `timestamptz` |  |
+| `duration_minutes` | `int4` |  Nullable |
+| `course_id` | `uuid` |  Nullable |
+| `status` | `text` |  |
+| `color` | `text` |  Nullable |
+| `created_at` | `timestamptz` |  Nullable |
+| `updated_at` | `timestamptz` |  Nullable |
+| `recording_chunks` | `jsonb` |  Nullable |
+
+## Table `password_resets`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `email` | `text` |  |
+| `code` | `text` |  |
+| `reset_token` | `uuid` |  Nullable |
+| `expires_at` | `timestamptz` |  |
+| `used` | `bool` |  Nullable |
+| `created_at` | `timestamptz` |  Nullable |
+| `updated_at` | `timestamptz` |  Nullable |
+
+## Table `analytics_sessions`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `visitor_id` | `uuid` |  |
+| `user_id` | `uuid` |  Nullable |
+| `started_at` | `timestamptz` |  Nullable |
+| `last_seen_at` | `timestamptz` |  Nullable |
+
+## Table `analytics_events`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `uuid` | Primary |
+| `event_id` | `text` |  Unique |
+| `event_type` | `text` |  |
+| `session_id` | `uuid` |  Nullable |
+| `visitor_id` | `uuid` |  |
+| `user_id` | `uuid` |  Nullable |
+| `path` | `text` |  Nullable |
+| `exam_id` | `uuid` |  Nullable |
+| `attempt_id` | `uuid` |  Nullable |
+| `import_id` | `uuid` |  Nullable |
+| `metadata` | `jsonb` |  Nullable |
+| `occurred_at` | `timestamptz` |  Nullable |
 

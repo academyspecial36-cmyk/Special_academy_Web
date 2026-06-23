@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { AppContext } from "./app-context";
 import { apiList, clearCache } from "@/lib/api-client";
 import { useCoursesState } from "./courses-context";
 import { useExamsState } from "./exams-context";
@@ -8,10 +9,8 @@ import { useStudentsState, type Enrollment } from "./students-context";
 import { useContentState } from "./content-context";
 import { useSettingsState } from "./settings-context";
 import {
-  generateId, defaultSettings, createSeedExamCategories, createSeedQuestions, createSeedAttempts,
   type FAQ, type AppSettings, type Qualification, type NoticeCategory,
 } from "./seed-data";
-import { NOTICE_CATEGORIES as DEFAULT_NOTICE_CATEGORIES } from "@/constants";
 import type { FacultyMember, Subcategory, Item, ExamCategory, ExamSubcategory, Question, ExamAttempt, Notice, Testimonial, GalleryImage, Course, Student } from "@/types";
 
 export interface AppContextValue {
@@ -79,10 +78,8 @@ export interface AppContextValue {
   addQuestion: (q: Omit<Question, "id" | "createdAt">) => void;
   updateQuestion: (id: string, data: Partial<Question>) => void;
   deleteQuestion: (id: string) => void;
-  addAttempt: (a: Omit<ExamAttempt, "id" | "completedAt">) => void;
+  addAttempt: (a: Omit<ExamAttempt, "id" | "completedAt">) => string;
 }
-
-const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -108,20 +105,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     async function loadBootstrap() {
       try {
-        const settingsRes = await fetch("/api/settings");
-        if (settingsRes.ok) {
+        const [settingsRes, bootstrapRes] = await Promise.all([
+          fetch("/api/settings").catch(() => null),
+          fetch("/api/bootstrap").catch(() => null),
+        ]);
+        if (settingsRes?.ok) {
           const { settings: merged } = await settingsRes.json();
           settings.setSettings(merged);
         }
-      } catch {
-        /* fallback to defaults */
-      } finally {
-        setLoading(false);
-      }
-
-      try {
-        const bootstrapRes = await fetch("/api/bootstrap");
-        if (bootstrapRes.ok) {
+        if (bootstrapRes?.ok) {
           const data = await bootstrapRes.json();
           if (data.settings) settings.setSettings(data.settings);
           if (Array.isArray(data.faqs) && data.faqs.length) content.setFaqs(data.faqs);
@@ -148,6 +140,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.log("Bootstrap load failed:", err);
+      } finally {
+        setLoading(false);
       }
 
       try {
@@ -225,10 +219,4 @@ export function AppProvider({ children }: { children: ReactNode }) {
       {children}
     </AppContext.Provider>
   );
-}
-
-export function useAppContext() {
-  const ctx = useContext(AppContext);
-  if (!ctx) throw new Error("useAppContext must be used within AppProvider");
-  return ctx;
 }

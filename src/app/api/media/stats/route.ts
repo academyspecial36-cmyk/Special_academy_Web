@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 const STORAGE_LIMIT = Number(process.env.NEXT_PUBLIC_STORAGE_LIMIT_BYTES) || 1073741824; // 1GB default
 
 export async function GET() {
+  const { error } = await requireAdmin();
+  if (error) return error;
   try {
     const supabase = createServiceRoleSupabase();
     const { data, error } = await supabase

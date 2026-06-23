@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import sharp from "sharp";
 import { PDFDocument } from "pdf-lib";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function GET(request: Request) {
+  const { error } = await requireAdmin();
+  if (error) return error;
   try {
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get("folder_id");
@@ -79,6 +82,9 @@ async function optimizeBuffer(buffer: Buffer, mime: string): Promise<Buffer> {
 
 export async function POST(request: Request) {
   try {
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const supabase = createServiceRoleSupabase();
     const formData = await request.formData();
     const file = formData.get("file") as File | null;

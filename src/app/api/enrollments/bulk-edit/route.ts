@@ -1,0 +1,32 @@
+import { NextResponse } from "next/server";
+import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
+
+export async function POST(request: Request) {
+  try {
+    const { error: authError } = await requireAdmin();
+    if (authError) return authError;
+
+    const { ids, interestedCourse, status } = await request.json();
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "No IDs provided" }, { status: 400 });
+    }
+
+    const updates: Record<string, unknown> = {};
+    if (interestedCourse !== undefined) updates.interested_course = interestedCourse;
+    if (status !== undefined) updates.status = status;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+    }
+
+    const svc = createServiceRoleSupabase();
+    const { error } = await svc.from("enrollments").update(updates).in("id", ids);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, updated: ids.length });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}

@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import {
   Users, BookOpen, FileText, Bell, TrendingUp, ArrowUpRight, ArrowDownRight,
   BarChart3, PieChart, Activity, DollarSign, GraduationCap, MessageSquare,
   Newspaper, Star, ImageIcon, Video, File, PlayCircle,
 } from "lucide-react";
 
-const DashboardCharts = dynamic(
+export const dynamic = "force-dynamic";
+
+const DashboardCharts = dynamicImport(
   () => import("@/components/dashboard/dashboard-charts").then((m) => m.DashboardCharts),
   {
     ssr: false,
@@ -28,7 +30,13 @@ const DashboardCharts = dynamic(
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatShortDate, cn } from "@/lib/utils";
+import { formatShortDate } from "@/lib/utils";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatCard } from "@/components/shared/stat-card";
+import { SkeletonCard } from "@/components/shared/skeleton-card";
+import { NoticeItem } from "@/components/shared/notice-item";
+import { CardHeaderAction } from "@/components/shared/card-header-action";
+import { EmptyState } from "@/components/shared/empty-state";
 
 interface AnalyticsData {
   stats: {
@@ -58,19 +66,7 @@ interface AnalyticsData {
 
 // Chart configurations, tooltips, and legends moved to dashboard-charts.tsx
 
-function SkeletonCard() {
-  return (
-    <Card className="animate-pulse">
-      <CardContent className="p-5">
-        <div className="h-4 bg-primary/5 rounded w-24 mb-3" />
-        <div className="h-8 bg-primary/5 rounded w-16 mb-3" />
-        <div className="h-3 bg-primary/5 rounded w-32" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function ChartSkeleton() {
+const ChartSkeleton = memo(function ChartSkeleton() {
   return (
     <Card className="animate-pulse">
       <CardHeader><div className="h-5 bg-primary/5 rounded w-40" /></CardHeader>
@@ -79,7 +75,7 @@ function ChartSkeleton() {
       </CardContent>
     </Card>
   );
-}
+});
 
 export default function DashboardPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -103,6 +99,68 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
+  const s = data?.stats;
+
+  const noData = useMemo(
+    () => !data || (s && s.totalStudents === 0 && s.activeCourses === 0 && s.totalEnrollments === 0),
+    [data, s]
+  );
+
+  const statCards = useMemo(() => [
+    {
+      label: "Total Students",
+      value: s?.totalStudents ?? 0,
+      change: s?.studentGrowth?.change,
+      up: s?.studentGrowth?.up,
+      changeLabel: "vs last month",
+      icon: <Users className="w-full h-full" />,
+      accentBorder: "border-l-emerald-500",
+      iconVariant: "emerald" as const,
+    },
+    {
+      label: "Active Courses",
+      value: s?.activeCourses ?? 0,
+      change: `${s?.publishedPosts ?? 0}`,
+      up: true,
+      changeLabel: "published posts",
+      icon: <BookOpen className="w-full h-full" />,
+      accentBorder: "border-l-secondary",
+      iconVariant: "secondary" as const,
+    },
+    {
+      label: "Enrollments",
+      value: s?.totalEnrollments ?? 0,
+      change: s?.enrollmentGrowth?.change,
+      up: s?.enrollmentGrowth?.up,
+      changeLabel: "vs last month",
+      icon: <FileText className="w-full h-full" />,
+      accentBorder: "border-l-amber-500",
+      iconVariant: "amber" as const,
+    },
+    {
+      label: "Unread Messages",
+      value: s?.unreadMessages ?? 0,
+      change: `${s?.totalContactSubmissions ?? 0}`,
+      up: false,
+      changeLabel: "total submissions",
+      icon: <MessageSquare className="w-full h-full" />,
+      accentBorder: "border-l-violet-500",
+      iconVariant: "violet" as const,
+    },
+  ], [s]);
+
+  const noticesEntries = useMemo(
+    () => Object.entries(data?.noticesByCategory ?? {}),
+    [data?.noticesByCategory]
+  );
+
+  const miniStats = useMemo(() => [
+    { label: "Testimonials", value: s?.totalTestimonials ?? 0, icon: <Star className="w-full h-full" /> },
+    { label: "Blog Posts", value: s?.publishedPosts ?? 0, icon: <Newspaper className="w-full h-full" /> },
+    { label: "Messages", value: s?.totalContactSubmissions ?? 0, icon: <MessageSquare className="w-full h-full" /> },
+    { label: "Revenue", value: `$${(s?.totalRevenue ?? 0).toLocaleString()}`, icon: <DollarSign className="w-full h-full" /> },
+  ], [s]);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -122,77 +180,16 @@ export default function DashboardPage() {
     );
   }
 
-  const s = data?.stats;
-  const noData = !data || (s && s.totalStudents === 0 && s.activeCourses === 0 && s.totalEnrollments === 0);
-
-  const statCards = [
-    {
-      label: "Total Students",
-      value: s?.totalStudents ?? 0,
-      change: s?.studentGrowth?.change,
-      up: s?.studentGrowth?.up,
-      changeLabel: "vs last month",
-      icon: Users,
-      accent: "border-l-emerald-500",
-      iconBg: "bg-emerald-50 text-emerald-600",
-    },
-    {
-      label: "Active Courses",
-      value: s?.activeCourses ?? 0,
-      change: `${s?.publishedPosts ?? 0}`,
-      up: true,
-      changeLabel: "published posts",
-      icon: BookOpen,
-      accent: "border-l-secondary",
-      iconBg: "bg-secondary/10 text-secondary",
-    },
-    {
-      label: "Enrollments",
-      value: s?.totalEnrollments ?? 0,
-      change: s?.enrollmentGrowth?.change,
-      up: s?.enrollmentGrowth?.up,
-      changeLabel: "vs last month",
-      icon: FileText,
-      accent: "border-l-amber-500",
-      iconBg: "bg-amber-50 text-amber-600",
-    },
-    {
-      label: "Unread Messages",
-      value: s?.unreadMessages ?? 0,
-      change: `${s?.totalContactSubmissions ?? 0}`,
-      up: false,
-      changeLabel: "total submissions",
-      icon: MessageSquare,
-      accent: "border-l-violet-500",
-      iconBg: "bg-violet-50 text-violet-600",
-    },
-  ];
-
-  const noticesEntries = Object.entries(data?.noticesByCategory ?? {});
-
-
-
   return (
     <div className="space-y-6">
-      {/* Welcome */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard</h1>
-          <p className="text-xs sm:text-sm text-muted">Welcome back, Admin. Here&apos;s what&apos;s happening today.</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/dashboard/enrollments">View Enrollments</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/dashboard/notices">Publish Notice</Link>
-          </Button>
-        </div>
-      </motion.div>
+      <PageHeader title="Dashboard" description="Welcome back, Admin. Here&apos;s what&apos;s happening today.">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/enrollments">View Enrollments</Link>
+        </Button>
+        <Button size="sm" asChild>
+          <Link href="/dashboard/notices">Publish Notice</Link>
+        </Button>
+      </PageHeader>
 
       {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -203,75 +200,25 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05 }}
           >
-            <Card className={`border-l-4 ${stat.accent} overflow-hidden`}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.iconBg} shrink-0`}>
-                      <stat.icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-muted uppercase tracking-wider">{stat.label}</p>
-                      <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5">
-                        {typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 mt-1",
-                      stat.up ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
-                    )}
-                  >
-                    {stat.up ? (
-                      <ArrowUpRight className="w-3 h-3" />
-                    ) : (
-                      <ArrowDownRight className="w-3 h-3" />
-                    )}
-                    {stat.change}
-                  </span>
-                </div>
-                <p className="text-xs text-muted mt-2 ml-[52px]">{stat.changeLabel}</p>
-              </CardContent>
-            </Card>
+            <StatCard icon={stat.icon} label={stat.label} value={stat.value} change={stat.change} up={stat.up} changeLabel={stat.changeLabel} accentBorder={stat.accentBorder} iconVariant={stat.iconVariant} />
           </motion.div>
         ))}
       </div>
 
       {/* Additional mini stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Testimonials", value: s?.totalTestimonials ?? 0, icon: Star },
-          { label: "Blog Posts", value: s?.publishedPosts ?? 0, icon: Newspaper },
-          { label: "Messages", value: s?.totalContactSubmissions ?? 0, icon: MessageSquare },
-          { label: "Revenue", value: `$${(s?.totalRevenue ?? 0).toLocaleString()}`, icon: DollarSign },
-        ].map((stat) => (
-          <Card key={stat.label} className="border-t-2 border-t-primary/10">
-            <CardContent className="p-3.5 flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-medium text-muted uppercase tracking-wider">{stat.label}</p>
-                <p className="text-base font-bold text-primary mt-0.5">{typeof stat.value === "number" ? stat.value.toLocaleString() : stat.value}</p>
-              </div>
-              <div className="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
-                <stat.icon className="w-4 h-4 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
+        {miniStats.map((stat) => (
+            <StatCard key={stat.label} icon={stat.icon} label={stat.label} value={stat.value} variant="mini" />
         ))}
       </div>
 
       {noData ? (
-        <Card>
-          <CardContent className="py-16">
-            <div className="text-center">
-              <BarChart3 className="w-12 h-12 text-muted mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-primary mb-2">No Data Yet</h3>
-              <p className="text-sm text-muted max-w-md mx-auto">
-                Start adding students, courses, and enrollments to see analytics and charts here.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={<BarChart3 className="w-full h-full" />}
+          title="No Data Yet"
+          description="Start adding students, courses, and enrollments to see analytics and charts here."
+          size="lg"
+        />
       ) : (
         <DashboardCharts data={data} noticesEntries={noticesEntries} />
       )}
@@ -303,52 +250,7 @@ export default function DashboardPage() {
         {/* Mobile & Tablet Cards */}
         <div className="space-y-3 md:hidden">
           {data.recentEnrollments.map((e) => (
-            <div
-              key={e.id}
-              className="rounded-xl border border-primary/5 bg-accent p-4"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-bold text-primary">
-                  {e.fullName
-                    .split(" ")
-                    .map((n: string) => n[0])
-                    .join("")}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm font-semibold text-primary">
-                    {e.fullName}
-                  </p>
-
-                  <p className="mt-0.5 break-words text-xs text-muted">
-                    {e.email}
-                  </p>
-
-                  <p className="mt-2 break-words text-xs text-muted">
-                    {e.course}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-3 flex items-center justify-between border-t border-primary/5 pt-3">
-                <span className="text-xs text-muted">
-                  {formatShortDate(e.createdAt)}
-                </span>
-
-                <Badge
-                  variant={
-                    e.status === "approved"
-                      ? "success"
-                      : e.status === "rejected"
-                      ? "destructive"
-                      : "outline"
-                  }
-                  className="text-[10px]"
-                >
-                  {e.status}
-                </Badge>
-              </div>
-            </div>
+            <EnrollmentCard key={e.id} enrollment={e} />
           ))}
         </div>
 
@@ -374,54 +276,7 @@ export default function DashboardPage() {
 
             <tbody>
               {data.recentEnrollments.map((e) => (
-                <tr
-                  key={e.id}
-                  className="border-b border-primary/5 last:border-0"
-                >
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-bold text-primary">
-                        {e.fullName
-                          .split(" ")
-                          .map((n: string) => n[0])
-                          .join("")}
-                      </div>
-
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-primary">
-                          {e.fullName}
-                        </p>
-
-                        <p className="truncate text-xs text-muted">
-                          {e.email}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="max-w-[220px] truncate py-3 pr-4 text-sm text-muted">
-                    {e.course}
-                  </td>
-
-                  <td className="whitespace-nowrap py-3 pr-4 text-sm text-muted">
-                    {formatShortDate(e.createdAt)}
-                  </td>
-
-                  <td className="py-3">
-                    <Badge
-                      variant={
-                        e.status === "approved"
-                          ? "success"
-                          : e.status === "rejected"
-                          ? "destructive"
-                          : "outline"
-                      }
-                      className="text-[10px]"
-                    >
-                      {e.status}
-                    </Badge>
-                  </td>
-                </tr>
+                <EnrollmentRow key={e.id} enrollment={e} />
               ))}
             </tbody>
           </table>
@@ -439,24 +294,13 @@ export default function DashboardPage() {
         {/* Latest Notices */}
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle>Latest Notices</CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/dashboard/notices">View All</Link>
-              </Button>
-            </div>
+            <CardHeaderAction title="Latest Notices" actionHref="/dashboard/notices" />
           </CardHeader>
           <CardContent>
             {data?.latestNotices && data.latestNotices.length > 0 ? (
               <div className="space-y-3 sm:space-y-4">
                 {data.latestNotices.map((notice) => (
-                  <div key={notice.id} className="pb-3 sm:pb-4 border-b border-primary/5 last:border-0 last:pb-0">
-                    <p className="text-sm font-medium text-primary line-clamp-2 mb-1.5">{notice.title}</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs text-muted">{formatShortDate(notice.date)}</span>
-                      <Badge variant="outline" className="text-[10px] shrink-0">{notice.category}</Badge>
-                    </div>
-                  </div>
+                  <NoticeItem key={notice.id} title={notice.title} date={formatShortDate(notice.date)} category={notice.category} variant="compact" />
                 ))}
               </div>
             ) : (
@@ -470,69 +314,13 @@ export default function DashboardPage() {
       {mediaFiles.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-secondary" />
-                Media Preview
-              </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/dashboard/media">View All</Link>
-              </Button>
-            </div>
+            <CardHeaderAction title="Media Preview" icon={<ImageIcon className="w-full h-full" />} actionHref="/dashboard/media" />
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {mediaFiles.map((file) => {
-                const isVideo = file.mime_type?.startsWith("video/");
-                const isImage = file.mime_type?.startsWith("image/");
-                const isPdf = file.mime_type === "application/pdf";
-                return (
-                  <Link
-                    key={file.id}
-                    href="/dashboard/media"
-                    className="group relative aspect-square rounded-xl overflow-hidden border border-primary/5 bg-accent hover:border-secondary/30 hover:shadow-soft transition-all"
-                  >
-                    {isImage ? (
-                      <Image
-                        src={file.thumbnail_url || file.url}
-                        alt={file.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        unoptimized
-                      />
-                    ) : isVideo ? (
-                      <div className="relative w-full h-full flex items-center justify-center bg-black/5">
-                        <Video className="w-8 h-8 text-muted" />
-                        {file.thumbnail_url && (
-                          <Image
-                            src={file.thumbnail_url}
-                            alt={file.name}
-                            fill
-                            className="object-cover opacity-40"
-                            unoptimized
-                          />
-                        )}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center">
-                            <PlayCircle className="w-5 h-5 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                    ) : isPdf ? (
-                      <div className="w-full h-full flex items-center justify-center bg-red-50">
-                        <File className="w-8 h-8 text-red-500" />
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <File className="w-8 h-8 text-muted" />
-                      </div>
-                    )}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-6">
-                      <p className="text-[10px] text-white truncate font-medium">{file.name}</p>
-                    </div>
-                  </Link>
-                );
-              })}
+              {mediaFiles.map((file) => (
+                <MediaFileCard key={file.id} file={file} />
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -540,3 +328,112 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+const EnrollmentCard = memo(function EnrollmentCard({ enrollment }: {
+  enrollment: { id: string; fullName: string; email: string; course: string; status: string; createdAt: string };
+}) {
+  return (
+    <div key={enrollment.id} className="rounded-xl border border-primary/5 bg-accent p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-bold text-primary">
+          {enrollment.fullName.split(" ").map((n: string) => n[0]).join("")}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="break-words text-sm font-semibold text-primary">{enrollment.fullName}</p>
+          <p className="mt-0.5 break-words text-xs text-muted">{enrollment.email}</p>
+          <p className="mt-2 break-words text-xs text-muted">{enrollment.course}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between border-t border-primary/5 pt-3">
+        <span className="text-xs text-muted">{formatShortDate(enrollment.createdAt)}</span>
+        <Badge
+          variant={enrollment.status === "approved" ? "success" : enrollment.status === "rejected" ? "destructive" : "outline"}
+          className="text-[10px]"
+        >
+          {enrollment.status}
+        </Badge>
+      </div>
+    </div>
+  );
+});
+
+const EnrollmentRow = memo(function EnrollmentRow({ enrollment }: {
+  enrollment: { id: string; fullName: string; email: string; course: string; status: string; createdAt: string };
+}) {
+  return (
+    <tr key={enrollment.id} className="border-b border-primary/5 last:border-0">
+      <td className="py-3 pr-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/5 text-xs font-bold text-primary">
+            {enrollment.fullName.split(" ").map((n: string) => n[0]).join("")}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-primary">{enrollment.fullName}</p>
+            <p className="truncate text-xs text-muted">{enrollment.email}</p>
+          </div>
+        </div>
+      </td>
+      <td className="max-w-[220px] truncate py-3 pr-4 text-sm text-muted">{enrollment.course}</td>
+      <td className="whitespace-nowrap py-3 pr-4 text-sm text-muted">{formatShortDate(enrollment.createdAt)}</td>
+      <td className="py-3">
+        <Badge
+          variant={enrollment.status === "approved" ? "success" : enrollment.status === "rejected" ? "destructive" : "outline"}
+          className="text-[10px]"
+        >
+          {enrollment.status}
+        </Badge>
+      </td>
+    </tr>
+  );
+});
+
+const MediaFileCard = memo(function MediaFileCard({ file }: {
+  file: { id: string; url: string; thumbnail_url: string | null; name: string; mime_type: string };
+}) {
+  const isVideo = file.mime_type?.startsWith("video/");
+  const isImage = file.mime_type?.startsWith("image/");
+  const isPdf = file.mime_type === "application/pdf";
+  return (
+    <Link
+      href="/dashboard/media"
+      className="group relative aspect-square rounded-xl overflow-hidden border border-primary/5 bg-accent hover:border-secondary/30 hover:shadow-soft transition-all"
+    >
+      {isImage ? (
+        <Image
+          src={file.thumbnail_url || file.url}
+          alt={file.name}
+          fill
+          className="object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+      ) : isVideo ? (
+        <div className="relative w-full h-full flex items-center justify-center bg-black/5">
+          <Video className="w-8 h-8 text-muted" />
+          {file.thumbnail_url && (
+            <Image
+              src={file.thumbnail_url}
+              alt={file.name}
+              fill
+              className="object-cover opacity-40"
+            />
+          )}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center">
+              <PlayCircle className="w-5 h-5 text-white" />
+            </div>
+          </div>
+        </div>
+      ) : isPdf ? (
+        <div className="w-full h-full flex items-center justify-center bg-red-50">
+          <File className="w-8 h-8 text-red-500" />
+        </div>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <File className="w-8 h-8 text-muted" />
+        </div>
+      )}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2 pt-6">
+        <p className="text-[10px] text-white truncate font-medium">{file.name}</p>
+      </div>
+    </Link>
+  );
+});

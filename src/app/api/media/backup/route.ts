@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { PassThrough } from "stream";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function GET() {
+  const { error } = await requireAdmin();
+  if (error) return error;
   const { ZipArchive } = await import("archiver");
   try {
     const supabase = createServiceRoleSupabase();

@@ -171,7 +171,7 @@ export function AssetPicker({ open, onClose, onSelect, filterMime, multiple }: A
                         <div className="aspect-square bg-primary/[0.02] flex items-center justify-center">
                           {file.mime_type.startsWith("image/") ? (
                             <Image src={file.url} alt={file.alt_text || file.name}
-                              width={150} height={150} className="w-full h-full object-cover" unoptimized />
+                              width={150} height={150} className="w-full h-full object-cover" />
                           ) : (
                             <Icon className="w-6 h-6 text-muted" />
                           )}

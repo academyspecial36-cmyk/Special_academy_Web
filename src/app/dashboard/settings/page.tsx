@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, type ComponentType } from "react";
-import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import dynamicImport from "next/dynamic";
+
+export const dynamic = "force-dynamic";
 import { Building2, User, Layout, ToggleLeft, TrendingUp, FileText, Palette, HardDrive } from "lucide-react";
 import { toast } from "sonner";
 import { useAppContext } from "@/lib/app-context";
@@ -11,15 +12,15 @@ import { cn } from "@/lib/utils";
 import { apiList } from "@/lib/api-client";
 import type { AppSettings } from "@/lib/app-context";
 
-const ProfileTab = dynamic(() => import("@/components/settings/profile-tab").then(m => ({ default: m.ProfileTab })), { ssr: false }) as ComponentType<{ user: import("@/lib/auth-context").AuthUser | null }>;
-const SiteTab = dynamic(() => import("@/components/settings/site-tab").then(m => ({ default: m.SiteTab })), { ssr: false }) as ComponentType<{ form: any; setForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
-const LandingTab = dynamic(() => import("@/components/settings/landing-tab").then(m => ({ default: m.LandingTab })), { ssr: false }) as ComponentType<{ landingForm: any; setLandingForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
-const SectionsTab = dynamic(() => import("@/components/settings/sections-tab").then(m => ({ default: m.SectionsTab })), { ssr: false }) as ComponentType<{ sectionsForm: any; setSectionsForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
-const FeaturesTab = dynamic(() => import("@/components/settings/features-tab").then(m => ({ default: m.FeaturesTab })), { ssr: false }) as ComponentType<any>;
-const ContentTab = dynamic(() => import("@/components/settings/content-tab").then(m => ({ default: m.ContentTab })), { ssr: false }) as ComponentType<{ contentForm: any; setContentForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
-const ThemeTab = dynamic(() => import("@/components/settings/theme-tab").then(m => ({ default: m.ThemeTab })), { ssr: false }) as ComponentType<{ themeForm: any; setThemeForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
-const LegalTab = dynamic(() => import("@/components/settings/legal-tab").then(m => ({ default: m.LegalTab })), { ssr: false }) as ComponentType<{ legalForm: any; setLegalForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
-const BackupTab = dynamic(() => import("@/components/settings/backup-tab").then(m => ({ default: m.BackupTab })), { ssr: false }) as ComponentType<{ backupConfig: any; setBackupConfig: any; backupHistory: any; setBackupHistory: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const ProfileTab = dynamicImport(() => import("@/components/settings/profile-tab").then(m => ({ default: m.ProfileTab })), { ssr: false }) as ComponentType<{ user: import("@/lib/auth-context").AuthUser | null }>;
+const SiteTab = dynamicImport(() => import("@/components/settings/site-tab").then(m => ({ default: m.SiteTab })), { ssr: false }) as ComponentType<{ form: any; setForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const LandingTab = dynamicImport(() => import("@/components/settings/landing-tab").then(m => ({ default: m.LandingTab })), { ssr: false }) as ComponentType<{ landingForm: any; setLandingForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const SectionsTab = dynamicImport(() => import("@/components/settings/sections-tab").then(m => ({ default: m.SectionsTab })), { ssr: false }) as ComponentType<{ sectionsForm: any; setSectionsForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const FeaturesTab = dynamicImport(() => import("@/components/settings/features-tab").then(m => ({ default: m.FeaturesTab })), { ssr: false }) as ComponentType<any>;
+const ContentTab = dynamicImport(() => import("@/components/settings/content-tab").then(m => ({ default: m.ContentTab })), { ssr: false }) as ComponentType<{ contentForm: any; setContentForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const ThemeTab = dynamicImport(() => import("@/components/settings/theme-tab").then(m => ({ default: m.ThemeTab })), { ssr: false }) as ComponentType<{ themeForm: any; setThemeForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const LegalTab = dynamicImport(() => import("@/components/settings/legal-tab").then(m => ({ default: m.LegalTab })), { ssr: false }) as ComponentType<{ legalForm: any; setLegalForm: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
+const BackupTab = dynamicImport(() => import("@/components/settings/backup-tab").then(m => ({ default: m.BackupTab })), { ssr: false }) as ComponentType<{ backupConfig: any; setBackupConfig: any; backupHistory: any; setBackupHistory: any; savingSettings: boolean; handleSave: () => Promise<void> }>;
 
 type Tab = "profile" | "site" | "landing" | "sections" | "features" | "content" | "theme" | "legal" | "backup";
 
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const [seoForm, setSeoForm] = useState({ ...settings.seo });
   const [sectionsForm, setSectionsForm] = useState<Record<string, boolean>>({});
   const [pinnedPopupEnabled, setPinnedPopupEnabled] = useState(true);
+  const [admissionBarEnabled, setAdmissionBarEnabled] = useState(true);
   const [contentForm, setContentForm] = useState(() => ({
     whyChoose: [] as { icon: string; title: string; description: string }[],
     cadetOverview: { title: "", description: "", heading: "", steps: [] as string[], images: [] as string[] },
@@ -87,6 +89,7 @@ export default function SettingsPage() {
     setSeoForm({ ...settings.seo });
     setSectionsForm({ ...(settings.config?.sections || {}) });
     setPinnedPopupEnabled(settings.config?.enablePinnedPopup !== false);
+    setAdmissionBarEnabled(settings.config?.showAdmissionBar !== false);
     setContentForm({
       whyChoose: settings.config?.whyChoose?.length ? settings.config.whyChoose : [],
       cadetOverview: settings.config?.cadetOverview || { title: "", description: "", heading: "", steps: [], images: [] },
@@ -150,6 +153,7 @@ export default function SettingsPage() {
       if (activeTab === "features") {
         mergedConfig.seo = seoForm;
         mergedConfig.enablePinnedPopup = pinnedPopupEnabled;
+        mergedConfig.showAdmissionBar = admissionBarEnabled;
       }
       if (activeTab === "theme") {
         mergedConfig.theme = themeForm;
@@ -258,67 +262,68 @@ export default function SettingsPage() {
       </div>
 
       {activeTab === "profile" && (
-        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="profile">
           <ProfileTab user={user} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "site" && (
-        <motion.div key="site" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="site">
           <SiteTab form={form} setForm={setForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "landing" && (
-        <motion.div key="landing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="landing">
           <LandingTab landingForm={landingForm} setLandingForm={setLandingForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "sections" && (
-        <motion.div key="sections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="sections">
           <SectionsTab sectionsForm={sectionsForm} setSectionsForm={setSectionsForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "features" && (
-        <motion.div key="features" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="features">
           <FeaturesTab
             seoForm={seoForm} setSeoForm={setSeoForm}
             pinnedPopupEnabled={pinnedPopupEnabled} setPinnedPopupEnabled={setPinnedPopupEnabled}
+            admissionBarEnabled={admissionBarEnabled} setAdmissionBarEnabled={setAdmissionBarEnabled}
             form={form as unknown as Record<string, unknown>}
             setForm={setForm as unknown as (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void}
             savingSettings={savingSettings} handleSave={handleSave}
           />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "content" && (
-        <motion.div key="content" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="content">
           <ContentTab contentForm={contentForm} setContentForm={setContentForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "theme" && (
-        <motion.div key="theme" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="theme">
           <ThemeTab themeForm={themeForm} setThemeForm={setThemeForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "legal" && (
-        <motion.div key="legal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="legal">
           <LegalTab legalForm={legalForm} setLegalForm={setLegalForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "backup" && (
-        <motion.div key="backup" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="backup">
           <BackupTab
             backupConfig={backupConfig} setBackupConfig={setBackupConfig}
             backupHistory={backupHistory} setBackupHistory={setBackupHistory}
             savingSettings={savingSettings} handleSave={handleSave}
           />
-        </motion.div>
+        </div>
       )}
     </div>
   );

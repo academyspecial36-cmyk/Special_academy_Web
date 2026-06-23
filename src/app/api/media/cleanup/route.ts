@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function POST() {
+  const { error } = await requireAdmin();
+  if (error) return error;
   try {
     const supabase = createServiceRoleSupabase();
 
@@ -37,6 +40,9 @@ export async function POST() {
 
 export async function DELETE(request: Request) {
   try {
+    const { error: authError } = await requireAdmin();
+    if (authError) return authError;
+
     const body = await request.json();
     const { paths, bucket } = body;
     if (!Array.isArray(paths) || paths.length === 0) {

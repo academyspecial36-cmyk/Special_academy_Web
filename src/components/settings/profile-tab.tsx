@@ -103,7 +103,7 @@ export function ProfileTab({ user }: ProfileTabProps) {
             <div className="relative group">
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg overflow-hidden">
                 {(avatarPreview || user?.avatar_url) ? (
-                  <Image src={avatarPreview || user!.avatar_url!} alt="Avatar" width={56} height={56} className="w-full h-full object-cover" unoptimized />
+                  <Image src={avatarPreview || user!.avatar_url!} alt="Avatar" width={56} height={56} className="w-full h-full object-cover" />
                 ) : (
                   <span>{initials}</span>
                 )}

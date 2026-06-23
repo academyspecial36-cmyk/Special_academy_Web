@@ -60,6 +60,7 @@ export function Navbar() {
   return (
     <>
       {/* Announcement Bar */}
+      {settings.config?.showAdmissionBar !== false && (
       <div className="hidden md:block bg-primary text-white text-center py-2 px-4 text-xs md:text-sm font-medium">
         <span className="inline-flex items-center gap-2">
           <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
@@ -75,6 +76,7 @@ export function Navbar() {
           </Link>
         </span>
       </div>
+      )}
 
       {/* Navbar */}
       <header
@@ -96,7 +98,7 @@ export function Navbar() {
                   width={36}
                   height={36}
                   className="object-contain"
-                  unoptimized
+                 
                 />
               </div>
               <div className="flex flex-col">
@@ -143,7 +145,7 @@ export function Navbar() {
                           width={32}
                           height={32}
                           className="w-full h-full object-cover"
-                          unoptimized
+                         
                         />
                       ) : (
                         initials
@@ -276,7 +278,7 @@ export function Navbar() {
                             width={36}
                             height={36}
                             className="w-full h-full object-cover rounded-full"
-                            unoptimized
+                           
                           />
                         ) : (
                           initials

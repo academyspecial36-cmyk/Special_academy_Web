@@ -180,6 +180,7 @@ export interface ExamAttempt {
   id: string;
   categoryId: string;
   subcategoryId?: string;
+  studentId?: string;
   studentName: string;
   answers: { questionId: string; answer: string; correct: boolean }[];
   score: number;

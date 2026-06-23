@@ -298,7 +298,7 @@ export default function BlogEditorPage({ params }: { params: Promise<{ id: strin
                       alt="Featured"
                       fill
                       className="object-cover"
-                      unoptimized
+                     
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted text-sm">

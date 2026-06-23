@@ -3,6 +3,7 @@ import { exportAllData, importAllData, uploadToSupabaseStorage, generateBackupId
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { seedSettings } from "@/lib/settings-server";
 import { createNotificationForRole } from "@/lib/notifications";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 async function ensureSettingsRow(svc: ReturnType<typeof createServiceRoleSupabase>) {
   const { data } = await svc.from("settings").select("id").maybeSingle();
@@ -16,6 +17,9 @@ async function ensureSettingsRow(svc: ReturnType<typeof createServiceRoleSupabas
 
 export async function GET(request: Request) {
   try {
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action");
 
@@ -49,6 +53,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const action = searchParams.get("action");
     const body = await request.json();

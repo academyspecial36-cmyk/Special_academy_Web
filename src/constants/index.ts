@@ -24,6 +24,12 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
     href: "/dashboard",
     icon: "LayoutDashboard",
   },
+  {
+    type: "link",
+    label: "Analytics",
+    href: "/dashboard/analytics",
+    icon: "BarChart3",
+  },
 
   {
     type: "group",
@@ -194,13 +200,4 @@ export const COURSE_CATEGORIES = [
   "Physical",
 ];
 
-export const QUALIFICATIONS = [
-  "Class 8",
-  "Class 9",
-  "Class 10",
-  "Class 11",
-  "Class 12",
-  "+2",
-  "Bachelor",
-  "Master",
-];
+export { QUALIFICATIONS } from "./qualifications";

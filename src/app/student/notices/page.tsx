@@ -105,7 +105,7 @@ export default function StudentNoticesPage() {
                 <div className="flex items-start gap-3 sm:gap-4">
                   {notice.image && (
                     <div className="hidden sm:block w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-accent">
-                      <Image src={notice.image} alt="" width={64} height={64} className="w-full h-full object-cover" unoptimized />
+                      <Image src={notice.image} alt="" width={64} height={64} className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -165,7 +165,7 @@ export default function StudentNoticesPage() {
                 </div>
                 {selectedNotice.image && (
                   <div className="w-full h-40 sm:h-48 rounded-lg overflow-hidden bg-accent mb-4">
-                    <Image src={selectedNotice.image} alt="" width={500} height={200} className="w-full h-full object-cover" unoptimized />
+                    <Image src={selectedNotice.image} alt="" width={500} height={200} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <h2 className="text-lg sm:text-xl font-bold text-primary mb-3 sm:mb-4">{selectedNotice.title}</h2>
