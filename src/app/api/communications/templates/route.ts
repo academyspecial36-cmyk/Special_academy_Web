@@ -16,22 +16,34 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const supabase = createServiceRoleSupabase();
+    const insertPayload = {
+      name: parsed.name,
+      type: parsed.type,
+      subject: parsed.subject,
+      body: parsed.body,
+      variables: parsed.variables ?? [],
+      category: parsed.category || "custom",
+      config: parsed.config ?? {},
+    };
     const { data, error } = await supabase
       .from("communication_templates")
-      .insert({
-        name: body.name,
-        type: body.type,
-        subject: body.subject,
-        body: body.body,
-        variables: body.variables ?? [],
-      })
+      .insert(insertPayload)
       .select()
       .single();
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     return NextResponse.json(data, { status: 201 });
-  } catch {
+  } catch (e) {
+    console.error("POST /api/communications/templates unexpected error:", e);
     return NextResponse.json({ error: "Failed to create template" }, { status: 500 });
   }
 }

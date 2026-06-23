@@ -17,6 +17,8 @@ export async function PUT(
         subject: body.subject,
         body: body.body,
         variables: body.variables ?? [],
+        category: body.category || "custom",
+        config: body.config ?? {},
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

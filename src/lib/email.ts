@@ -1,5 +1,7 @@
 import { Resend } from "resend";
+import { createServiceRoleSupabase } from "./supabase-server";
 import { fetchSettings } from "./settings-server";
+import { generateEmailHtml } from "./email-template-builder";
 
 const resend = new Resend(
   process.env.RESEND_API_KEY  || ""
@@ -22,6 +24,65 @@ type Settings = {
   email: string;
   phone: string;
 };
+
+import type { TemplateConfig } from "./email-template-builder";
+
+type Template = {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  variables: string[];
+  category: string;
+  config: TemplateConfig | null;
+};
+
+async function fetchTemplateByCategory(category: string): Promise<Template | null> {
+  try {
+    const svc = createServiceRoleSupabase();
+    const { data } = await svc
+      .from("communication_templates")
+      .select("*")
+      .eq("category", category)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data as Template | null;
+  } catch {
+    return null;
+  }
+}
+
+function renderTemplate(template: Template, vars: Record<string, string>): { subject: string; body: string } {
+  let subject = template.subject || "";
+  let body = template.body || "";
+  for (const [key, val] of Object.entries(vars)) {
+    const re = new RegExp(`\\\{\\\{${key}\\\}\\\}`, "g");
+    subject = subject.replace(re, val);
+    body = body.replace(re, val);
+  }
+  return { subject, body };
+}
+
+function renderConfigTemplate(template: Template, vars: Record<string, string>, settings: Settings): { subject: string; body: string } {
+  let subject = template.subject || "";
+  for (const [key, val] of Object.entries(vars)) {
+    const re = new RegExp(`\\\{\\\{${key}\\\}\\\}`, "g");
+    subject = subject.replace(re, val);
+  }
+  const safeVars = { ...vars };
+  for (const [key, val] of Object.entries(safeVars)) {
+    safeVars[key] = val || "";
+  }
+  const body = generateEmailHtml(template.config!, {
+    name: settings.academyName,
+    logo: settings.appIcon,
+    website: settings.website,
+    email: settings.email,
+    phone: settings.phone,
+  });
+  return { subject, body: body.replace(/\{\{(\w+)\}\}/g, (_, key) => safeVars[key] !== undefined ? safeVars[key] : `{{${key}}}`) };
+}
 
 async function getSettings(): Promise<Settings> {
   try {
@@ -149,7 +210,8 @@ export async function sendEnrollmentEmail(
   const settings = await getSettings();
   const from = getFromAddress(settings);
 
-  const body = `
+  let subject = `Verify Your ${settings.academyName} Enrollment`;
+  let body = `
     ${heroBadge("ACTION REQUIRED", "#d97706")}
     <h2 style="color:${PRIMARY};font-size:22px;margin:0 0 4px;">Welcome, ${name}!</h2>
     <p style="margin:0 0 16px;color:${TEXT_BODY};">Thank you for choosing ${settings.academyName}. Use the code below to verify your email and activate your enrollment.</p>
@@ -163,10 +225,23 @@ export async function sendEnrollmentEmail(
     <p style="font-size:13px;color:${TEXT_MUTED};margin:0;">If you did not create this account, please ignore this email.</p>
   `;
 
+  const tmpl = await fetchTemplateByCategory("enrollment");
+  if (tmpl) {
+    if (tmpl.config) {
+      const rendered = renderConfigTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName, verificationCode }, settings);
+      subject = rendered.subject || subject;
+      await resend.emails.send({ from, to: email, subject, html: rendered.body });
+      return;
+    }
+    const rendered = renderTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName, verificationCode });
+    subject = rendered.subject || subject;
+    body = rendered.body || body;
+  }
+
   await resend.emails.send({
     from,
     to: email,
-    subject: `Verify Your ${settings.academyName} Enrollment`,
+    subject,
     html: baseLayout(body, settings),
   });
 }
@@ -179,7 +254,8 @@ export async function sendRejectionEmail(
   const settings = await getSettings();
   const from = getFromAddress(settings);
 
-  const body = `
+  let subject = `Application Status Update – ${settings.academyName}`;
+  let body = `
     ${heroBadge("APPLICATION UPDATE", "#dc2626")}
     <h2 style="color:${PRIMARY};font-size:22px;margin:0 0 4px;">Application Update</h2>
     <p style="margin:0 0 16px;color:${TEXT_BODY};">Dear ${name},</p>
@@ -201,10 +277,23 @@ export async function sendRejectionEmail(
     <p style="font-size:14px;color:${TEXT_BODY};margin:0;">Best regards,<br/><strong style="color:${PRIMARY};">Admissions Team</strong><br/>${settings.academyName}</p>
   `;
 
+  const tmpl = await fetchTemplateByCategory("rejection");
+  if (tmpl) {
+    if (tmpl.config) {
+      const rendered = renderConfigTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName, message }, settings);
+      subject = rendered.subject || subject;
+      await resend.emails.send({ from, to: email, subject, html: rendered.body });
+      return;
+    }
+    const rendered = renderTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName, message });
+    subject = rendered.subject || subject;
+    body = rendered.body || body;
+  }
+
   await resend.emails.send({
     from,
     to: email,
-    subject: `Application Status Update – ${settings.academyName}`,
+    subject,
     html: baseLayout(body, settings),
   });
 }
@@ -217,7 +306,8 @@ export async function sendPasswordResetEmail(
   const settings = await getSettings();
   const from = getFromAddress(settings);
 
-  const body = `
+  let subject = `Reset Your ${settings.academyName} Password`;
+  let body = `
     ${heroBadge("SECURITY ALERT", "#d97706")}
     <h2 style="color:${PRIMARY};font-size:22px;margin:0 0 4px;">Reset Your Password</h2>
     <p style="margin:0 0 16px;color:${TEXT_BODY};">Hi <strong>${name}</strong>, we received a request to reset your <strong>${settings.academyName}</strong> account password.</p>
@@ -231,10 +321,23 @@ export async function sendPasswordResetEmail(
     <p style="font-size:13px;color:${TEXT_MUTED};margin:0;">For security, this link can only be used once. If you need to reset your password again, please request a new code.</p>
   `;
 
+  const tmpl = await fetchTemplateByCategory("password_reset");
+  if (tmpl) {
+    if (tmpl.config) {
+      const rendered = renderConfigTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName, verificationCode: code }, settings);
+      subject = rendered.subject || subject;
+      await resend.emails.send({ from, to: email, subject, html: rendered.body });
+      return;
+    }
+    const rendered = renderTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName, verificationCode: code });
+    subject = rendered.subject || subject;
+    body = rendered.body || body;
+  }
+
   await resend.emails.send({
     from,
     to: email,
-    subject: `Reset Your ${settings.academyName} Password`,
+    subject,
     html: baseLayout(body, settings),
   });
 }
@@ -246,7 +349,8 @@ export async function sendApprovalEmail(
   const settings = await getSettings();
   const from = getFromAddress(settings);
 
-  const body = `
+  let subject = `Welcome to ${settings.academyName} – Application Approved!`;
+  let body = `
     ${heroBadge("CONGRATULATIONS", "#16a34a")}
     <h2 style="color:${PRIMARY};font-size:22px;margin:0 0 4px;">Congratulations, ${name}!</h2>
     <p style="color:${TEXT_BODY};margin:0 0 16px;">We are delighted to welcome you to <strong>${settings.academyName}</strong>.</p>
@@ -283,10 +387,23 @@ export async function sendApprovalEmail(
     <p style="font-size:14px;color:${TEXT_BODY};margin:0;">Best regards,<br/><strong style="color:${PRIMARY};">Admissions Team</strong><br/>${settings.academyName}</p>
   `;
 
+  const tmpl = await fetchTemplateByCategory("approval");
+  if (tmpl) {
+    if (tmpl.config) {
+      const rendered = renderConfigTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName }, settings);
+      subject = rendered.subject || subject;
+      await resend.emails.send({ from, to: email, subject, html: rendered.body });
+      return;
+    }
+    const rendered = renderTemplate(tmpl, { name, email, phone: "", academyName: settings.academyName });
+    subject = rendered.subject || subject;
+    body = rendered.body || body;
+  }
+
   await resend.emails.send({
     from,
     to: email,
-    subject: `Welcome to ${settings.academyName} – Application Approved!`,
+    subject,
     html: baseLayout(body, settings),
   });
 }
