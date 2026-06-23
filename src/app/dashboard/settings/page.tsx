@@ -2,7 +2,6 @@
 
 import { useState, useEffect, type ComponentType } from "react";
 import dynamicImport from "next/dynamic";
-import { motion } from "framer-motion";
 
 export const dynamic = "force-dynamic";
 import { Building2, User, Layout, ToggleLeft, TrendingUp, FileText, Palette, HardDrive } from "lucide-react";
@@ -263,31 +262,31 @@ export default function SettingsPage() {
       </div>
 
       {activeTab === "profile" && (
-        <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="profile">
           <ProfileTab user={user} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "site" && (
-        <motion.div key="site" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="site">
           <SiteTab form={form} setForm={setForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "landing" && (
-        <motion.div key="landing" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="landing">
           <LandingTab landingForm={landingForm} setLandingForm={setLandingForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "sections" && (
-        <motion.div key="sections" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="sections">
           <SectionsTab sectionsForm={sectionsForm} setSectionsForm={setSectionsForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "features" && (
-        <motion.div key="features" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="features">
           <FeaturesTab
             seoForm={seoForm} setSeoForm={setSeoForm}
             pinnedPopupEnabled={pinnedPopupEnabled} setPinnedPopupEnabled={setPinnedPopupEnabled}
@@ -296,35 +295,35 @@ export default function SettingsPage() {
             setForm={setForm as unknown as (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void}
             savingSettings={savingSettings} handleSave={handleSave}
           />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "content" && (
-        <motion.div key="content" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="content">
           <ContentTab contentForm={contentForm} setContentForm={setContentForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "theme" && (
-        <motion.div key="theme" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="theme">
           <ThemeTab themeForm={themeForm} setThemeForm={setThemeForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "legal" && (
-        <motion.div key="legal" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="legal">
           <LegalTab legalForm={legalForm} setLegalForm={setLegalForm} savingSettings={savingSettings} handleSave={handleSave} />
-        </motion.div>
+        </div>
       )}
 
       {activeTab === "backup" && (
-        <motion.div key="backup" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div key="backup">
           <BackupTab
             backupConfig={backupConfig} setBackupConfig={setBackupConfig}
             backupHistory={backupHistory} setBackupHistory={setBackupHistory}
             savingSettings={savingSettings} handleSave={handleSave}
           />
-        </motion.div>
+        </div>
       )}
     </div>
   );

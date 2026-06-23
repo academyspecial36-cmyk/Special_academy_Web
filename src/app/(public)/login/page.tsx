@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
 import { LogIn, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
-import { sanitizeHtml } from "@/lib/sanitize";
+
 
 const PageWrapper = dynamic(() => import("@/components/shared/page-wrapper").then(m => ({ default: m.PageWrapper })), { ssr: false });
 
@@ -71,11 +70,7 @@ export default function LoginPage() {
     <PageWrapper>
       <section className="py-20 md:py-28 bg-accent min-h-[80vh] flex items-center">
         <div className="max-w-md mx-auto px-4 w-full">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-8 border border-primary/5 shadow-card"
-          >
+          <div className="bg-white rounded-2xl p-8 border border-primary/5 shadow-card">
             <div className="text-center mb-8">
               <div className="w-14 h-14 rounded-full bg-primary/5 flex items-center justify-center mx-auto mb-4">
                 <LogIn className="w-6 h-6 text-primary" />
@@ -123,7 +118,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg [&_a]:text-red-700 [&_a]:font-medium" dangerouslySetInnerHTML={{ __html: sanitizeHtml(error) }} />
+                <div className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</div>
               )}
 
               <div className="flex items-center justify-between text-sm">
@@ -156,7 +151,7 @@ export default function LoginPage() {
                 </Link>
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
     </PageWrapper>

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   HelpCircle,
@@ -287,9 +286,7 @@ export default function StudentTakeSubcategoryExamPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-32">
       {/* ─── Header ────────────────────────────────────────────── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div
         className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6"
       >
         <Button
@@ -311,7 +308,7 @@ export default function StudentTakeSubcategoryExamPage() {
             {" "}• {answeredCount} answered
           </p>
         </div>
-      </motion.div>
+      </div>
 
       {/* ─── Empty State ───────────────────────────────────────── */}
       {subQuestions.length === 0 ? (
@@ -332,10 +329,8 @@ export default function StudentTakeSubcategoryExamPage() {
       ) : (
         <>
           {/* ─── Progress Bar ──────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+          <div
+            style={{ animation: "fadeInUp 0.3s ease-out 0.1s both" }}
             className="sticky top-0 z-30 bg-white border rounded-xl p-4 mb-6 shadow-sm"
           >
             <div className="flex items-center justify-between mb-2">
@@ -348,11 +343,8 @@ export default function StudentTakeSubcategoryExamPage() {
               </span>
             </div>
             <div className="w-full h-2.5 bg-primary/10 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-primary rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
               />
             </div>
             <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
@@ -381,13 +373,11 @@ export default function StudentTakeSubcategoryExamPage() {
                 );
               })}
             </div>
-          </motion.div>
+          </div>
 
           {/* ─── Info Alert ────────────────────────────────────── */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
+          <div
+            style={{ animation: "fadeInUp 0.3s ease-out 0.15s both" }}
           >
             <Card className="bg-amber-50 border-amber-200 mb-6">
               <CardContent className="p-4 flex items-start gap-3">
@@ -405,18 +395,16 @@ export default function StudentTakeSubcategoryExamPage() {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
           {/* ─── Questions ─────────────────────────────────────── */}
           <div className="space-y-4">
             {subQuestions.map((q, i) => (
-              <motion.div
+              <div
                 id={`question-${q.id}`}
                 data-question-id={q.id}
                 key={q.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05, duration: 0.3 }}
+                style={{ animation: `fadeInUp 0.3s ease-out ${i * 0.05}s both` }}
               >
                 <Card
                   className={`overflow-hidden transition-all duration-300 border-2 ${
@@ -484,17 +472,11 @@ export default function StudentTakeSubcategoryExamPage() {
                               }`}
                             >
                               {answers[q.id] === optValue && (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 500,
-                                    damping: 30,
-                                  }}
+                                <div
+                                  style={{ animation: "fadeInUp 0.2s ease-out both" }}
                                 >
                                   <Circle className="w-2.5 h-2.5 text-white fill-white" />
-                                </motion.div>
+                                </div>
                               )}
                             </div>
                             <input
@@ -537,16 +519,13 @@ export default function StudentTakeSubcategoryExamPage() {
                     )}
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* ─── Sticky Submit Bar ───────────────────────────── */}
-          <AnimatePresence>
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+          <div
+              style={{ animation: "fadeInUp 0.4s ease-out 0.5s both" }}
               className="fixed bottom-12 lg:bottom-0 left-0 right-0 z-40 bg-white border-t p-4 sm:px-6"
             >
               <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -585,41 +564,34 @@ export default function StudentTakeSubcategoryExamPage() {
                   )}
                 </Button>
               </div>
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          
 
           {/* ─── Scroll to Top Button ──────────────────────────── */}
-          <AnimatePresence>
+          
             {showScrollTop && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+              <button
+                style={{ animation: "fadeInUp 0.2s ease-out both" }}
                 onClick={scrollToTop}
                 className="fixed bottom-24 right-4 sm:right-8 z-50 w-10 h-10 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
               >
                 <ChevronUp className="w-5 h-5" />
-              </motion.button>
+              </button>
             )}
-          </AnimatePresence>
+          
         </>
       )}
 
       {/* ─── Validation Modal ─────────────────────────────────── */}
-      <AnimatePresence>
+      
         {showValidationModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            style={{ animation: "fadeInUp 0.15s ease-out both" }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={() => setShowValidationModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            <div
+              style={{ animation: "fadeInUp 0.2s ease-out both" }}
               className="bg-white rounded-xl border shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -677,26 +649,21 @@ export default function StudentTakeSubcategoryExamPage() {
                   Submit Anyway
                 </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      
 
       {/* ─── Confirm Submit Modal ─────────────────────────────── */}
-      <AnimatePresence>
+      
         {showConfirmModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            style={{ animation: "fadeInUp 0.15s ease-out both" }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
             onClick={() => setShowConfirmModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            <div
+              style={{ animation: "fadeInUp 0.2s ease-out both" }}
               className="bg-white rounded-xl border shadow-2xl max-w-md w-full overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -770,10 +737,10 @@ export default function StudentTakeSubcategoryExamPage() {
                   )}
                 </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
+      
     </div>
   );
 }

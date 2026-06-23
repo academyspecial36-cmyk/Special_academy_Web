@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { motion } from "framer-motion";
 import { User, Mail, Phone, MapPin, School, Calendar, Edit3, Save, Loader2, UserCheck, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
 import { apiUpload, apiList } from "@/lib/api-client";
-import { QUALIFICATIONS } from "@/constants";
+import { QUALIFICATIONS } from "@/constants/qualifications";
 import Image from "next/image";
 import { toast } from "sonner";
 
@@ -178,7 +177,7 @@ export default function StudentProfilePage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        <div style={{ animation: "fadeInUp 0.3s ease-out both" }}>
           <Card className="text-center">
             <CardContent className="p-6 sm:p-8">
               <div className="relative w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden">
@@ -250,9 +249,9 @@ export default function StudentProfilePage() {
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-2 space-y-6">
+        <div style={{ animation: "fadeInUp 0.3s ease-out 0.1s both" }} className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Personal Information</CardTitle>
@@ -344,7 +343,7 @@ export default function StudentProfilePage() {
               </Button>
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
     </div>
   );

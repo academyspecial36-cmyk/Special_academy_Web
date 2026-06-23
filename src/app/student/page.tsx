@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, memo } from "react";
-import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -202,28 +201,26 @@ export default function StudentDashboardPage() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Welcome */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+      <div style={{ animation: "fadeInUp 0.3s ease-out both" }}>
         <h1 className="text-xl sm:text-2xl font-bold text-primary">
           Welcome back, {user?.name?.split(" ")[0] ?? "Student"}!
         </h1>
         <p className="text-xs sm:text-sm text-muted">Here&apos;s your academic overview.</p>
-      </motion.div>
+      </div>
 
       {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
+      <div
+        style={{ animation: "fadeInUp 0.3s ease-out 0.05s both" }}
         className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
       >
         {QUICK_ACTIONS.map((action) => (
           <QuickActionLink key={action.href} href={action.href} icon={action.icon} label={action.label} desc={action.desc} />
         ))}
-      </motion.div>
+      </div>
 
         {/* Latest Materials */}
       {latestMaterials.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <div style={{ animation: "fadeInUp 0.3s ease-out 0.4s both" }}>
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-amber-500" />
@@ -238,13 +235,13 @@ export default function StudentDashboardPage() {
               <LatestMaterialCard key={mat.id} mat={mat} />
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Progress Ring card */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <div style={{ animation: "fadeInUp 0.3s ease-out 0.1s both" }}>
           <Card className="h-full">
             <CardContent className="p-4 sm:p-5 flex flex-col items-center justify-center text-center h-full">
               <ProgressRing percent={avgProgress} />
@@ -252,22 +249,22 @@ export default function StudentDashboardPage() {
               <p className="text-[9px] sm:text-[10px] text-muted">{totalCompleted}/{totalItems} items</p>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
         {[
           { label: "Enrolled Courses", value: enrolledCourses.length.toString(), icon: BookOpen },
           { label: "Exams Completed", value: examCompleted.toString(), icon: ClipboardCheck },
           { label: "Avg Score", value: `${avgScore}%`, icon: Trophy },
         ].map((stat, i) => (
-          <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}>
+          <div key={stat.label} style={{ animation: `fadeInUp 0.3s ease-out ${0.1 + i * 0.05}s both` }}>
             <StatCard label={stat.label} value={stat.value} icon={stat.icon} />
-          </motion.div>
+          </div>
         ))}
       </div>
 
       {/* Badges + Live Classes row */}
       <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Achievement Badges */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+        <div style={{ animation: "fadeInUp 0.3s ease-out 0.25s both" }}>
           <Card className="h-full">
             <CardHeader className="pb-2 px-4 sm:px-6 pt-4 sm:pt-6">
               <CardTitle className="text-sm sm:text-base flex items-center gap-2">
@@ -283,10 +280,10 @@ export default function StudentDashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Upcoming Live Classes */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <div style={{ animation: "fadeInUp 0.3s ease-out 0.3s both" }}>
           <Card className="h-full">
             <CardHeader className="pb-2 px-4 sm:px-6 pt-4 sm:pt-6">
               <div className="flex items-center justify-between">
@@ -312,10 +309,10 @@ export default function StudentDashboardPage() {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
         {/* Exam Mini Chart */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+        <div style={{ animation: "fadeInUp 0.3s ease-out 0.35s both" }}>
           <Card className="h-full">
             <CardHeader className="pb-2 px-4 sm:px-6 pt-4 sm:pt-6">
               <CardTitle className="text-sm sm:text-base flex items-center gap-2">
@@ -337,7 +334,7 @@ export default function StudentDashboardPage() {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
       {/* Main grid: Courses + Notices */}
       <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">

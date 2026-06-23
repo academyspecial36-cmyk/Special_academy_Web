@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, type ComponentType } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Play, FileText, Clock, BookOpen, CheckCircle, Circle, Image as ImageIcon, ChevronRight, ListChecks, Search, X, LayoutGrid, List } from "lucide-react";
@@ -183,11 +183,9 @@ export default function StudentCourseDetailPage() {
               <span className="text-xs sm:text-sm text-muted shrink-0">{completedCount}/{totalItems} items · {progress}%</span>
             </div>
             <div className="w-full h-2.5 bg-accent rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-secondary rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.5 }}
+              <div
+                className="h-full bg-secondary rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
               />
             </div>
           </CardContent>
@@ -261,13 +259,11 @@ export default function StudentCourseDetailPage() {
 
           {/* Main Content — Items Area */}
           <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
+            
               {activeSub ? (
-                <motion.div
+                <div
                   key={activeSub.id}
-                  initial={{ opacity: 0, x: 10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
+                  style={{ animation: "fadeInUp 0.3s ease-out both" }}
                   className="space-y-4"
                 >
                   {/* Subcategory Header */}
@@ -495,15 +491,15 @@ export default function StudentCourseDetailPage() {
                       })}
                     </div>
                   )}
-                </motion.div>
+                </div>
               ) : (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+                <div className="text-center py-16">
                   <BookOpen className="w-12 h-12 text-muted mx-auto mb-3" />
                   <h3 className="font-semibold text-primary mb-1">Select a chapter</h3>
                   <p className="text-sm text-muted">Choose a chapter from the sidebar to view its content.</p>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
+            
           </div>
         </div>
       )}
