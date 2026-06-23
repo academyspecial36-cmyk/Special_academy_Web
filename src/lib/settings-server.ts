@@ -49,6 +49,7 @@ export interface LandingConfig {
     fontFamily: string;
   };
   enablePinnedPopup?: boolean;
+  showAdmissionBar?: boolean;
   backup?: {
     autoBackup: { enabled: boolean; frequency: string; lastBackup: string | null };
   };
@@ -269,6 +270,7 @@ const defaultLandingConfig: LandingConfig = {
     primaryColor: "#07220B",
     fontFamily: "Inter",
   },
+  showAdmissionBar: true,
   enablePinnedPopup: true,
   privacyPolicy: {
     title: "Privacy Policy",
@@ -389,6 +391,7 @@ export async function fetchSettings(): Promise<AppSettings> {
       loaderQuotes: Array.isArray(rawConfig.loaderQuotes) ? (rawConfig.loaderQuotes as typeof defaultLC.loaderQuotes) : defaultLC.loaderQuotes,
       theme: { ...defaultLC.theme, ...((rawConfig.theme as Record<string, unknown>) || {}) } as typeof defaultLC.theme,
       enablePinnedPopup: rawConfig.enablePinnedPopup != null ? Boolean(rawConfig.enablePinnedPopup) : defaultLC.enablePinnedPopup,
+      showAdmissionBar: rawConfig.showAdmissionBar != null ? Boolean(rawConfig.showAdmissionBar) : defaultLC.showAdmissionBar,
       privacyPolicy: { ...defaultLC.privacyPolicy, ...((rawConfig.privacyPolicy as Record<string, unknown>) || {}) } as typeof defaultLC.privacyPolicy,
       terms: { ...defaultLC.terms, ...((rawConfig.terms as Record<string, unknown>) || {}) } as typeof defaultLC.terms,
     };

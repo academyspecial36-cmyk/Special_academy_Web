@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import {
   Eye, Users, Activity, ClipboardCheck, Target, Trophy, TrendingUp,
-  ArrowUpRight, ArrowDownRight, BarChart3, FileText, GraduationCap,
+  BarChart3, FileText, GraduationCap,
   BookOpen, HelpCircle, AlertCircle, LogIn, Download,
   CheckSquare, LayoutDashboard,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/shared/page-header";
+import { StatCard } from "@/components/shared/stat-card";
+import { SkeletonCard } from "@/components/shared/skeleton-card";
+
+
 
 interface AnalyticsData {
   totalPageViews: number;
@@ -34,82 +39,6 @@ interface AnalyticsData {
   totalExams: number;
   totalQuestions: number;
   totalEnrollments: number;
-}
-
-function SkeletonCard() {
-  return (
-    <Card className="animate-pulse">
-      <CardContent className="p-5">
-        <div className="h-4 bg-primary/5 rounded w-24 mb-3" />
-        <div className="h-8 bg-primary/5 rounded w-16 mb-3" />
-        <div className="h-3 bg-primary/5 rounded w-32" />
-      </CardContent>
-    </Card>
-  );
-}
-
-const ACCENT_BORDERS = [
-  "border-l-primary-500", "border-l-primary-600", "border-l-primary-400", "border-l-primary-700",
-  "border-l-primary-500", "border-l-primary-300", "border-l-primary-600", "border-l-primary-400",
-];
-const ACCENT_ICONS = [
-  "bg-primary-50 text-primary-600", "bg-primary-100 text-primary-700",
-  "bg-primary-50 text-primary-500", "bg-primary-200 text-primary-800",
-  "bg-primary-50 text-primary-600", "bg-primary-50 text-primary-400",
-  "bg-primary-100 text-primary-700", "bg-primary-50 text-primary-500",
-];
-
-function StatCard({
-  icon: Icon, label, value, change, changeLabel, up, accentIdx,
-}: {
-  icon: React.ElementType; label: string; value: string | number;
-  change?: string; changeLabel?: string; up?: boolean; accentIdx: number;
-}) {
-  const i = accentIdx % ACCENT_BORDERS.length;
-  return (
-    <Card className={`border-l-4 ${ACCENT_BORDERS[i]} overflow-hidden`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${ACCENT_ICONS[i]} shrink-0`}>
-              <Icon className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted uppercase tracking-wider">{label}</p>
-              <p className="text-xl sm:text-2xl font-bold text-primary mt-0.5">
-                {typeof value === "number" ? value.toLocaleString() : value}
-              </p>
-            </div>
-          </div>
-          {change !== undefined && (
-            <span className={`inline-flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 mt-1 ${
-              up ? "bg-primary-50 text-primary-700" : "bg-red-50 text-red-700"
-            }`}>
-              {up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {change}
-            </span>
-          )}
-        </div>
-        {changeLabel && <p className="text-xs text-muted mt-2 ml-[52px]">{changeLabel}</p>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function MiniStat({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | number }) {
-  return (
-    <Card className="border-t-2 border-t-primary/10">
-      <CardContent className="p-3.5 flex items-center justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-medium text-muted uppercase tracking-wider">{label}</p>
-          <p className="text-base font-bold text-primary mt-0.5">{typeof value === "number" ? value.toLocaleString() : value}</p>
-        </div>
-        <div className="w-9 h-9 rounded-xl bg-primary/5 flex items-center justify-center shrink-0">
-          <Icon className="w-4 h-4 text-primary" />
-        </div>
-      </CardContent>
-    </Card>
-  );
 }
 
 export default function AnalyticsPage() {
@@ -183,44 +112,42 @@ export default function AnalyticsPage() {
 
   const mainStats = [
     {
-      icon: Eye, label: "Total Page Views", value: data.totalPageViews,
+      icon: <Eye className="w-full h-full" />, label: "Total Page Views", value: data.totalPageViews,
       change: `${data.viewsGrowth > 0 ? "+" : ""}${data.viewsGrowth}%`,
       up: data.viewsGrowth >= 0, changeLabel: "vs previous period",
+      accentBorder: "border-l-primary-500", iconVariant: "primary" as const,
     },
     {
-      icon: Users, label: "Unique Visitors", value: data.uniqueVisitors,
+      icon: <Users className="w-full h-full" />, label: "Unique Visitors", value: data.uniqueVisitors,
+      accentBorder: "border-l-primary-600", iconVariant: "primary" as const,
     },
     {
-      icon: Activity, label: "Views Today", value: data.viewsToday,
+      icon: <Activity className="w-full h-full" />, label: "Views Today", value: data.viewsToday,
+      accentBorder: "border-l-primary-400", iconVariant: "primary" as const,
     },
     {
-      icon: ClipboardCheck, label: "New Registrations", value: data.newRegistrations,
+      icon: <ClipboardCheck className="w-full h-full" />, label: "New Registrations", value: data.newRegistrations,
       change: `${data.totalEnrollments}`,
       up: true, changeLabel: "total enrollments",
+      accentBorder: "border-l-primary-700", iconVariant: "primary" as const,
     },
   ];
 
   const engagementStats = [
-    { icon: LogIn, label: "Logins", value: data.logins },
-    { icon: Target, label: "Exam Starts", value: data.examStarts },
-    { icon: Trophy, label: "Exam Submissions", value: data.examSubmits },
+    { icon: <LogIn className="w-full h-full" />, label: "Logins", value: data.logins, accentBorder: "border-l-primary-500", iconVariant: "primary" as const },
+    { icon: <Target className="w-full h-full" />, label: "Exam Starts", value: data.examStarts, accentBorder: "border-l-primary-300", iconVariant: "primary" as const },
+    { icon: <Trophy className="w-full h-full" />, label: "Exam Submissions", value: data.examSubmits, accentBorder: "border-l-primary-600", iconVariant: "primary" as const },
     {
-      icon: TrendingUp, label: "Completion Rate", value: `${data.completionRate}%`,
+      icon: <TrendingUp className="w-full h-full" />, label: "Completion Rate", value: `${data.completionRate}%`,
       change: `${data.examStarts} started`,
       up: true, changeLabel: `${data.examSubmits} submitted`,
+      accentBorder: "border-l-primary-400", iconVariant: "primary" as const,
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
-      >
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-primary">Analytics</h1>
-          <p className="text-xs sm:text-sm text-muted">Track platform engagement, exams, and content performance.</p>
-        </div>
+      <PageHeader title="Analytics" description="Track platform engagement, exams, and content performance.">
         <div className="flex gap-1.5 bg-primary/5 rounded-lg p-1 overflow-x-auto w-fit max-w-full">
           {ranges.map((r) => (
             <button
@@ -237,13 +164,13 @@ export default function AnalyticsPage() {
             </button>
           ))}
         </div>
-      </motion.div>
+      </PageHeader>
 
       {/* Main Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {mainStats.map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <StatCard {...s} accentIdx={i} />
+            <StatCard icon={s.icon} label={s.label} value={s.value} change={s.change} up={s.up} changeLabel={s.changeLabel} accentBorder={s.accentBorder} iconVariant={s.iconVariant} />
           </motion.div>
         ))}
       </div>
@@ -252,17 +179,17 @@ export default function AnalyticsPage() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {engagementStats.map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-            <StatCard {...s} accentIdx={i + 4} />
+            <StatCard icon={s.icon} label={s.label} value={s.value} change={s.change} up={s.up} changeLabel={s.changeLabel} accentBorder={s.accentBorder} iconVariant={s.iconVariant} />
           </motion.div>
         ))}
       </div>
 
       {/* Mini Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MiniStat icon={LayoutDashboard} label="Landing Views" value={data.landingViews} />
-        <MiniStat icon={HelpCircle} label="Exam Page Views" value={data.examPageViews} />
-        <MiniStat icon={Download} label="PDF Imports" value={data.pdfImports} />
-        <MiniStat icon={CheckSquare} label="Questions Saved" value={data.questionsSaved} />
+        <StatCard icon={<LayoutDashboard className="w-full h-full" />} label="Landing Views" value={data.landingViews} variant="mini" />
+        <StatCard icon={<HelpCircle className="w-full h-full" />} label="Exam Page Views" value={data.examPageViews} variant="mini" />
+        <StatCard icon={<Download className="w-full h-full" />} label="PDF Imports" value={data.pdfImports} variant="mini" />
+        <StatCard icon={<CheckSquare className="w-full h-full" />} label="Questions Saved" value={data.questionsSaved} variant="mini" />
       </div>
 
       {/* Chart + Top Pages side by side */}
@@ -328,11 +255,7 @@ export default function AnalyticsPage() {
             ) : (
               <div className="space-y-2">
                 {data.topPages.map((page, i) => (
-                  <div key={page.path} className="flex items-center gap-3 py-1.5 border-b border-primary/5 last:border-0">
-                    <span className="text-xs text-muted w-5 shrink-0 font-medium">{i + 1}.</span>
-                    <span className="text-xs sm:text-sm truncate flex-1">{page.path}</span>
-                    <Badge variant="outline" className="text-[10px] shrink-0 font-mono">{page.views}</Badge>
-                  </div>
+                  <TopPageRow key={page.path} index={i} path={page.path} views={page.views} />
                 ))}
               </div>
             )}
@@ -369,18 +292,7 @@ export default function AnalyticsPage() {
                   </thead>
                   <tbody>
                     {data.topExams.map((exam) => (
-                      <tr key={exam.id} className="border-b border-primary/5 last:border-0">
-                        <td className="py-2.5 pr-4">
-                          <span className="text-sm font-medium text-primary truncate block max-w-[200px]">{exam.title}</span>
-                        </td>
-                        <td className="py-2.5 pr-4 text-center text-sm">{exam.started}</td>
-                        <td className="py-2.5 pr-4 text-center text-sm">{exam.submitted}</td>
-                        <td className="py-2.5 text-right">
-                          <Badge variant={exam.rate >= 70 ? "success" : exam.rate >= 40 ? "outline" : "destructive"} className="text-[10px]">
-                            {exam.rate}%
-                          </Badge>
-                        </td>
-                      </tr>
+                      <TopExamRow key={exam.id} title={exam.title} started={exam.started} submitted={exam.submitted} rate={exam.rate} />
                     ))}
                   </tbody>
                 </table>
@@ -399,28 +311,60 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { icon: Users, label: "Students", value: data.totalStudents },
-              { icon: BookOpen, label: "Courses", value: data.totalCourses },
-              { icon: FileText, label: "Enrollments", value: data.totalEnrollments },
-              { icon: GraduationCap, label: "Exams", value: data.totalExams },
-              { icon: HelpCircle, label: "Questions", value: data.totalQuestions },
-            ].map((s, i) => {
-              const variants = ["bg-primary-50 text-primary-600", "bg-primary-100 text-primary-700", "bg-primary-50 text-primary-500", "bg-primary-200 text-primary-800", "bg-primary-50 text-primary-400"];
-              return (
-                <div key={s.label} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${variants[i % variants.length]}`}>
-                      <s.icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm text-muted">{s.label}</span>
-                  </div>
-                  <span className="text-sm font-bold text-primary">{s.value.toLocaleString()}</span>
-                </div>
-              );
-            })}
+              { icon: Users, label: "Students", value: data.totalStudents, accent: "bg-primary-50 text-primary-600" },
+              { icon: BookOpen, label: "Courses", value: data.totalCourses, accent: "bg-primary-100 text-primary-700" },
+              { icon: FileText, label: "Enrollments", value: data.totalEnrollments, accent: "bg-primary-50 text-primary-500" },
+              { icon: GraduationCap, label: "Exams", value: data.totalExams, accent: "bg-primary-200 text-primary-800" },
+              { icon: HelpCircle, label: "Questions", value: data.totalQuestions, accent: "bg-primary-50 text-primary-400" },
+            ].map((s) => (
+              <PlatformTotalStat key={s.label} icon={s.icon} label={s.label} value={s.value} accent={s.accent} />
+            ))}
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
+const TopPageRow = memo(function TopPageRow({ index, path, views }: { index: number; path: string; views: number }) {
+  return (
+    <div className="flex items-center gap-3 py-1.5 border-b border-primary/5 last:border-0">
+      <span className="text-xs text-muted w-5 shrink-0 font-medium">{index + 1}.</span>
+      <span className="text-xs sm:text-sm truncate flex-1">{path}</span>
+      <Badge variant="outline" className="text-[10px] shrink-0 font-mono">{views}</Badge>
+    </div>
+  );
+});
+
+const TopExamRow = memo(function TopExamRow({ title, started, submitted, rate }: { title: string; started: number; submitted: number; rate: number }) {
+  return (
+    <tr className="border-b border-primary/5 last:border-0">
+      <td className="py-2.5 pr-4">
+        <span className="text-sm font-medium text-primary truncate block max-w-[200px]">{title}</span>
+      </td>
+      <td className="py-2.5 pr-4 text-center text-sm">{started}</td>
+      <td className="py-2.5 pr-4 text-center text-sm">{submitted}</td>
+      <td className="py-2.5 text-right">
+        <Badge variant={rate >= 70 ? "success" : rate >= 40 ? "outline" : "destructive"} className="text-[10px]">
+          {rate}%
+        </Badge>
+      </td>
+    </tr>
+  );
+});
+
+const PlatformTotalStat = memo(function PlatformTotalStat({ icon: Icon, label, value, accent }: {
+  icon: React.ElementType; label: string; value: number; accent: string;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2.5">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accent}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+        <span className="text-sm text-muted">{label}</span>
+      </div>
+      <span className="text-sm font-bold text-primary">{value.toLocaleString()}</span>
+    </div>
+  );
+});

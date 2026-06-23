@@ -48,7 +48,7 @@ export function SiteTab({ form, setForm, savingSettings, handleSave }: SiteTabPr
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/10 overflow-hidden flex items-center justify-center shrink-0">
                   {(iconPreview || form.appIcon) ? (
-                    <Image src={iconPreview || form.appIcon} alt="App Icon" width={56} height={56} className="w-full h-full object-contain" unoptimized />
+                    <Image src={iconPreview || form.appIcon} alt="App Icon" width={56} height={56} className="w-full h-full object-contain" />
                   ) : (
                     <Upload className="w-5 h-5 text-muted" />
                   )}

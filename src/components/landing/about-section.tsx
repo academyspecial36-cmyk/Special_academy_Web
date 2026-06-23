@@ -37,7 +37,7 @@ export function AboutSection() {
                   width={600}
                   height={450}
                   className="w-full h-[250px] sm:h-[400px] object-cover"
-                  unoptimized
+                 
                 />
             </div>
             <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-primary/5 rounded-2xl -z-10" />

@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function POST(request: Request) {
   try {
+    const { error: authError } = await requireAdmin();
+    if (authError) return authError;
+
     const { ids } = await request.json();
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: "No IDs provided" }, { status: 400 });

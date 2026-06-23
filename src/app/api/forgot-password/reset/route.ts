@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -12,9 +13,46 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 6) {
+    const rateKey = getRateLimitKey(request, email, "password_reset");
+    const limit = checkRateLimit(rateKey, RATE_LIMITS.PASSWORD_RESET_SEND);
+    if (!limit.allowed) {
       return NextResponse.json(
-        { success: false, error: "Password must be at least 6 characters" },
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
+    if (password.length < 8) {
+      return NextResponse.json(
+        { success: false, error: "Password must be at least 8 characters" },
+        { status: 400 }
+      );
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json(
+        { success: false, error: "Password must contain at least one uppercase letter" },
+        { status: 400 }
+      );
+    }
+
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json(
+        { success: false, error: "Password must contain at least one lowercase letter" },
+        { status: 400 }
+      );
+    }
+
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json(
+        { success: false, error: "Password must contain at least one digit" },
+        { status: 400 }
+      );
+    }
+
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return NextResponse.json(
+        { success: false, error: "Password must contain at least one special character" },
         { status: 400 }
       );
     }

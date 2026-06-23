@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const { id } = await params;
     const supabase = createServiceRoleSupabase();
 

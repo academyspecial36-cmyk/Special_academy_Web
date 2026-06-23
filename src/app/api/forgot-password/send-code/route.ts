@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from "@/lib/rate-limit";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -17,9 +18,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const rateKey = getRateLimitKey(request, email, "password_reset_send");
+    const limit = checkRateLimit(rateKey, RATE_LIMITS.PASSWORD_RESET_SEND);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
+      );
+    }
+
     const svc = createServiceRoleSupabase();
 
-    // Check if user exists in auth.users
     const { data: users, error: usersError } = await svc.auth.admin.listUsers();
     if (usersError) {
       return NextResponse.json(
@@ -31,13 +40,12 @@ export async function POST(request: Request) {
     const user = users.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
 
     if (!user) {
-      return NextResponse.json(
-        { success: false, error: "No account found with this email address." },
-        { status: 404 }
-      );
+      return NextResponse.json({
+        success: true,
+        message: "If an account with that email exists, a verification code has been sent.",
+      });
     }
 
-    // Get user's name from profiles
     const { data: profile } = await svc
       .from("profiles")
       .select("name")
@@ -46,7 +54,6 @@ export async function POST(request: Request) {
 
     const name = profile?.name || email;
 
-    // Invalidate any existing unused codes for this email
     await svc
       .from("password_resets")
       .update({ used: true, updated_at: new Date().toISOString() })

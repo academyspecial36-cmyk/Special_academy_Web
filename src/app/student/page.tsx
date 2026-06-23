@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  BookOpen, Bell, Calendar, TrendingUp, Clock, FileText,
+  BookOpen, Bell, Calendar, TrendingUp, FileText,
   ArrowRight, Sparkles, ClipboardCheck, Target, Trophy, BarChart3,
   Video, ExternalLink, Zap, Award, Flame, CheckCircle, ChevronRight,
   Play, GraduationCap,
@@ -18,8 +18,10 @@ import { useAppContext } from "@/lib/app-context";
 import { useFetch } from "@/lib/use-fetch";
 import { Notice, LiveClass } from "@/types";
 import { formatShortDate } from "@/lib/utils";
+import { NoticeItem } from "@/components/shared/notice-item";
+import { CardHeaderAction } from "@/components/shared/card-header-action";
 
-function ProgressRing({ percent, size = 72, strokeWidth = 6 }: { percent: number; size?: number; strokeWidth?: number }) {
+const ProgressRing = memo(function ProgressRing({ percent, size = 72, strokeWidth = 6 }: { percent: number; size?: number; strokeWidth?: number }) {
   const r = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * r;
   const offset = circumference - (percent / 100) * circumference;
@@ -37,7 +39,7 @@ function ProgressRing({ percent, size = 72, strokeWidth = 6 }: { percent: number
       <span className="absolute text-sm font-bold text-primary">{percent}%</span>
     </div>
   );
-}
+});
 
 const QUICK_ACTIONS = [
   { label: "My Courses", href: "/student/courses", icon: BookOpen, desc: "Continue learning" },
@@ -56,7 +58,7 @@ function getBadges(userAttempts: { score?: number; total?: number; completedAt?:
   return badges;
 }
 
-function ExamMiniChart({ scores }: { scores: number[] }) {
+const ExamMiniChart = memo(function ExamMiniChart({ scores }: { scores: number[] }) {
   const max = Math.max(...scores, 1);
   return (
     <div className="flex items-end gap-1 h-12">
@@ -71,7 +73,7 @@ function ExamMiniChart({ scores }: { scores: number[] }) {
       ))}
     </div>
   );
-}
+});
 
 export default function StudentDashboardPage() {
   const { user } = useAuth();
@@ -215,22 +217,29 @@ export default function StudentDashboardPage() {
         className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
       >
         {QUICK_ACTIONS.map((action) => (
-          <Link
-            key={action.href}
-            href={action.href}
-            className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/5 hover:border-primary/20 transition-all group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
-              <action.icon className="w-4 h-4 text-primary" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm font-semibold text-primary truncate">{action.label}</p>
-              <p className="text-[10px] sm:text-xs text-muted truncate">{action.desc}</p>
-            </div>
-            <ChevronRight className="w-3.5 h-3.5 text-muted ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </Link>
+          <QuickActionLink key={action.href} href={action.href} icon={action.icon} label={action.label} desc={action.desc} />
         ))}
       </motion.div>
+
+        {/* Latest Materials */}
+      {latestMaterials.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Latest Materials
+            </h2>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/student/courses">View All <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {latestMaterials.map((mat) => (
+              <LatestMaterialCard key={mat.id} mat={mat} />
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -250,17 +259,7 @@ export default function StudentDashboardPage() {
           { label: "Avg Score", value: `${avgScore}%`, icon: Trophy },
         ].map((stat, i) => (
           <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.05 }}>
-            <Card className="h-full">
-              <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
-                <p className="text-[10px] sm:text-xs text-muted mb-1">{stat.label}</p>
-                <div className="flex items-end justify-between">
-                  <p className="text-lg sm:text-2xl font-bold text-primary">{stat.value}</p>
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                    <stat.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <StatCard label={stat.label} value={stat.value} icon={stat.icon} />
           </motion.div>
         ))}
       </div>
@@ -279,18 +278,7 @@ export default function StudentDashboardPage() {
             <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
               <div className="grid grid-cols-2 gap-2">
                 {badges.map((b) => (
-                  <div
-                    key={b.label}
-                    className={`p-2.5 rounded-lg border text-center transition-all ${
-                      b.earned
-                        ? "bg-primary/5 border-primary/10"
-                        : "bg-accent/50 border-dashed border-primary/10 opacity-50"
-                    }`}
-                  >
-                    <b.icon className={`w-4 h-4 mx-auto mb-1 ${b.earned ? b.color : "text-muted"}`} />
-                    <p className={`text-[9px] font-medium ${b.earned ? "text-primary" : "text-muted"}`}>{b.label}</p>
-                    {b.earned && <span className="text-[8px] text-emerald-600 font-medium">Unlocked</span>}
-                  </div>
+                  <BadgeCard key={b.label} icon={b.icon} label={b.label} earned={b.earned} color={b.color} />
                 ))}
               </div>
             </CardContent>
@@ -318,34 +306,7 @@ export default function StudentDashboardPage() {
                 <div className="space-y-2">
                   {upcomingLive.map((cls) => {
                     const isSoon = new Date(cls.startTime).getTime() - Date.now() < 3600000;
-                    return (
-                      <Link
-                        key={cls.id}
-                        href={cls.joinUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-colors ${
-                          cls.status === "live"
-                            ? "bg-green-50 border-green-200"
-                            : isSoon
-                            ? "bg-amber-50 border-amber-200"
-                            : "bg-accent border-primary/5 hover:border-primary/20"
-                        }`}
-                      >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                          cls.status === "live" ? "bg-green-500 animate-pulse" : "bg-primary/10"
-                        }`}>
-                          <Video className={`w-4 h-4 ${cls.status === "live" ? "text-white" : "text-primary"}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium text-primary truncate">{cls.title}</p>
-                          <p className="text-[10px] text-muted">
-                            {cls.status === "live" ? "Live now" : formatShortDate(cls.startTime)}
-                          </p>
-                        </div>
-                        <ExternalLink className="w-3 h-3 text-muted shrink-0" />
-                      </Link>
-                    );
+                    return <LiveClassLink key={cls.id} cls={cls} isSoon={isSoon} />;
                   })}
                 </div>
               )}
@@ -378,63 +339,12 @@ export default function StudentDashboardPage() {
           </Card>
         </motion.div>
       </div>
-
-      {/* Latest Materials */}
-      {latestMaterials.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 className="text-base sm:text-lg font-bold text-primary flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              Latest Materials
-            </h2>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/student/courses">View All <ArrowRight className="w-3.5 h-3.5 ml-1" /></Link>
-            </Button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {latestMaterials.map((mat) => (
-              <Link key={mat.id} href={`/student/courses/${mat.courseId}?itemId=${mat.id}`} className="group">
-                <Card className="h-full overflow-hidden hover:shadow-md transition-all duration-300">
-                  <div className="relative h-28 sm:h-32 overflow-hidden">
-                    <Image
-                      src={mat.image || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=300&q=80"}
-                      alt={mat.title}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      unoptimized
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    <Badge className="absolute top-2 left-2 bg-white/90 text-primary border-0 text-[9px] shadow-sm">
-                      <Sparkles className="w-2.5 h-2.5 mr-1" />
-                      New
-                    </Badge>
-                  </div>
-                  <CardContent className="p-3 sm:p-4">
-                    <p className="text-[10px] sm:text-xs font-medium text-muted line-clamp-1 mb-0.5">{mat.chapterName}</p>
-                    <p className="text-xs sm:text-sm font-semibold text-primary line-clamp-2 group-hover:text-secondary transition-colors">{mat.title}</p>
-                    <p className="text-[9px] sm:text-[10px] text-muted mt-1.5">{formatShortDate(mat.createdAt)}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
       {/* Main grid: Courses + Notices */}
       <div className="grid lg:grid-cols-3 gap-4 sm:gap-6">
         {/* My Courses */}
         <Card className="lg:col-span-2">
           <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-secondary" />
-                My Courses
-              </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/student/courses">View All</Link>
-              </Button>
-            </div>
+            <CardHeaderAction title="My Courses" icon={<GraduationCap className="w-full h-full" />} actionHref="/student/courses" />
           </CardHeader>
           <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
             <div className="space-y-3 sm:space-y-4">
@@ -445,29 +355,7 @@ export default function StudentDashboardPage() {
                   const progress = getCourseProgress(course.id);
                   const completed = getCompletedCount(course.id);
                   const total = getTotalCount(course.id);
-                  return (
-                    <Link key={course.id} href={`/student/courses/${course.id}`} className="block group">
-                      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-accent rounded-xl border border-primary/5 group-hover:border-secondary/20 transition-all">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                          <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start sm:items-center gap-2">
-                            <p className="font-medium text-primary text-xs sm:text-sm truncate">{course.title}</p>
-                            <Badge variant="outline" className="text-[9px] sm:text-[10px] shrink-0 sm:hidden">{progress}%</Badge>
-                          </div>
-                          <p className="text-[10px] sm:text-xs text-muted truncate">{course.duration} · {course.qualification}</p>
-                          <div className="mt-1.5 sm:mt-2 flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-primary/10 rounded-full overflow-hidden">
-                              <div className="h-full bg-secondary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-                            </div>
-                            <span className="text-[9px] sm:text-[10px] text-muted shrink-0">{completed}/{total}</span>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="text-[9px] sm:text-[10px] shrink-0 hidden sm:block">{progress}%</Badge>
-                      </div>
-                    </Link>
-                  );
+                  return <CourseCard key={course.id} course={course} progress={progress} completed={completed} total={total} />;
                 })
               )}
             </div>
@@ -477,15 +365,7 @@ export default function StudentDashboardPage() {
         {/* Notices */}
         <Card>
           <CardHeader className="pb-3 px-4 sm:px-6 pt-4 sm:pt-6">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-                <Bell className="w-4 h-4 text-secondary" />
-                Notices
-              </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/student/notices">View All</Link>
-              </Button>
-            </div>
+            <CardHeaderAction title="Notices" icon={<Bell className="w-full h-full" />} actionHref="/student/notices" />
           </CardHeader>
           <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
             {notices.length === 0 ? (
@@ -493,16 +373,7 @@ export default function StudentDashboardPage() {
             ) : (
               <div className="space-y-3 sm:space-y-4">
                 {notices.slice(0, 4).map((notice) => (
-                  <div key={notice.id} className="pb-3 sm:pb-4 border-b border-primary/5 last:border-0 last:pb-0">
-                    <p className="text-xs sm:text-sm font-medium text-primary line-clamp-1 mb-1">{notice.title}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] sm:text-xs text-muted flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatShortDate(notice.date)}
-                      </span>
-                      <Badge variant="outline" className="text-[8px] sm:text-[10px]">{notice.category}</Badge>
-                    </div>
-                  </div>
+                  <NoticeItem key={notice.id} title={notice.title} date={formatShortDate(notice.date)} category={notice.category} variant="compact" />
                 ))}
               </div>
             )}
@@ -516,51 +387,35 @@ export default function StudentDashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3">
             <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-secondary" />
+              <ClipboardCheck className="w-4 h-4 text-secondary shrink-0" />
               My Exam Activity
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6">
             <div className="space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="p-3 bg-primary/5 rounded-lg text-center">
-                  <p className="text-lg font-bold text-primary">{examStarted}</p>
-                  <p className="text-[10px] text-muted">Started</p>
-                </div>
-                <div className="p-3 bg-primary/5 rounded-lg text-center">
-                  <p className="text-lg font-bold text-primary">{examCompleted}</p>
-                  <p className="text-[10px] text-muted">Completed</p>
-                </div>
-                <div className="p-3 bg-primary/5 rounded-lg text-center">
-                  <p className="text-lg font-bold text-primary">{examRate}%</p>
-                  <p className="text-[10px] text-muted">Rate</p>
-                </div>
-                <div className="p-3 bg-primary/5 rounded-lg text-center">
-                  <p className="text-lg font-bold text-primary">{avgScore}</p>
-                  <p className="text-[10px] text-muted">Avg Score</p>
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                {[
+                  { label: "Started", value: examStarted },
+                  { label: "Completed", value: examCompleted },
+                  { label: "Rate", value: `${examRate}%` },
+                  { label: "Avg Score", value: avgScore },
+                ].map((s) => (
+                  <div key={s.label} className="py-2.5 px-2 bg-primary/5 rounded-lg text-center">
+                    <p className="text-base sm:text-lg font-bold text-primary">{s.value}</p>
+                    <p className="text-[10px] text-muted truncate">{s.label}</p>
+                  </div>
+                ))}
               </div>
               {recentExams.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted">Recent Attempts</p>
-                  {recentExams.map((a) => {
-                    const sub = examSubcategories.find((s) => s.id === a.subcategoryId);
-                    const cat = examCategories.find((c) => c.id === a.categoryId);
-                    return (
-                      <Link key={a.id} href={`/student/exams/result/${a.id}`} className="block">
-                        <div className="flex items-center justify-between p-2.5 bg-accent rounded-lg border border-primary/5 hover:border-secondary/20 transition-colors">
-                          <div className="min-w-0">
-                            <p className="text-xs font-medium truncate">{sub?.name || cat?.name || "Exam"}</p>
-                            <p className="text-[10px] text-muted">{formatShortDate(a.completedAt)}</p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge variant="outline" className="text-[10px]">{a.score}/{a.total}</Badge>
-                            <Play className="w-3 h-3 text-muted" />
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                  <div className="space-y-2">
+                    {recentExams.map((a) => {
+                      const sub = examSubcategories.find((s) => s.id === a.subcategoryId);
+                      const cat = examCategories.find((c) => c.id === a.categoryId);
+                      return <ExamActivityItem key={a.id} a={a} sub={sub} cat={cat} />;
+                    })}
+                  </div>
                 </div>
               )}
               {examStarted === 0 && <p className="text-sm text-muted text-center py-4">No exam activity yet.</p>}
@@ -569,42 +424,33 @@ export default function StudentDashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        <Card>
-          <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3">
-            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-500" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-6 pb-4 sm:pb-6">
-            {recentActivity.length === 0 ? (
-              <p className="text-sm text-muted text-center py-4">No recent activity.</p>
-            ) : (
-              <div className="space-y-3">
-                {recentActivity.map((act) => (
-                  <Link key={act.id} href={act.href} className="block">
-                    <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-accent transition-colors group">
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
-                        act.type === "exam" ? "bg-purple-50 text-purple-600" : "bg-primary/5 text-primary"
-                      }`}>
-                        {act.type === "exam" ? (
-                          <ClipboardCheck className="w-3.5 h-3.5" />
-                        ) : (
-                          <FileText className="w-3.5 h-3.5" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-medium text-primary truncate group-hover:text-secondary transition-colors">{act.title}</p>
-                        <p className="text-[10px] text-muted">{formatShortDate(act.date)}</p>
-                      </div>
-                      <ChevronRight className="w-3 h-3 text-muted shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+       <Card className="w-full overflow-hidden">
+  <CardHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3">
+    <CardTitle className="flex items-center gap-2 text-sm sm:text-base min-w-0">
+      <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+      <span className="truncate">Recent Activity</span>
+    </CardTitle>
+  </CardHeader>
+
+  <CardContent className="px-3 sm:px-6 pb-4 sm:pb-6 overflow-hidden">
+    {recentActivity.length === 0 ? (
+      <p className="text-sm text-muted text-center py-4">
+        No recent activity.
+      </p>
+    ) : (
+      <div className="space-y-2 w-full min-w-0">
+        {recentActivity.map((act) => (
+          <div
+            key={act.id}
+            className="w-full min-w-0 overflow-hidden"
+          >
+            <RecentActivityItem act={act} />
+          </div>
+        ))}
+      </div>
+    )}
+  </CardContent>
+</Card>
       </div>
 
       {/* Upcoming Schedule */}
@@ -622,11 +468,7 @@ export default function StudentDashboardPage() {
               { title: "Physical Training", date: "Jan 21, 2026", time: "12:30 PM", type: "Training" },
               { title: "Leadership Workshop", date: "Jan 22, 2026", time: "2:00 PM", type: "Workshop" },
             ].map((item, i) => (
-              <div key={i} className="p-3 sm:p-4 bg-accent rounded-xl border border-primary/5 hover:border-primary/20 transition-colors">
-                <Badge variant="outline" className="text-[8px] sm:text-[10px] mb-1.5 sm:mb-2 bg-primary/5">{item.type}</Badge>
-                <p className="font-medium text-primary text-xs sm:text-sm mb-1">{item.title}</p>
-                <p className="text-[10px] sm:text-xs text-muted">{item.date} · {item.time}</p>
-              </div>
+              <ScheduleCard key={i} title={item.title} date={item.date} time={item.time} type={item.type} />
             ))}
           </div>
         </CardContent>
@@ -634,3 +476,202 @@ export default function StudentDashboardPage() {
     </div>
   );
 }
+
+const QuickActionLink = memo(function QuickActionLink({ href, icon: Icon, label, desc }: {
+  href: string; icon: React.ElementType; label: string; desc: string;
+}) {
+  return (
+    <Link href={href} className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/5 hover:border-primary/20 transition-all group">
+      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
+        <Icon className="w-4 h-4 text-primary" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs sm:text-sm font-semibold text-primary truncate">{label}</p>
+        <p className="text-[10px] sm:text-xs text-muted truncate">{desc}</p>
+      </div>
+      <ChevronRight className="w-3.5 h-3.5 text-muted ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+    </Link>
+  );
+});
+
+const StatCard = memo(function StatCard({ label, value, icon: Icon }: {
+  label: string; value: string; icon: React.ElementType;
+}) {
+  return (
+    <Card className="h-full">
+      <CardContent className="p-4 sm:p-5 flex flex-col justify-between h-full">
+        <p className="text-[10px] sm:text-xs text-muted mb-1">{label}</p>
+        <div className="flex items-end justify-between">
+          <p className="text-lg sm:text-2xl font-bold text-primary">{value}</p>
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+            <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+
+const BadgeCard = memo(function BadgeCard({ icon: Icon, label, earned, color }: {
+  icon: React.ElementType; label: string; earned: boolean; color: string;
+}) {
+  return (
+    <div className={`p-2.5 rounded-lg border text-center transition-all ${
+      earned
+        ? "bg-primary/5 border-primary/10"
+        : "bg-accent/50 border-dashed border-primary/10 opacity-50"
+    }`}>
+      <Icon className={`w-4 h-4 mx-auto mb-1 ${earned ? color : "text-muted"}`} />
+      <p className={`text-[9px] font-medium ${earned ? "text-primary" : "text-muted"}`}>{label}</p>
+      {earned && <span className="text-[8px] text-emerald-600 font-medium">Unlocked</span>}
+    </div>
+  );
+});
+
+const LiveClassLink = memo(function LiveClassLink({ cls, isSoon }: {
+  cls: LiveClass; isSoon: boolean;
+}) {
+  return (
+    <Link
+      key={cls.id}
+      href={cls.joinUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-colors ${
+        cls.status === "live"
+          ? "bg-green-50 border-green-200"
+          : isSoon
+          ? "bg-amber-50 border-amber-200"
+          : "bg-accent border-primary/5 hover:border-primary/20"
+      }`}
+    >
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+        cls.status === "live" ? "bg-green-500 animate-pulse" : "bg-primary/10"
+      }`}>
+        <Video className={`w-4 h-4 ${cls.status === "live" ? "text-white" : "text-primary"}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-primary truncate">{cls.title}</p>
+        <p className="text-[10px] text-muted">
+          {cls.status === "live" ? "Live now" : formatShortDate(cls.startTime)}
+        </p>
+      </div>
+      <ExternalLink className="w-3 h-3 text-muted shrink-0" />
+    </Link>
+  );
+});
+
+const LatestMaterialCard = memo(function LatestMaterialCard({ mat }: {
+  mat: { id: string; title: string; image?: string; chapterName: string; courseId: string; createdAt: string };
+}) {
+  return (
+    <Link key={mat.id} href={`/student/courses/${mat.courseId}?itemId=${mat.id}`} className="group">
+      <Card className="h-full overflow-hidden hover:shadow-md transition-all duration-300">
+        <div className="relative h-28 sm:h-32 overflow-hidden">
+          <Image
+            src={mat.image || "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=300&q=80"}
+            alt={mat.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+          <Badge className="absolute top-2 left-2 bg-white/90 text-primary border-0 text-[9px] shadow-sm">
+            <Sparkles className="w-2.5 h-2.5 mr-1" />
+            New
+          </Badge>
+        </div>
+        <CardContent className="p-3 sm:p-4">
+          <p className="text-[10px] sm:text-xs font-medium text-muted line-clamp-1 mb-0.5">{mat.chapterName}</p>
+          <p className="text-xs sm:text-sm font-semibold text-primary line-clamp-2 group-hover:text-secondary transition-colors">{mat.title}</p>
+          <p className="text-[9px] sm:text-[10px] text-muted mt-1.5">{formatShortDate(mat.createdAt)}</p>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+});
+
+const CourseCard = memo(function CourseCard({ course, progress, completed, total }: {
+  course: { id: string; title: string; duration: string; qualification: string };
+  progress: number; completed: number; total: number;
+}) {
+  return (
+    <Link key={course.id} href={`/student/courses/${course.id}`} className="block group">
+      <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-accent rounded-xl border border-primary/5 group-hover:border-secondary/20 transition-all">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+          <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start sm:items-center gap-2">
+            <p className="font-medium text-primary text-xs sm:text-sm truncate">{course.title}</p>
+            <Badge variant="outline" className="text-[9px] sm:text-[10px] shrink-0 sm:hidden">{progress}%</Badge>
+          </div>
+          <p className="text-[10px] sm:text-xs text-muted truncate">{course.duration} · {course.qualification}</p>
+          <div className="mt-1.5 sm:mt-2 flex items-center gap-2">
+            <div className="flex-1 h-1.5 bg-primary/10 rounded-full overflow-hidden">
+              <div className="h-full bg-secondary rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+            </div>
+            <span className="text-[9px] sm:text-[10px] text-muted shrink-0">{completed}/{total}</span>
+          </div>
+        </div>
+        <Badge variant="outline" className="text-[9px] sm:text-[10px] shrink-0 hidden sm:block">{progress}%</Badge>
+      </div>
+    </Link>
+  );
+});
+
+const ExamActivityItem = memo(function ExamActivityItem({ a, sub, cat }: {
+  a: { id: string; completedAt?: string; score?: number; total?: number; subcategoryId?: string; categoryId?: string };
+  sub?: { id: string; name: string }; cat?: { id: string; name: string };
+}) {
+  return (
+    <Link key={a.id} href={`/student/exams/result/${a.id}`} className="block">
+      <div className="flex items-center justify-between gap-2 p-2.5 bg-accent rounded-lg border border-primary/5 hover:border-secondary/20 transition-colors">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-primary truncate">{sub?.name || cat?.name || "Exam"}</p>
+          <p className="text-[10px] text-muted">{a.completedAt ? formatShortDate(a.completedAt) : "N/A"}</p>
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Badge variant="outline" className="text-[10px] whitespace-nowrap">{a.score}/{a.total}</Badge>
+          <Play className="w-3 h-3 text-muted shrink-0" />
+        </div>
+      </div>
+    </Link>
+  );
+});
+
+const RecentActivityItem = memo(function RecentActivityItem({ act }: {
+  act: { id: string; type: "material" | "exam"; title: string; date: string; href: string };
+}) {
+  return (
+    <Link key={act.id} href={act.href} className="block">
+      <div className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-accent transition-colors group">
+        <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+          act.type === "exam" ? "bg-purple-50 text-purple-600" : "bg-primary/5 text-primary"
+        }`}>
+          {act.type === "exam" ? (
+            <ClipboardCheck className="w-3 h-3" />
+          ) : (
+            <FileText className="w-3 h-3" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium text-primary truncate group-hover:text-secondary transition-colors">{act.title}</p>
+          <p className="text-[10px] text-muted">{formatShortDate(act.date)}</p>
+        </div>
+        <ChevronRight className="w-3 h-3 text-muted shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
+    </Link>
+  );
+});
+
+const ScheduleCard = memo(function ScheduleCard({ title, date, time, type }: {
+  title: string; date: string; time: string; type: string;
+}) {
+  return (
+    <div className="p-3 sm:p-4 bg-accent rounded-xl border border-primary/5 hover:border-primary/20 transition-colors">
+      <Badge variant="outline" className="text-[8px] sm:text-[10px] mb-1.5 sm:mb-2 bg-primary/5">{type}</Badge>
+      <p className="font-medium text-primary text-xs sm:text-sm mb-1">{title}</p>
+      <p className="text-[10px] sm:text-xs text-muted">{date} · {time}</p>
+    </div>
+  );
+});

@@ -52,6 +52,7 @@ export interface LandingConfig {
   loaderQuotes: string[];
   theme?: { primaryColor: string; fontFamily: string; };
   enablePinnedPopup?: boolean;
+  showAdmissionBar?: boolean;
   backup?: { autoBackup: { enabled: boolean; frequency: string; lastBackup: string | null }; };
   backupHistory?: { id: string; timestamp: string; type: string; destination: string; status: string; fileSize: number | null; errorMessage: string | null; fileName: string | null; }[];
   privacyPolicy?: { title: string; description: string; lastUpdated: string; sections: { title: string; content: string[] }[]; };
@@ -185,6 +186,7 @@ export const defaultSettings: AppSettings = {
     ],
     theme: { primaryColor: "#07220B", fontFamily: "Inter" },
     enablePinnedPopup: true,
+    showAdmissionBar: true,
     privacyPolicy: { title: "Privacy Policy", description: "Learn how we collect, use, and protect your personal information.", lastUpdated: "June 2026", sections: [
       { title: "Information We Collect", content: ["We collect information you provide directly to us, including your name, email address, phone number, and academic details when you fill out admission forms, contact forms, or register for our programs.", "We automatically collect certain information when you visit our website, including your IP address, browser type, device information, and browsing patterns through cookies and similar technologies.", "We may collect photographs and video footage during academy events and activities for promotional and record-keeping purposes with appropriate consent."] },
       { title: "How We Use Your Information", content: ["To process admissions, enrollments, and academic record management for our cadet preparation programs.", "To communicate with you regarding program updates, admissions notices, examination schedules, and other academy-related information.", "To improve our educational services, curriculum, and website experience based on usage patterns and feedback.", "To comply with legal obligations and maintain academic records as required by educational regulatory authorities."] },

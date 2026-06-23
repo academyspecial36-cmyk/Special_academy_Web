@@ -98,7 +98,7 @@ export function BlogSection() {
                     alt={post.title}
                     fill
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    unoptimized
+                   
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">

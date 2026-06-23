@@ -276,7 +276,7 @@ export default function StudentCourseDetailPage() {
                       <div className="flex items-start gap-4">
                         {activeSub.thumbnail ? (
                           <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 relative shadow-sm">
-                            <Image src={activeSub.thumbnail} alt={activeSub.title} fill className="object-cover" unoptimized />
+                            <Image src={activeSub.thumbnail} alt={activeSub.title} fill className="object-cover" />
                           </div>
                         ) : (
                           <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center shrink-0">

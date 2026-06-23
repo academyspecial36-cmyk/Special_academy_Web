@@ -158,7 +158,7 @@ export function HeroSection() {
                   height={500}
                   className="w-full h-[500px] object-cover"
                   priority
-                  unoptimized
+                 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-primary/60 via-transparent to-transparent" />
               </div>

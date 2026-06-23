@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { sendEnrollmentEmail } from "@/lib/email";
 import { createNotificationForRole } from "@/lib/notifications";
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from "@/lib/rate-limit";
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -19,6 +20,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "fullName, email, and password are required" },
         { status: 400 }
+      );
+    }
+
+    const rateKey = getRateLimitKey(request, email, "enroll");
+    const limit = checkRateLimit(rateKey, RATE_LIMITS.ENROLL);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many enrollment attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
       );
     }
 
@@ -54,8 +64,6 @@ export async function POST(request: Request) {
     });
 
     const verificationCode = generateCode();
-
-    console.log(`[Enroll] Verification code for ${email}: ${verificationCode}`);
 
     const { error: enrollError } = await serviceSupabase.from("enrollments").insert({
       full_name: fullName,

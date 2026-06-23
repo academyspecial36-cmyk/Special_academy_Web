@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -112,7 +114,7 @@ export default function NoticesPage() {
                   <div className="flex items-start gap-4">
                     {notice.image && (
                       <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-accent hidden sm:block">
-                        <Image src={notice.image} alt="" width={80} height={80} className="w-full h-full object-cover" unoptimized />
+                        <Image src={notice.image} alt="" width={80} height={80} className="w-full h-full object-cover" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -184,7 +186,7 @@ export default function NoticesPage() {
                 </div>
                 {selectedNotice.image && (
                   <div className="w-full h-48 rounded-lg overflow-hidden bg-accent mb-4">
-                    <Image src={selectedNotice.image} alt="" width={500} height={200} className="w-full h-full object-cover" unoptimized />
+                    <Image src={selectedNotice.image} alt="" width={500} height={200} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <h2 className="text-xl font-bold text-primary mb-4">

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "@/styles/globals.css";
@@ -54,7 +55,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="font-sans" suppressHydrationWarning>
-        <AuthProviderWrapper><AppProviderWrapper><ThemeProvider><OfflineDetector><PageViewTracker />{children}</OfflineDetector></ThemeProvider></AppProviderWrapper></AuthProviderWrapper>
+        <AuthProviderWrapper><AppProviderWrapper><ThemeProvider><OfflineDetector><Suspense fallback={null}><PageViewTracker /></Suspense>{children}</OfflineDetector></ThemeProvider></AppProviderWrapper></AuthProviderWrapper>
       </body>
     </html>
   );

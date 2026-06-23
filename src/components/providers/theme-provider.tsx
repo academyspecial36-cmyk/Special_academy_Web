@@ -1,6 +1,6 @@
 "use client";
 
-import { useInsertionEffect } from "react";
+import { useEffect } from "react";
 import { useAppContext } from "@/lib/app-context";
 import { generateShadeCssVars } from "@/lib/theme-utils";
 
@@ -32,7 +32,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const cached = !settings.config?.theme?.primaryColor ? loadCachedTheme() : null;
   const theme = settings.config?.theme || cached || { primaryColor: "#07220B", fontFamily: "Inter" };
 
-  useInsertionEffect(() => {
+  useEffect(() => {
     const root = document.documentElement;
     const color = theme?.primaryColor || "#07220B";
     const font = theme?.fontFamily || "Inter";
@@ -51,6 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         link = document.createElement("link");
         link.id = linkId;
         link.rel = "stylesheet";
+        link.fetchPriority = "high";
         document.head.appendChild(link);
       }
       link.href = url;

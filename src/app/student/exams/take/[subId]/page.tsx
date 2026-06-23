@@ -200,6 +200,7 @@ export default function StudentTakeSubcategoryExamPage() {
     const attempt = {
       categoryId: category.id,
       subcategoryId: subId,
+      studentId: user?.id,
       studentName: user?.name || user?.email?.split("@")[0] || "Student",
       answers: answerDetails,
       score,
@@ -505,7 +506,7 @@ export default function StudentTakeSubcategoryExamPage() {
                               className="sr-only"
                             />
                             <span className="break-words text-primary">{optText}</span>
-                            {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
+                            {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" /></div>}
                           </label>
                           );
                         })}

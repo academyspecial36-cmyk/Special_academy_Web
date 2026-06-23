@@ -121,7 +121,7 @@ export default function StudentAttemptResultPage() {
                                   {String.fromCharCode(65 + oi)}
                                 </span>
                                 <span className={`break-words ${isRight ? "font-medium" : ""}`}>{optText}</span>
-                                {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
+                                {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" /></div>}
                                 {isRight && <CheckCircle className="w-3.5 h-3.5 text-emerald-500 ml-auto shrink-0" />}
                                 {isSelected && !isRight && <XCircle className="w-3.5 h-3.5 text-red-500 ml-auto shrink-0" />}
                               </div>

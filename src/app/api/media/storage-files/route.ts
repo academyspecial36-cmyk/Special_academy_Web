@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 const CONTENT_TABLES: Record<string, string[]> = {
   courses: ["image"],
@@ -40,6 +41,9 @@ interface BucketInfo {
 
 export async function GET() {
   try {
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const svc = createServiceRoleSupabase();
 
     // 1. Collect all referenced URLs from content tables

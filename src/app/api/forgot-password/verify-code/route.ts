@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { checkRateLimit, getRateLimitKey, RATE_LIMITS } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +10,15 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { success: false, error: "Email and code are required" },
         { status: 400 }
+      );
+    }
+
+    const rateKey = getRateLimitKey(request, email, "password_reset_verify");
+    const limit = checkRateLimit(rateKey, RATE_LIMITS.PASSWORD_RESET_VERIFY);
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(Math.ceil((limit.resetAt - Date.now()) / 1000)) } }
       );
     }
 

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
 import { exportAllData, uploadToSupabaseStorage, generateBackupId, isBackupDue, type BackupEntry } from "@/lib/backup";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const { error } = await requireAdmin();
+    if (error) return error;
+  }
   try {
     const supabase = createServiceRoleSupabase();
 

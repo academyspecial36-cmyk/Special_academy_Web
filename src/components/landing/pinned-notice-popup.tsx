@@ -59,7 +59,7 @@ export function PinnedNoticePopup() {
               <div className="px-5 pb-5 space-y-4">
                 {latest.image && (
                   <div className="w-full h-48 rounded-lg overflow-hidden bg-accent">
-                    <Image src={latest.image} alt="" width={500} height={200} className="w-full h-full object-cover" unoptimized />
+                    <Image src={latest.image} alt="" width={500} height={200} className="w-full h-full object-cover" />
                   </div>
                 )}
                 <div>

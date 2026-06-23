@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function GET() {
+  const { error } = await requireAdmin();
+  if (error) return error;
   try {
     const supabase = createServiceRoleSupabase();
     const { data } = await supabase
@@ -16,6 +19,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const { error: authError } = await requireAdmin();
+    if (authError) return authError;
+
     let parsed: Record<string, unknown>;
     try {
       parsed = await request.json();

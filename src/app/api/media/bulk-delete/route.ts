@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { extractStoragePath } from "@/lib/storage-cleanup";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function POST(request: Request) {
+  const { error } = await requireAdmin();
+  if (error) return error;
   try {
     const { ids } = await request.json();
     if (!Array.isArray(ids) || ids.length === 0) {

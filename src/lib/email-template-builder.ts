@@ -34,6 +34,8 @@ export const DEFAULT_CONFIG: TemplateConfig = {
   footerText: "",
 };
 
+import { sanitizeHtml } from "./sanitize";
+
 export function generateEmailHtml(config: TemplateConfig, academy: { name: string; logo: string; website: string; email: string; phone: string }): string {
   const logoUrl = academy.logo
     ? `${academy.website.replace(/\/+$/, "")}/${academy.logo.replace(/^\//, "")}`
@@ -48,23 +50,23 @@ export function generateEmailHtml(config: TemplateConfig, academy: { name: strin
     : `<h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;">${academy.name}</h1>`;
 
   const badgeHtml = config.badgeText
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 20px;"><tr><td style="background-color:${config.badgeColor}15;color:${config.badgeColor};font-size:13px;font-weight:600;padding:6px 16px;border-radius:20px;font-family:Arial,sans-serif;">${config.badgeText}</td></tr></table>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 20px;"><tr><td style="background-color:${config.badgeColor}15;color:${config.badgeColor};font-size:13px;font-weight:600;padding:6px 16px;border-radius:20px;font-family:Arial,sans-serif;">${sanitizeHtml(config.badgeText)}</td></tr></table>`
     : "";
 
   const headingHtml = config.heading
-    ? `<h2 style="color:${config.headerColor || "#07220B"};font-size:22px;margin:0 0 16px;">${config.heading}</h2>`
+    ? `<h2 style="color:${config.headerColor || "#07220B"};font-size:22px;margin:0 0 16px;">${sanitizeHtml(config.heading)}</h2>`
     : "";
 
   const messageHtml = config.message
-    ? `<p style="margin:0 0 16px;color:${config.messageColor || "#444"};">${config.message.replace(/\n/g, "<br/>")}</p>`
+    ? `<p style="margin:0 0 16px;color:${config.messageColor || "#444"};">${sanitizeHtml(config.message).replace(/\n/g, "<br/>")}</p>`
     : "";
 
   const buttonHtml = config.showButton && config.buttonText
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td align="center" style="background-color:${config.buttonColor || "#07220B"};border-radius:8px;"><a href="${config.buttonUrl || "#"}" target="_blank" style="display:inline-block;padding:12px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${config.buttonText}</a></td></tr></table>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px auto;"><tr><td align="center" style="background-color:${config.buttonColor || "#07220B"};border-radius:8px;"><a href="${sanitizeHtml(config.buttonUrl || "#")}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:12px 32px;font-family:Arial,sans-serif;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">${sanitizeHtml(config.buttonText)}</a></td></tr></table>`
     : "";
 
   const footerTextHtml = config.footerText
-    ? `<p style="margin:0 0 2px;font-family:Arial,sans-serif;font-size:12px;color:#999;">${config.footerText.replace(/\n/g, "<br/>")}</p>`
+    ? `<p style="margin:0 0 2px;font-family:Arial,sans-serif;font-size:12px;color:#999;">${sanitizeHtml(config.footerText).replace(/\n/g, "<br/>")}</p>`
     : "";
 
   const contactHtml = config.showContact
@@ -90,7 +92,7 @@ export function generateEmailHtml(config: TemplateConfig, academy: { name: strin
           <tr>
             <td align="center" style="padding:32px 32px 24px;${headerBg};">
               ${logoHtml}
-              ${config.tagline ? `<p style="color:rgba(255,255,255,0.65);font-size:13px;margin:8px 0 0;font-family:Arial,sans-serif;">${config.tagline}</p>` : ""}
+              ${config.tagline ? `<p style="color:rgba(255,255,255,0.65);font-size:13px;margin:8px 0 0;font-family:Arial,sans-serif;">${sanitizeHtml(config.tagline)}</p>` : ""}
             </td>
           </tr>
 

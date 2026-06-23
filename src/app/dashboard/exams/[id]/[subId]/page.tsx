@@ -172,7 +172,7 @@ export default function AdminSubcategoryQuestionsPage() {
                                 {String.fromCharCode(65 + oi)}
                               </span>
                               <span className="break-words">{optText}</span>
-                              {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" unoptimized /></div>}
+                              {optImage && <div className="relative w-8 h-8 rounded overflow-hidden shrink-0"><Image src={optImage} alt="" fill className="object-cover" /></div>}
                               {isCorrect && <Badge className="ml-auto text-[8px] bg-emerald-500 text-white border-0 shrink-0">Correct</Badge>}
                             </div>
                           );

@@ -48,7 +48,7 @@ export function FreeResourcesSection() {
                     alt={sub.title}
                     fill
                     className="object-cover"
-                    unoptimized
+                   
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                   <Badge className="absolute top-3 left-3 bg-white/90 text-primary border-0 text-[10px]">

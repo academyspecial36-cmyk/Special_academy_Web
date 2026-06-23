@@ -1,29 +1,29 @@
-"use client";
-
-import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: ReactNode;
   title: string;
-  description: string;
-  action?: { label: string; href: string };
+  description?: string;
+  size?: "sm" | "md" | "lg";
+  className?: string;
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+const SIZE_CLASSES = {
+  sm: { icon: "w-6 h-6", padding: "py-8", title: "text-sm font-semibold", desc: "text-xs" },
+  md: { icon: "w-8 h-8", padding: "py-12", title: "text-base font-semibold", desc: "text-sm" },
+  lg: { icon: "w-12 h-12", padding: "py-16", title: "text-lg font-semibold", desc: "text-sm" },
+};
+
+export function EmptyState({ icon, title, description, size = "md", className }: EmptyStateProps) {
+  const s = SIZE_CLASSES[size];
   return (
-    <Card>
-      <CardContent className="py-16 text-center">
-        <Icon className="w-12 h-12 text-muted mx-auto mb-3" />
-        <h3 className="font-semibold text-primary mb-1">{title}</h3>
-        <p className="text-sm text-muted">{description}</p>
-        {action && (
-          <Button className="mt-4" asChild>
-            <Link href={action.href}>{action.label}</Link>
-          </Button>
-        )}
+    <Card className={cn("border-0 shadow-none", className)}>
+      <CardContent className={cn(s.padding, "text-center")}>
+        <div className={cn(s.icon, "text-muted mx-auto mb-3")}>{icon}</div>
+        <h3 className={cn(s.title, "text-primary mb-1")}>{title}</h3>
+        {description && <p className={cn(s.desc, "text-muted max-w-md mx-auto")}>{description}</p>}
       </CardContent>
     </Card>
   );

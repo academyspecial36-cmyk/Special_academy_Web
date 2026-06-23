@@ -183,7 +183,7 @@ export function PreviewModal({ open, onClose, type, title, url, images, studentN
             width={isFullscreen ? 1200 : 800}
             height={isFullscreen ? 900 : 600}
             className="max-w-full max-h-full object-contain"
-            unoptimized
+           
             draggable={false}
           />
         </div>
@@ -256,7 +256,7 @@ export function PreviewModal({ open, onClose, type, title, url, images, studentN
                   transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
                 }}
               >
-                <Image src={allImages[imageIndex]} alt={`${title} ${imageIndex + 1}`} width={1200} height={900} className="max-w-full max-h-full object-contain" unoptimized draggable={false} style={{ width: "auto", height: "auto" }} />
+                <Image src={allImages[imageIndex]} alt={`${title} ${imageIndex + 1}`} width={1200} height={900} className="max-w-full max-h-full object-contain" draggable={false} style={{ width: "auto", height: "auto" }} />
               </div>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-white/60">No images available</div>

@@ -53,7 +53,7 @@ export function CourseTableRenderer({ data }: { data: CourseTableData }) {
                     alt={course.title ?? ""}
                     fill
                     className="object-cover"
-                    unoptimized
+                   
                   />
                 </div>
               )}

@@ -58,7 +58,7 @@ export function NoticesSection() {
                 >
                   {notice.image && (
                     <div className="w-full h-40 rounded-lg overflow-hidden bg-accent mb-3">
-                      <Image src={notice.image} alt="" width={400} height={160} className="w-full h-full object-cover" unoptimized />
+                      <Image src={notice.image} alt="" width={400} height={160} className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="flex items-start justify-between gap-4 mb-3">

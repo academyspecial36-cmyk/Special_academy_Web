@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
 import { extractStoragePath } from "@/lib/storage-cleanup";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { error } = await requireAdmin();
+  if (error) return error;
   try {
     const { id } = await params;
     const body = await request.json();
@@ -45,6 +48,9 @@ async function collectDescendantFolderIds(supabase: ReturnType<typeof createServ
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { error: authError } = await requireAdmin();
+    if (authError) return authError;
+
     const { id } = await params;
     const supabase = createServiceRoleSupabase();
 

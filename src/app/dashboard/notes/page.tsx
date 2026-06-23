@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { cn, formatShortDate } from "@/lib/utils";
+import { sanitizeHtml } from "@/lib/sanitize";
 import dynamic from "next/dynamic";
 
 const RichEditor = dynamic(
@@ -487,7 +488,7 @@ function NoteCard({ note, onEdit, onPin, onDelete, pinningId }: {
           {note.content && (
             <div
               className="text-xs leading-relaxed [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-0.5 line-clamp-[10] note-content"
-              dangerouslySetInnerHTML={{ __html: note.content }} />
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(note.content) }} />
           )}
 
           {/* Tags */}

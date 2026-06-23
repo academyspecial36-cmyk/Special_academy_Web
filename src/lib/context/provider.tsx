@@ -108,20 +108,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     async function loadBootstrap() {
       try {
-        const settingsRes = await fetch("/api/settings");
-        if (settingsRes.ok) {
+        const [settingsRes, bootstrapRes] = await Promise.all([
+          fetch("/api/settings").catch(() => null),
+          fetch("/api/bootstrap").catch(() => null),
+        ]);
+        if (settingsRes?.ok) {
           const { settings: merged } = await settingsRes.json();
           settings.setSettings(merged);
         }
-      } catch {
-        /* fallback to defaults */
-      } finally {
-        setLoading(false);
-      }
-
-      try {
-        const bootstrapRes = await fetch("/api/bootstrap");
-        if (bootstrapRes.ok) {
+        if (bootstrapRes?.ok) {
           const data = await bootstrapRes.json();
           if (data.settings) settings.setSettings(data.settings);
           if (Array.isArray(data.faqs) && data.faqs.length) content.setFaqs(data.faqs);
@@ -148,6 +143,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         console.log("Bootstrap load failed:", err);
+      } finally {
+        setLoading(false);
       }
 
       try {

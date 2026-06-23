@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatShortDate } from "@/lib/utils";
 import type { BlogPost } from "@/types";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 export function BlogPostPage({ slugPromise }: { slugPromise: Promise<{ slug: string }> }) {
   const [post, setPost] = useState<BlogPost | null>(null);
@@ -90,7 +91,7 @@ export function BlogPostPage({ slugPromise }: { slugPromise: Promise<{ slug: str
                 alt={post.title}
                 fill
                 className="object-cover"
-                unoptimized
+               
                 priority
               />
             </div>
@@ -128,7 +129,7 @@ export function BlogPostPage({ slugPromise }: { slugPromise: Promise<{ slug: str
 
           <div
             className="prose prose-sm md:prose-base max-w-none prose-headings:text-primary prose-p:text-muted prose-a:text-secondary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-strong:text-primary prose-code:text-secondary prose-pre:bg-primary/5 prose-pre:border prose-pre:border-primary/10 overflow-x-auto break-words"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
           />
         </motion.div>
       </div>

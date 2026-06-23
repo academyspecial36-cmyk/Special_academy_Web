@@ -19,6 +19,7 @@ interface StudentData {
   email: string;
   phone: string;
   class: string;
+  qualification_id?: string;
   enrolled_courses: string[];
   created_at: string;
 }
@@ -34,6 +35,7 @@ interface EnrollmentData {
   address: string;
   created_at: string;
   status: string;
+  qualification_id?: string;
 }
 
 export default function StudentProfilePage() {
@@ -45,6 +47,7 @@ export default function StudentProfilePage() {
   const [editing, setEditing] = useState(false);
 
   const [qualificationOptions, setQualificationOptions] = useState<{ id: string; name: string }[]>([]);
+  const [studentQualId, setStudentQualId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -67,13 +70,14 @@ export default function StudentProfilePage() {
         setStudent(data.student);
         setEnrollment(data.enrollment);
         setAvatarUrl(data.profile?.avatar_url ?? null);
+        setStudentQualId(data.student?.qualification_id || data.enrollment?.qualification_id || null);
         setForm({
           name: data.student?.name ?? data.profile?.name ?? data.enrollment?.full_name ?? "",
           phone: data.student?.phone ?? data.enrollment?.phone ?? data.profile?.phone ?? "",
           address: data.enrollment?.address ?? "",
           guardianName: data.enrollment?.guardian_name ?? "",
           guardianContact: data.enrollment?.guardian_contact ?? "",
-          qualification: data.student?.class ?? "",
+          qualification: data.student?.class || "",
         });
       } catch {
         toast.error("Failed to load profile");
@@ -83,11 +87,19 @@ export default function StudentProfilePage() {
     }
     fetchProfile();
     apiList("qualifications").then((data) => {
-      if (Array.isArray(data) && data.length) setQualificationOptions(data as { id: string; name: string }[]);
+      if (Array.isArray(data) && data.length) {
+        setQualificationOptions(data as { id: string; name: string }[]);
+      }
     }).catch(() => {
       setQualificationOptions(QUALIFICATIONS.map((name) => ({ id: name, name })));
     });
   }, []);
+
+  useEffect(() => {
+    if (!studentQualId || !qualificationOptions.length) return;
+    const match = qualificationOptions.find((q) => q.id === studentQualId);
+    if (match) setForm((p) => ({ ...p, qualification: match.name }));
+  }, [studentQualId, qualificationOptions]);
 
   async function handleSave() {
     setSaving(true);
@@ -171,7 +183,7 @@ export default function StudentProfilePage() {
             <CardContent className="p-6 sm:p-8">
               <div className="relative w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden">
                 {(avatarPreview || avatarUrl) ? (
-                  <Image src={avatarPreview || avatarUrl!} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" unoptimized />
+                  <Image src={avatarPreview || avatarUrl!} alt="Avatar" width={96} height={96} className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-2xl font-bold text-primary">{initials}</span>
                 )}
@@ -193,7 +205,7 @@ export default function StudentProfilePage() {
                 )}
               </div>
               <h3 className="text-lg font-bold text-primary">{form.name || "Student"}</h3>
-              <p className="text-sm text-muted mb-1">{student?.class ?? enrollment?.interested_course ?? "No qualification set"}</p>
+              <p className="text-sm text-muted mb-1">{form.qualification || student?.class || enrollment?.interested_course || "No qualification set"}</p>
               {student?.id && (
                 <p className="text-xs text-muted">Student ID: {student.id.slice(0, 8).toUpperCase()}</p>
               )}
@@ -212,7 +224,7 @@ export default function StudentProfilePage() {
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <School className="w-4 h-4 text-muted" />
-                  <span className="text-muted">{student?.class || "Not specified"}</span>
+                  <span className="text-muted">{form.qualification || student?.class || "Not specified"}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="w-4 h-4 text-muted" />
@@ -279,7 +291,7 @@ export default function StudentProfilePage() {
                       ))}
                     </Select>
                   ) : (
-                    <Input value={student?.class ?? ""} disabled />
+                    <Input value={form.qualification || student?.class || ""} disabled />
                   )}
                 </div>
               </div>

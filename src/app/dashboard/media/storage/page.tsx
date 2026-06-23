@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -155,9 +155,7 @@ export default function MyStoragePage() {
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-1 mt-3 text-xs text-muted">
               {stats.buckets.map((b) => (
-                <span key={b.name}>
-                  <span className="font-medium text-primary">{b.name}</span>: {formatSize(b.bytes)} ({b.files} files)
-                </span>
+                <BucketStatItem key={b.name} name={b.name} bytes={b.bytes} files={b.files} />
               ))}
             </div>
           </CardContent>
@@ -236,105 +234,32 @@ export default function MyStoragePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((file) => {
-                    const Icon = fileIcon(file.mime_type);
-                    return (
-                      <motion.tr
-                        key={`${file.bucket}:${file.path}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
-                      >
-                        <td className="py-4 px-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                              <Icon className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-primary truncate max-w-[220px]">{file.name}</p>
-                              <p className="text-xs text-muted truncate max-w-[220px]">{file.path}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <Badge variant="outline" className="text-[10px] font-mono">{file.bucket}</Badge>
-                        </td>
-                        <td className="py-4 px-4 text-sm text-muted whitespace-nowrap">{formatSize(file.file_size)}</td>
-                        <td className="py-4 px-4">
-                          <Badge
-                            variant={file.in_use ? "success" : "destructive"}
-                            className="text-[10px]"
-                          >
-                            {file.in_use ? "In Use" : "Orphaned"}
-                          </Badge>
-                        </td>
-                        <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            {isPreviewable(file) && (
-                              <Button size="sm" variant="ghost" onClick={() => setPreviewFile(file)} className="hover:bg-primary/5" title="Preview">
-                                <Eye className="w-3.5 h-3.5" />
-                              </Button>
-                            )}
-                            <Button size="sm" variant="ghost" onClick={() => window.open(file.url, "_blank")} title="Download" className="hover:bg-primary/5">
-                              <Download className="w-3.5 h-3.5" />
-                            </Button>
-                            {!file.in_use && (
-                              <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(file)} className="hover:bg-red-50 hover:text-red-600" title="Delete">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })}
+                  {filtered.map((file) => (
+                    <StorageFileTableRow
+                      key={`${file.bucket}:${file.path}`}
+                      file={file}
+                      isPreviewable={isPreviewable}
+                      onPreview={setPreviewFile}
+                      onDownload={(f) => window.open(f.url, "_blank")}
+                      onDelete={setDeleteTarget}
+                    />
+                  ))}
                 </tbody>
               </table>
             </div>
           ) : (
             <div className="p-4 sm:p-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                {filtered.map((file) => {
-                  const Icon = fileIcon(file.mime_type);
-                  return (
-                    <motion.div
-                      key={`${file.bucket}:${file.path}`}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="group relative rounded-xl border border-primary/5 bg-white hover:border-primary/10 hover:shadow-sm transition-all overflow-hidden"
-                    >
-                      <div className="aspect-square bg-accent/30 flex items-center justify-center relative overflow-hidden">
-                        {file.mime_type.startsWith("image/") ? (
-                          <Image src={file.url} alt={file.name} width={200} height={200} className="w-full h-full object-cover" unoptimized />
-                        ) : (
-                          <Icon className="w-10 h-10 text-muted/60" />
-                        )}
-                        {!file.in_use && (
-                          <button
-                            onClick={() => setDeleteTarget(file)}
-                            className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-red-50 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                      <div className="p-2.5">
-                        <p className="text-xs font-medium text-primary truncate">{file.name}</p>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-[10px] text-muted">{formatSize(file.file_size)}</span>
-                          <Badge variant={file.in_use ? "success" : "destructive"} className="text-[9px] px-1.5 py-0">{file.in_use ? "In Use" : "Orphaned"}</Badge>
-                        </div>
-                        <div className="flex items-center gap-1 mt-1.5">
-                          {isPreviewable(file) && (
-                            <button onClick={() => setPreviewFile(file)} className="text-[10px] text-primary hover:underline" title="Preview">Preview</button>
-                          )}
-                          <button onClick={() => window.open(file.url, "_blank")} className="text-[10px] text-primary hover:underline ml-auto" title="Download">Download</button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                {filtered.map((file) => (
+                  <StorageFileGridCard
+                    key={`${file.bucket}:${file.path}`}
+                    file={file}
+                    isPreviewable={isPreviewable}
+                    onPreview={setPreviewFile}
+                    onDownload={(f) => window.open(f.url, "_blank")}
+                    onDelete={setDeleteTarget}
+                  />
+                ))}
               </div>
             </div>
           )}
@@ -373,7 +298,6 @@ export default function MyStoragePage() {
                   height={600}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg"
                   style={{ width: "auto", height: "auto" }}
-                  unoptimized
                 />
               ) : previewFile.mime_type.startsWith("video/") ? (
                 <video controls className="max-w-full max-h-[70vh] rounded-lg" src={previewFile.url}>
@@ -405,3 +329,107 @@ export default function MyStoragePage() {
     </div>
   );
 }
+
+const BucketStatItem = memo(function BucketStatItem({ name, bytes, files }: { name: string; bytes: number; files: number }) {
+  return (
+    <span>
+      <span className="font-medium text-primary">{name}</span>: {formatSize(bytes)} ({files} files)
+    </span>
+  );
+});
+
+const StorageFileTableRow = memo(function StorageFileTableRow({ file, isPreviewable, onPreview, onDownload, onDelete }: {
+  file: StorageFileItem; isPreviewable: (f: StorageFileItem) => boolean;
+  onPreview: (f: StorageFileItem) => void; onDownload: (f: StorageFileItem) => void; onDelete: (f: StorageFileItem) => void;
+}) {
+  const Icon = fileIcon(file.mime_type);
+  return (
+    <motion.tr
+      key={`${file.bucket}:${file.path}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="border-b border-primary/5 last:border-0 hover:bg-accent/30 transition-colors"
+    >
+      <td className="py-4 px-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+            <Icon className="w-4 h-4 text-primary" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-primary truncate max-w-[220px]">{file.name}</p>
+            <p className="text-xs text-muted truncate max-w-[220px]">{file.path}</p>
+          </div>
+        </div>
+      </td>
+      <td className="py-4 px-4">
+        <Badge variant="outline" className="text-[10px] font-mono">{file.bucket}</Badge>
+      </td>
+      <td className="py-4 px-4 text-sm text-muted whitespace-nowrap">{formatSize(file.file_size)}</td>
+      <td className="py-4 px-4">
+        <Badge variant={file.in_use ? "success" : "destructive"} className="text-[10px]">{file.in_use ? "In Use" : "Orphaned"}</Badge>
+      </td>
+      <td className="py-4 px-6 text-right">
+        <div className="flex items-center justify-end gap-1">
+          {isPreviewable(file) && (
+            <Button size="sm" variant="ghost" onClick={() => onPreview(file)} className="hover:bg-primary/5" title="Preview">
+              <Eye className="w-3.5 h-3.5" />
+            </Button>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => onDownload(file)} title="Download" className="hover:bg-primary/5">
+            <Download className="w-3.5 h-3.5" />
+          </Button>
+          {!file.in_use && (
+            <Button size="sm" variant="ghost" onClick={() => onDelete(file)} className="hover:bg-red-50 hover:text-red-600" title="Delete">
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </div>
+      </td>
+    </motion.tr>
+  );
+});
+
+const StorageFileGridCard = memo(function StorageFileGridCard({ file, isPreviewable, onPreview, onDownload, onDelete }: {
+  file: StorageFileItem; isPreviewable: (f: StorageFileItem) => boolean;
+  onPreview: (f: StorageFileItem) => void; onDownload: (f: StorageFileItem) => void; onDelete: (f: StorageFileItem) => void;
+}) {
+  const Icon = fileIcon(file.mime_type);
+  return (
+    <motion.div
+      key={`${file.bucket}:${file.path}`}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="group relative rounded-xl border border-primary/5 bg-white hover:border-primary/10 hover:shadow-sm transition-all overflow-hidden"
+    >
+      <div className="aspect-square bg-accent/30 flex items-center justify-center relative overflow-hidden">
+        {file.mime_type.startsWith("image/") ? (
+          <Image src={file.url} alt={file.name} width={200} height={200} className="w-full h-full object-cover" />
+        ) : (
+          <Icon className="w-10 h-10 text-muted/60" />
+        )}
+        {!file.in_use && (
+          <button
+            onClick={() => onDelete(file)}
+            className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-red-50 text-red-600 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-100"
+            title="Delete"
+          >
+            <Trash2 className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+      <div className="p-2.5">
+        <p className="text-xs font-medium text-primary truncate">{file.name}</p>
+        <div className="flex items-center justify-between mt-1">
+          <span className="text-[10px] text-muted">{formatSize(file.file_size)}</span>
+          <Badge variant={file.in_use ? "success" : "destructive"} className="text-[9px] px-1.5 py-0">{file.in_use ? "In Use" : "Orphaned"}</Badge>
+        </div>
+        <div className="flex items-center gap-1 mt-1.5">
+          {isPreviewable(file) && (
+            <button onClick={() => onPreview(file)} className="text-[10px] text-primary hover:underline" title="Preview">Preview</button>
+          )}
+          <button onClick={() => onDownload(file)} className="text-[10px] text-primary hover:underline ml-auto" title="Download">Download</button>
+        </div>
+      </div>
+    </motion.div>
+  );
+});

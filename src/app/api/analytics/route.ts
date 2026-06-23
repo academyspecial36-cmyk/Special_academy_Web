@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceRoleSupabase } from "@/lib/supabase-server";
+import { requireAdmin } from "@/lib/api/auth-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +73,9 @@ function calculateGrowth(current: number, previous: number): { change: string; u
 
 export async function GET() {
   try {
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const supabase = createServiceRoleSupabase();
 
     const [

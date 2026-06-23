@@ -12,13 +12,15 @@ interface FeaturesTabProps {
   setSeoForm: (updater: (prev: { metaDescription: string; gaTrackingId: string }) => { metaDescription: string; gaTrackingId: string }) => void;
   pinnedPopupEnabled: boolean;
   setPinnedPopupEnabled: (v: boolean) => void;
+  admissionBarEnabled: boolean;
+  setAdmissionBarEnabled: (v: boolean) => void;
   form: Record<string, unknown>;
   setForm: (updater: (prev: Record<string, unknown>) => Record<string, unknown>) => void;
   savingSettings: boolean;
   handleSave: () => Promise<void>;
 }
 
-export function FeaturesTab({ seoForm, setSeoForm, pinnedPopupEnabled, setPinnedPopupEnabled, form, setForm, savingSettings, handleSave }: FeaturesTabProps) {
+export function FeaturesTab({ seoForm, setSeoForm, pinnedPopupEnabled, setPinnedPopupEnabled, admissionBarEnabled, setAdmissionBarEnabled, form, setForm, savingSettings, handleSave }: FeaturesTabProps) {
   return (
     <div>
       <div className="grid lg:grid-cols-2 gap-6">
@@ -37,6 +39,7 @@ export function FeaturesTab({ seoForm, setSeoForm, pinnedPopupEnabled, setPinned
               { key: "enableBlog", label: "Enable Blog", desc: "Show blog section on landing page" },
               { key: "maintenanceMode", label: "Maintenance Mode", desc: "Show maintenance page to visitors" },
               { key: "pinnedPopup", label: "Pinned Notice Popup", desc: "Show pinned notice as popup on landing page" },
+              { key: "admissionBar", label: "Admission Announcement Bar", desc: "Show admission announcement bar in the header" },
             ].map(({ key, label, desc }) => (
               <div key={key} className="flex items-center justify-between pb-4 border-b border-primary/5 last:border-0 last:pb-0">
                 <div>
@@ -45,6 +48,8 @@ export function FeaturesTab({ seoForm, setSeoForm, pinnedPopupEnabled, setPinned
                 </div>
                 {key === "pinnedPopup" ? (
                   <ToggleSwitch checked={pinnedPopupEnabled} onChange={setPinnedPopupEnabled} />
+                ) : key === "admissionBar" ? (
+                  <ToggleSwitch checked={admissionBarEnabled} onChange={setAdmissionBarEnabled} />
                 ) : (
                   <ToggleSwitch
                     checked={(form)[key] as boolean}
