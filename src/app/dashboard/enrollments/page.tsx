@@ -2,21 +2,23 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useAppContext } from "@/lib/app-context";
-import { Users, CheckCircle, X, Mail, School, Search, Filter, Trash2 } from "lucide-react";
+import { Users, CheckCircle, X, Mail, School, Search, Filter, Trash2, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DeleteModal } from "@/components/ui/delete-modal";
+import { EditEnrollmentModal } from "@/components/ui/edit-enrollment-modal";
+import { BulkEditEnrollmentModal } from "@/components/ui/bulk-edit-enrollment-modal";
 import type { Enrollment } from "@/lib/context/students-context";
 import { toast } from "sonner";
 
 export default function EnrollmentsPage() {
-  const { enrollments, loadAdminData } = useAppContext();
+  const { enrollments, courses, loadAdminData } = useAppContext();
 
   useEffect(() => { loadAdminData(); }, [loadAdminData]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected" | "unverified">("all");
   const [selected, setSelected] = useState<Enrollment | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmAction, setConfirmAction] = useState<{ id: string; action: "approved" | "rejected" } | null>(null);
@@ -26,6 +28,12 @@ export default function EnrollmentsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+  const [bulkAction, setBulkAction] = useState<"approved" | "rejected" | null>(null);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [bulkRejectionMessage, setBulkRejectionMessage] = useState("");
+  const [editingEnrollment, setEditingEnrollment] = useState<Enrollment | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
 
   function toggleSelect(id: string) {
     setSelectedIds((prev) => {
@@ -94,6 +102,81 @@ export default function EnrollmentsPage() {
     }
   }
 
+  async function confirmBulkStatus() {
+    if (!bulkAction) return;
+    if (bulkAction === "rejected" && !bulkRejectionMessage.trim()) {
+      toast.error("Please provide a rejection reason.");
+      return;
+    }
+    setBulkActionLoading(true);
+    const action = bulkAction;
+    setBulkAction(null);
+    try {
+      const ids = Array.from(selectedIds);
+      const res = await fetch("/api/enrollments/bulk-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, action, rejectionMessage: bulkRejectionMessage.trim() || undefined }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Bulk action failed");
+      }
+      await loadAdminData();
+      setSelectedIds(new Set());
+      setBulkRejectionMessage("");
+      toast.success(`${ids.length} enrollment(s) ${action}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update enrollments");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  }
+
+  async function handleBulkEdit(data: { interestedCourse?: string; status?: string }) {
+    setEditSaving(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const res = await fetch("/api/enrollments/bulk-edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, ...data }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Bulk edit failed");
+      }
+      await loadAdminData();
+      setSelectedIds(new Set());
+      toast.success(`${ids.length} enrollment(s) updated`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update enrollments");
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
+  async function handleEditSave(id: string, data: { interestedCourse?: string; status?: string }) {
+    setEditSaving(true);
+    try {
+      const res = await fetch(`/api/enrollments/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Update failed");
+      }
+      await loadAdminData();
+      toast.success("Enrollment updated");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update enrollment");
+    } finally {
+      setEditSaving(false);
+    }
+  }
+
   async function handleDelete() {
     if (!deleteId) return;
     setDeleting(true);
@@ -126,6 +209,8 @@ export default function EnrollmentsPage() {
   const pending = filtered.filter((e) => e.status === "pending");
   const approved = filtered.filter((e) => e.status === "approved");
   const rejected = filtered.filter((e) => e.status === "rejected");
+  const unverified = filtered.filter((e) => e.status === "unverified");
+
 
   return (
     <div>
@@ -133,8 +218,18 @@ export default function EnrollmentsPage() {
         <h1 className="text-2xl font-bold text-primary">Enrollments</h1>
         <p className="text-sm text-muted">Manage student enrollment requests.</p>
       </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 lg:mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 sm:gap-4 mb-4 lg:mb-6">
+        <Card className="border-amber-200">
+          <CardContent className="p-4 sm:p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted">Total</p>
+              <p className="text-xl font-bold text-primary">{enrollments.length}</p>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="border-amber-200">
           <CardContent className="p-4 sm:p-5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
@@ -168,6 +263,17 @@ export default function EnrollmentsPage() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4 sm:p-5 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <X className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-xs text-muted">Unverified</p>
+              <p className="text-xl font-bold text-primary">{unverified.length}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -182,9 +288,9 @@ export default function EnrollmentsPage() {
                 className="pl-10"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex max-w-full flex-wrap items-center gap-2">
               <Filter className="w-4 h-4 text-muted" />
-              {(["all", "pending", "approved", "rejected"] as const).map((s) => (
+              {(["all", "pending", "approved", "rejected","unverified"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
@@ -204,15 +310,44 @@ export default function EnrollmentsPage() {
         <CardHeader className="px-4 sm:px-6 py-4 flex flex-row items-center justify-between gap-4">
           <CardTitle className="text-base sm:text-lg">All Enrollment Requests</CardTitle>
           {selectedIds.size > 0 && (
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => setShowBulkConfirm(true)}
-              disabled={bulkDeleting}
-            >
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Delete ({selectedIds.size})
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowBulkEdit(true)}
+              >
+                <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                Edit ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => setBulkAction("approved")}
+                disabled={bulkActionLoading}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
+                Approve ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => { setBulkAction("rejected"); setBulkRejectionMessage(""); }}
+                disabled={bulkActionLoading}
+              >
+                <X className="w-3.5 h-3.5 mr-1.5" />
+                Reject ({selectedIds.size})
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => setShowBulkConfirm(true)}
+                disabled={bulkDeleting}
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                Delete ({selectedIds.size})
+              </Button>
+            </div>
           )}
         </CardHeader>
         <CardContent className="p-2 sm:p-4">
@@ -221,7 +356,7 @@ export default function EnrollmentsPage() {
           ) : (
             <div className="space-y-2">
               <label className="flex items-center gap-2 px-1 text-xs text-muted cursor-pointer select-none">
-                <input
+                <Input
                   type="checkbox"
                   checked={selectedIds.size === filtered.length && filtered.length > 0}
                   onChange={toggleSelectAll}
@@ -259,7 +394,7 @@ export default function EnrollmentsPage() {
                       <span className="shrink-0">{new Date(enrollment.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-end w-full sm:w-auto">
+                  <div className="flex max-w-full flex-wrap items-center gap-2 sm:gap-3 justify-between sm:justify-end w-full sm:w-auto">
                     <Badge className={
                       enrollment.status === "approved"
                         ? "bg-emerald-50 text-emerald-700 border-0 text-[10px]"
@@ -285,7 +420,7 @@ export default function EnrollmentsPage() {
                           disabled={actionLoading === enrollment.id}
                           className="hover:bg-emerald-50 hover:text-emerald-600"
                         >
-                     
+                      
                           <CheckCircle className="w-3.5 h-3.5" />
                             Approve
                         </Button>
@@ -303,6 +438,15 @@ export default function EnrollmentsPage() {
                         </Button>
                       )}
                     </div>
+                     <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingEnrollment(enrollment)}
+                        className="hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        Edit
+                      </Button>
                     <Button
                       size="sm"
                       variant="ghost"
@@ -310,6 +454,7 @@ export default function EnrollmentsPage() {
                       className="hover:bg-red-50 hover:text-red-600"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -389,6 +534,64 @@ export default function EnrollmentsPage() {
         message={`Are you sure you want to delete ${selectedIds.size} enrollment(s)? This action cannot be undone.`}
         loading={bulkDeleting}
       />
+
+      <EditEnrollmentModal
+        open={!!editingEnrollment}
+        enrollment={editingEnrollment}
+        courses={courses}
+        onClose={() => setEditingEnrollment(null)}
+        onSave={handleEditSave}
+      />
+
+      <BulkEditEnrollmentModal
+        open={showBulkEdit}
+        count={selectedIds.size}
+        courses={courses}
+        onClose={() => setShowBulkEdit(false)}
+        onSave={handleBulkEdit}
+      />
+
+      {/* Bulk Approve/Reject Modal */}
+      {bulkAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/40" onClick={() => { setBulkAction(null); setBulkRejectionMessage(""); }} />
+          <div className="relative bg-white rounded-xl shadow-lg p-5 sm:p-6 w-full max-w-sm sm:max-w-md">
+            <h3 className="text-base sm:text-lg font-bold text-primary mb-3 sm:mb-4">
+              {bulkAction === "approved" ? `Approve ${selectedIds.size} enrollment(s)?` : `Reject ${selectedIds.size} enrollment(s)?`}
+            </h3>
+            <p className="text-sm text-muted mb-4">
+              {bulkAction === "approved"
+                ? "This will approve all selected enrollments, create student accounts, and send approval emails."
+                : "This will reject all selected enrollments and notify the applicants."}
+            </p>
+            {bulkAction === "rejected" && (
+              <div className="mb-4">
+                <label className="text-sm font-medium text-primary mb-1.5 block">Rejection Reason</label>
+                <textarea
+                  value={bulkRejectionMessage}
+                  onChange={(e) => setBulkRejectionMessage(e.target.value)}
+                  className="w-full rounded-lg border border-primary/20 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[80px]"
+                  placeholder="Explain why these enrollments were rejected..."
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="outline" onClick={() => { setBulkAction(null); setBulkRejectionMessage(""); }}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant={bulkAction === "approved" ? "default" : "destructive"}
+                onClick={confirmBulkStatus}
+                disabled={bulkActionLoading}
+                className={bulkAction === "approved" ? "bg-emerald-600 hover:bg-emerald-700" : undefined}
+              >
+                {bulkActionLoading ? "Processing..." : bulkAction === "approved" ? "Confirm Approve" : "Confirm Reject"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {confirmAction && (

@@ -186,7 +186,7 @@ export default function StudentProfilePage() {
                 ) : (
                   <span className="text-2xl font-bold text-primary">{initials}</span>
                 )}
-                {editing && (
+                {/* {editing && (
                   <>
                     <button
                       onClick={() => avatarRef.current?.click()}
@@ -201,7 +201,7 @@ export default function StudentProfilePage() {
                       setAvatarPreview(URL.createObjectURL(file));
                     }} />
                   </>
-                )}
+                )} */}
               </div>
               <h3 className="text-lg font-bold text-primary">{form.name || "Student"}</h3>
               <p className="text-sm text-muted mb-1">{form.qualification || student?.class || enrollment?.interested_course || "No qualification set"}</p>
