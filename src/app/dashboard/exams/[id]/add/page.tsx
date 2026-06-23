@@ -15,6 +15,7 @@ import { useAppContext } from "@/lib/app-context";
 import { apiUpload } from "@/lib/api-client";
 import type { Question } from "@/types";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics/client";
 
 interface QuestionDraft {
   id: string;
@@ -381,6 +382,8 @@ export default function GoogleFormAddQuestions() {
     }
     if (saved > 0) {
       toast.success(`${saved} question${saved > 1 ? "s" : ""} saved`);
+      const importId = `questions-${categoryId}-${Date.now()}`;
+      trackEvent("questions_saved", { importId, eventId: `questions_saved:${importId}`, metadata: { questionCount: saved } });
       clearDraft();
       router.push(`/dashboard/exams/${categoryId}`);
     }

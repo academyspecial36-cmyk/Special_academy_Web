@@ -5,13 +5,23 @@ import { usePathname } from "next/navigation";
 import { ChatInterface } from "@/components/ai/chat-interface";
 import { ConversationHistory } from "@/components/ai/conversation-history";
 import { ContextPanel } from "@/components/ai/context-panel";
-import { CommandPalette } from "@/components/ai/command-palette";
+import { CommandPalette, type CommandItem } from "@/components/ai/command-palette";
 import { DeleteModal } from "@/components/ui/delete-modal";
 import { UsageModal } from "@/components/ai/usage-modal";
 import { apiList, apiDelete } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
 import { Menu, X, PanelRightOpen, PanelRightClose, BarChart3 } from "lucide-react";
 import type { AIConversation, PageContext } from "@/types/ai";
+
+const AI_COMMANDS = [
+  "Create a holiday notice",
+  "Show inactive students",
+  "Generate MCQs for exam",
+  "Approve pending enrollments",
+  "Publish blog post",
+  "Enable maintenance mode",
+  "Create backup",
+];
 
 export default function AICommandCenterPage() {
   const pathname = usePathname();
@@ -259,7 +269,10 @@ export default function AICommandCenterPage() {
       <CommandPalette
         open={cmdOpen}
         onClose={() => setCmdOpen(false)}
-        onCommand={handleCommand}
+        onSelect={(item) => {
+          if (!item.href) handleCommand(item.label);
+        }}
+        items={AI_COMMANDS.map((c) => ({ id: c, label: c, section: "AI Commands" }))}
       />
 
       <DeleteModal

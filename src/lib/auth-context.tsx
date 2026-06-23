@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import { useRouter } from "next/navigation";
 import { type AuthChangeEvent, type Session } from "@supabase/supabase-js";
 import { getSupabase } from "./supabase";
+import { trackEvent } from "@/lib/analytics/client";
 
 export interface AuthUser {
   id: string;
@@ -173,31 +174,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data.user) {
       const profileUser = await fetchProfileServer();
+      let role = "student";
       if (profileUser) {
         setUser(profileUser);
-        if (profileUser.role === "admin") {
+        role = profileUser.role;
+        if (role === "admin") {
           sessionStorage.setItem("admin_session", "true");
         }
-        return { success: true, role: profileUser.role };
+      } else {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .maybeSingle();
+
+        role = profile?.role ?? "student";
+        setUser({
+          id: data.user.id,
+          email: data.user.email ?? "",
+          role,
+          name: profile?.name,
+          avatar_url: profile?.avatar_url ?? undefined,
+        });
+
+        if (role === "admin") {
+          sessionStorage.setItem("admin_session", "true");
+        }
       }
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", data.user.id)
-        .maybeSingle();
-
-      const role = profile?.role ?? "student";
-      setUser({
-        id: data.user.id,
-        email: data.user.email ?? "",
-        role,
-        name: profile?.name,
-        avatar_url: profile?.avatar_url ?? undefined,
-      });
-
-      if (role === "admin") {
-        sessionStorage.setItem("admin_session", "true");
+      if (role !== "admin") {
+        const today = new Date().toISOString().slice(0, 10);
+        trackEvent("login_completed", { eventId: `login:${data.user.id}:${today}` });
       }
 
       return { success: true, role };
@@ -231,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: "student",
         name,
       });
+      trackEvent("registration_completed", { eventId: `registration:${data.user.id}` });
       return { success: true };
     }
 

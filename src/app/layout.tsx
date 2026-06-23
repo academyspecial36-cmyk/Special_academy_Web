@@ -5,6 +5,7 @@ import { AppProviderWrapper } from "@/components/providers/app-provider";
 import { AuthProviderWrapper } from "@/components/providers/auth-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { OfflineDetector } from "@/components/offline-detector";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -53,7 +54,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="font-sans" suppressHydrationWarning>
-        <AuthProviderWrapper><AppProviderWrapper><ThemeProvider><OfflineDetector>{children}</OfflineDetector></ThemeProvider></AppProviderWrapper></AuthProviderWrapper>
+        <AuthProviderWrapper><AppProviderWrapper><ThemeProvider><OfflineDetector><PageViewTracker />{children}</OfflineDetector></ThemeProvider></AppProviderWrapper></AuthProviderWrapper>
       </body>
     </html>
   );

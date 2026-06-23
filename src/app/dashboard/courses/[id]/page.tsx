@@ -13,6 +13,7 @@ import {
   BookOpen, ChevronRight, GripVertical,
 } from "lucide-react";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -306,10 +307,18 @@ export default function CourseDetailPage() {
         if (!url) url = urls[0];
       }
       if (itemForm.type === "image" && images.length === 0) { toast.error("Please select at least one image"); setUploading(false); return; }
-      if (pendingPdfFile) { const { url: pdfUrl } = await apiUpload(pendingPdfFile, "pdfs"); url = pdfUrl; }
+      let importId: string | null = null;
+      if (pendingPdfFile) {
+        const { url: pdfUrl } = await apiUpload(pendingPdfFile, "pdfs");
+        url = pdfUrl;
+        importId = `pdf-${Date.now()}`;
+      }
       const payload = { subcategoryId: itemForm.subcategoryId, type: itemForm.type, title: itemForm.title, description: itemForm.description, url, images: images.length > 0 ? images : undefined, duration: itemForm.duration || undefined, status: itemForm.status, hidden: itemForm.hidden } as Record<string, unknown>;
       if (editingItemId) { updateItem(itemForm.subcategoryId, editingItemId, payload); toast.success("Item updated successfully"); }
       else { addItem(itemForm.subcategoryId, payload as any); toast.success("Item added successfully"); }
+      if (importId) {
+        trackEvent("pdf_imported", { importId, eventId: `pdf_imported:${importId}` });
+      }
       setItemModalOpen(false);
     } catch { toast.error("Failed to save item"); }
     finally { setUploading(false); }

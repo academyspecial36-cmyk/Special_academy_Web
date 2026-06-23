@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,7 @@ import { useAppContext } from "@/lib/app-context";
 import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
+import { trackEvent } from "@/lib/analytics/client";
 
 // ─── Main Component ────────────────────────────────────────────────
 
@@ -95,6 +96,8 @@ export default function StudentTakeSubcategoryExamPage() {
 
   // ─── Effects ─────────────────────────────────────────────────────
 
+  const examStartedRef = useRef(false);
+
   useEffect(() => {
     if (alreadyAttempted) {
       const lastAttempt = [...attempts]
@@ -105,8 +108,12 @@ export default function StudentTakeSubcategoryExamPage() {
             new Date(a.completedAt).getTime()
         )[0];
       if (lastAttempt) router.replace(`/student/exams/result/${lastAttempt.id}`);
+    } else if (subQuestions.length > 0 && !examStartedRef.current) {
+      examStartedRef.current = true;
+      const attemptId = `start-${subId}-${Date.now()}`;
+      trackEvent("exam_started", { examId: subId, attemptId });
     }
-  }, [alreadyAttempted, subId, router, attempts]);
+  }, [alreadyAttempted, subId, router, attempts, subQuestions]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -200,6 +207,12 @@ export default function StudentTakeSubcategoryExamPage() {
     };
 
     const attemptId = addAttempt(attempt);
+    trackEvent("exam_submitted", {
+      examId: subId,
+      attemptId,
+      eventId: `exam_submitted:${attemptId}`,
+      metadata: { score },
+    });
     toast.success("Exam submitted successfully!", {
       description: `You scored ${score} out of ${total}`,
     });

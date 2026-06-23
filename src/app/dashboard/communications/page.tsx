@@ -709,7 +709,7 @@ export default function CommunicationsPage() {
                         <option key={c.value} value={c.value}>{c.label}</option>
                       ))}
                     </select>
-                    <p className="text-[11px] text-muted mt-1.5">Pick a type and we'll auto-fill a template. Customize any section below.</p>
+                    <p className="text-[11px] text-muted mt-1.5">Pick a type and we&apos;ll auto-fill a template. Customize any section below.</p>
                   </div>
                 </div>
               </details>
@@ -854,7 +854,7 @@ export default function CommunicationsPage() {
                   </label>
                   {(templateForm.config as TemplateConfig).showButton && (
                     <div className="space-y-4 pl-6 border-l-2 border-primary/10">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="text-sm font-medium text-primary mb-1.5 block">Button Text</label>
                           <Input value={(templateForm.config as TemplateConfig).buttonText}

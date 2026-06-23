@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,6 +30,7 @@ import {
   Sparkles,
   HardDrive,
   Video,
+  BarChart3,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,8 @@ import { LandingLoader } from "@/components/landing/landing-loader";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
-import { CommandPalette } from "@/components/ai/command-palette";
+import { CommandPalette, type CommandItem } from "@/components/ai/command-palette";
+import { CommandHint } from "@/components/ai/command-hint";
 import { FloatingActionButton } from "@/components/ai/floating-action-button";
 import { BreadcrumbRenderer } from "@/components/shared/breadcrumb-renderer";
 
@@ -63,6 +65,7 @@ const iconMap: Record<string, React.ElementType> = {
   Sparkles,
   HardDrive,
   Video,
+  BarChart3,
 };
 
 export default function DashboardLayout({
@@ -79,6 +82,20 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, isLoading, logout } = useAuth();
   const { loading, settings } = useAppContext();
+
+  const commandItems: CommandItem[] = useMemo(() => {
+    const items: CommandItem[] = [];
+    for (const item of DASHBOARD_SIDEBAR) {
+      if (item.type === "link") {
+        items.push({ id: item.href, label: item.label, href: item.href, icon: item.icon, section: "Pages" });
+      } else {
+        for (const child of item.children) {
+          items.push({ id: child.href, label: child.label, href: child.href, icon: child.icon, section: item.label });
+        }
+      }
+    }
+    return items;
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -114,6 +131,11 @@ export default function DashboardLayout({
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setCmdOpen((prev) => !prev);
+        return;
+      }
+      if (e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        setCmdOpen(true);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -309,6 +331,11 @@ export default function DashboardLayout({
           {/* Breadcrumb */}
           <BreadcrumbRenderer />
 
+          {/* Command palette hint */}
+          <div className="hidden lg:block ml-4">
+            <CommandHint />
+          </div>
+
           <div className="ml-auto flex items-center gap-3">
             {/* Profile */}
             <div className="relative">
@@ -375,10 +402,10 @@ export default function DashboardLayout({
       <CommandPalette
         open={cmdOpen}
         onClose={() => setCmdOpen(false)}
-        onCommand={(cmd) => {
-          setCmdOpen(false);
-          router.push("/dashboard/ai");
+        onSelect={(item) => {
+          if (item.href) router.push(item.href);
         }}
+        items={commandItems}
       />
       {pathname !== "/dashboard/ai" && (
         <FloatingActionButton onClick={() => router.push("/dashboard/ai")} />

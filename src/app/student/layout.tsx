@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -25,6 +25,8 @@ import { BreadcrumbProvider, useBreadcrumbs } from "@/lib/breadcrumb-context";
 import { BreadcrumbRenderer } from "@/components/shared/breadcrumb-renderer";
 import { NotificationsProvider } from "@/lib/notifications-context";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { CommandPalette, type CommandItem } from "@/components/ai/command-palette";
+import { CommandHint } from "@/components/ai/command-hint";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard,
@@ -42,6 +44,7 @@ export default function StudentLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoading, logout } = useAuth();
@@ -63,6 +66,32 @@ export default function StudentLayout({
       document.body.style.overflow = "";
     };
   }, [sidebarOpen]);
+
+  const commandItems: CommandItem[] = useMemo(() => {
+    return STUDENT_NAV.map((item) => ({
+      id: item.href,
+      label: item.label,
+      href: item.href,
+      icon: item.icon,
+      section: "Pages",
+    }));
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+        return;
+      }
+      if (e.key === "/" && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        e.preventDefault();
+        setCmdOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   if (isLoading) {
     return (
@@ -215,6 +244,10 @@ export default function StudentLayout({
 
               <BreadcrumbRenderer rootLabel="Student Portal" />
 
+              <div className="hidden lg:block ml-4">
+                <CommandHint />
+              </div>
+
               <div className="ml-auto flex items-center gap-3">
                 <div className="relative">
                   <button
@@ -325,6 +358,15 @@ export default function StudentLayout({
           </NotificationsProvider>
         </BreadcrumbProvider>
       </div>
+
+      <CommandPalette
+        open={cmdOpen}
+        onClose={() => setCmdOpen(false)}
+        onSelect={(item) => {
+          if (item.href) router.push(item.href);
+        }}
+        items={commandItems}
+      />
     </div>
   );
 }

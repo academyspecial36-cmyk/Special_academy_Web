@@ -24,6 +24,12 @@ export const DASHBOARD_SIDEBAR: SidebarItem[] = [
     href: "/dashboard",
     icon: "LayoutDashboard",
   },
+  {
+    type: "link",
+    label: "Analytics",
+    href: "/dashboard/analytics",
+    icon: "BarChart3",
+  },
 
   {
     type: "group",

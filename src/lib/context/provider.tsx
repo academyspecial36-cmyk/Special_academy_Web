@@ -79,7 +79,7 @@ export interface AppContextValue {
   addQuestion: (q: Omit<Question, "id" | "createdAt">) => void;
   updateQuestion: (id: string, data: Partial<Question>) => void;
   deleteQuestion: (id: string) => void;
-  addAttempt: (a: Omit<ExamAttempt, "id" | "completedAt">) => void;
+  addAttempt: (a: Omit<ExamAttempt, "id" | "completedAt">) => string;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
